@@ -6,12 +6,13 @@ import { formatUnknownError } from "../core/errors.js";
 import { initProject } from "../core/init/init-project.js";
 import { runDryRun } from "../core/run/dry-run.js";
 
+const VERSION = "0.0.0";
 const program = new Command();
 
 program
   .name("skillarena")
   .description("Evaluate Codex skills with repeatable local eval suites.")
-  .version("0.0.0");
+  .version(VERSION);
 
 program
   .command("init")
@@ -58,7 +59,9 @@ program
       const result = await runDryRun({
         cwd: process.cwd(),
         evalFile,
-        caseId: options.case
+        caseId: options.case,
+        command: process.argv.slice(2),
+        skillarenaVersion: VERSION
       });
 
       console.log("SkillArena dry run");
@@ -66,6 +69,7 @@ program
       console.log(`Agent: ${result.project.config.agent}`);
       console.log(`Suites: ${result.suites.length}`);
       console.log(`Cases: ${result.totalCases}`);
+      console.log(`Run: ${result.runStore.runDir}`);
 
       for (const loadedSuite of result.suites) {
         console.log(`\nPASS ${loadedSuite.suite.name}`);
@@ -79,6 +83,8 @@ program
           console.log(`  - ${warning}`);
         }
       }
+
+      console.log(`\nReport: ${result.runStore.reportMarkdownPath}`);
     } catch (error) {
       console.error(formatUnknownError(error));
       process.exitCode = 1;

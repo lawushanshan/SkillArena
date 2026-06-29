@@ -1,4 +1,5 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
@@ -23,19 +24,37 @@ describe("runDryRun", () => {
     const root = await makeTempDir();
     await initProject(root);
 
-    const result = await runDryRun({ cwd: root });
+    const result = await runDryRun({
+      cwd: root,
+      command: ["run", "--dry-run"],
+      skillarenaVersion: "0.0.0-test"
+    });
 
     expect(result.project.root).toBe(root);
     expect(result.suites).toHaveLength(1);
     expect(result.totalCases).toBe(1);
     expect(result.suites[0]?.suite.name).toBe("sample-skill");
+    expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
+    expect(existsSync(result.runStore.reportMarkdownPath)).toBe(true);
+
+    const reportJson = JSON.parse(await readFile(result.runStore.reportJsonPath, "utf8")) as {
+      schemaVersion: string;
+      summary: { cases: number };
+    };
+    expect(reportJson.schemaVersion).toBe("0.1");
+    expect(reportJson.summary.cases).toBe(1);
   });
 
   it("filters by case id", async () => {
     const root = await makeTempDir();
     await initProject(root);
 
-    const result = await runDryRun({ cwd: root, caseId: "sample-dry-run" });
+    const result = await runDryRun({
+      cwd: root,
+      caseId: "sample-dry-run",
+      command: ["run", "--dry-run", "--case", "sample-dry-run"],
+      skillarenaVersion: "0.0.0-test"
+    });
 
     expect(result.totalCases).toBe(1);
     expect(result.suites[0]?.selectedCaseCount).toBe(1);
@@ -45,9 +64,14 @@ describe("runDryRun", () => {
     const root = await makeTempDir();
     await initProject(root);
 
-    await expect(runDryRun({ cwd: root, caseId: "missing-case" })).rejects.toThrow(
-      "No eval case found with id: missing-case"
-    );
+    await expect(
+      runDryRun({
+        cwd: root,
+        caseId: "missing-case",
+        command: ["run", "--dry-run"],
+        skillarenaVersion: "0.0.0-test"
+      })
+    ).rejects.toThrow("No eval case found with id: missing-case");
   });
 
   it("fails invalid eval suites", async () => {
@@ -65,7 +89,13 @@ describe("runDryRun", () => {
       "utf8"
     );
 
-    await expect(runDryRun({ cwd: root })).rejects.toThrow("duplicate case id: duplicate");
+    await expect(
+      runDryRun({
+        cwd: root,
+        command: ["run", "--dry-run"],
+        skillarenaVersion: "0.0.0-test"
+      })
+    ).rejects.toThrow("duplicate case id: duplicate");
   });
 
   it("fails when a fixture is missing", async () => {
@@ -77,9 +107,13 @@ describe("runDryRun", () => {
       "utf8"
     );
 
-    await expect(runDryRun({ cwd: root, evalFile: "evals/missing-fixture.yaml" })).rejects.toThrow(
-      "Fixture does not exist for case missing-fixture"
-    );
+    await expect(
+      runDryRun({
+        cwd: root,
+        evalFile: "evals/missing-fixture.yaml",
+        command: ["run", "--dry-run"],
+        skillarenaVersion: "0.0.0-test"
+      })
+    ).rejects.toThrow("Fixture does not exist for case missing-fixture");
   });
 });
-

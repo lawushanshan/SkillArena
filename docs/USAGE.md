@@ -107,22 +107,24 @@ The first eval format should support:
 
 ## Run Evals
 
+The current implementation supports dry-run validation. Dry-run mode loads project config, validates eval YAML, checks fixture references, records run metadata, and writes reports without invoking Codex.
+
 Run all evals:
 
 ```powershell
-skillarena run
+skillarena run --dry-run
 ```
 
 Run a specific eval file:
 
 ```powershell
-skillarena run evals/markdown-skill.yaml
+skillarena run evals/markdown-skill.yaml --dry-run
 ```
 
 Run a specific case:
 
 ```powershell
-skillarena run evals/markdown-skill.yaml --case creates-table-of-contents
+skillarena run evals/markdown-skill.yaml --case creates-table-of-contents --dry-run
 ```
 
 Expected console output:
@@ -139,6 +141,8 @@ PASS does-not-trigger-for-unrelated-task
 2 passed, 0 failed
 Report: .skillarena/runs/2026-06-29T120000Z/report.md
 ```
+
+Real Codex execution will be implemented after the report and run directory contract is stable.
 
 ## Evaluate Scripted Skills
 
@@ -206,6 +210,18 @@ Each run should produce a directory like:
 `report.md` is for humans.
 
 `report.json` is for automation and should be treated as the stable report contract.
+
+The JSON report starts with:
+
+```json
+{
+  "schemaVersion": "0.1",
+  "tool": "skillarena",
+  "mode": "dry-run"
+}
+```
+
+Reports also include reproducibility metadata such as SkillArena version, Node version, platform, config hash, eval file hashes, fixture hashes, and Codex version when detected.
 
 ## CI Usage
 
