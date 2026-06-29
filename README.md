@@ -28,9 +28,21 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 
 ## Documentation
 
+- [Usage](docs/USAGE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
+
+## Target Usage
+
+SkillArena is designed to be used from the command line:
+
+```powershell
+skillarena init
+skillarena run
+```
+
+Developers write eval cases in YAML, run them against Codex with `codex exec --json`, and inspect Markdown or JSON reports under `.skillarena/runs/`.
 
 ## Repository Status
 
