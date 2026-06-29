@@ -1,0 +1,39 @@
+import { describe, expect, it } from "vitest";
+
+import { EvalSuiteSchema } from "./eval-schema.js";
+
+describe("EvalSuiteSchema", () => {
+  it("applies defaults for optional expectation lists", () => {
+    const result = EvalSuiteSchema.parse({
+      name: "example",
+      cases: [
+        {
+          id: "case-1",
+          prompt: "Do a task."
+        }
+      ]
+    });
+
+    expect(result.agent).toBe("codex");
+    expect(result.cases[0]?.expect.files_changed).toEqual([]);
+    expect(result.cases[0]?.expect.commands).toEqual([]);
+  });
+
+  it("rejects command expectations without a matcher", () => {
+    const result = EvalSuiteSchema.safeParse({
+      name: "example",
+      cases: [
+        {
+          id: "case-1",
+          prompt: "Do a task.",
+          expect: {
+            commands: [{ exit_code: 0 }]
+          }
+        }
+      ]
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+

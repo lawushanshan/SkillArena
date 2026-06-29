@@ -1,0 +1,43 @@
+{
+  "name": "skillarena",
+  "version": "0.0.0",
+  "description": "Local-first evaluation harness for Codex skills.",
+  "type": "module",
+  "bin": {
+    "skillarena": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "dev": "tsx src/cli/index.ts",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "codex",
+    "skills",
+    "eval",
+    "cli"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "yaml": "^2.8.2",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
+

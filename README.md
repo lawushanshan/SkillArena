@@ -41,11 +41,20 @@ SkillArena v0 is designed as a standalone command-line tool:
 
 ```powershell
 skillarena init
-skillarena run
+skillarena run --dry-run
 ```
 
 Developers write eval cases in YAML, run them against Codex with `codex exec --json`, and inspect Markdown or JSON reports under `.skillarena/runs/`.
 
 ## Repository Status
 
-This repository is at the project definition stage. The next step is to implement the Codex runner and a minimal eval format.
+This repository has a TypeScript CLI scaffold with project initialization and eval schema dry-run validation. The next step is to implement the Codex runner and report generation.
+
+## Development
+
+```powershell
+npm install
+npm run check
+npm test
+npm run build
+```
