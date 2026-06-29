@@ -1,6 +1,8 @@
 import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
+import { gradeDeterministicExpectations } from "../grader/deterministic-grader.js";
 import type { RunMetadata } from "../metadata/metadata.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
+import type { ParsedTrace } from "../trace/normalized-events.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";
 import type { ReportCase, ReportCheck, ReportSuite, SkillArenaReport } from "./report-schema.js";
 
@@ -8,6 +10,8 @@ export interface CaseExecutionResult {
   suiteName: string;
   caseId: string;
   codex: CodexExecResult;
+  parsedTracePath?: string;
+  parsedTrace?: ParsedTrace;
 }
 
 export interface CreateRunReportInput {
@@ -41,7 +45,16 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
       const key = createCaseKey(loadedSuite.suite.name, testCase.id);
       const workspace = workspaceByCase.get(key);
       const execution = executionByCase.get(key);
-      const checks = createExecutionChecks(execution);
+      const checks = [
+        ...createExecutionChecks(execution),
+        ...(execution
+          ? gradeDeterministicExpectations({
+              testCase,
+              codex: execution.codex,
+              parsedTrace: execution.parsedTrace
+            })
+          : [])
+      ];
       const failed = checks.some((check) => check.status === "fail");
 
       return {
@@ -130,6 +143,13 @@ function createExecutionChecks(execution: CaseExecutionResult | undefined): Repo
       name: "raw-trace",
       status: execution.codex.stdoutBytes > 0 ? "pass" : "warn",
       message: `Raw JSONL bytes: ${execution.codex.stdoutBytes}`
+    },
+    {
+      name: "parsed-trace",
+      status: execution.parsedTrace && execution.parsedTrace.stats.parseErrors === 0 ? "pass" : "warn",
+      message: execution.parsedTrace
+        ? `events=${execution.parsedTrace.stats.normalizedEvents}, parseErrors=${execution.parsedTrace.stats.parseErrors}`
+        : "Parsed trace is not available."
     }
   ];
 

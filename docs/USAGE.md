@@ -150,7 +150,18 @@ PASS does-not-trigger-for-unrelated-task
 Report: .skillarena/runs/2026-06-29T120000Z/report.md
 ```
 
-The first Codex execution path grades only process-level results: timeout, exit code, raw JSONL output, and stderr. Skill-specific deterministic graders will be added next.
+The current Codex execution path grades process-level results and the first deterministic trace assertions:
+
+- timeout and exit code
+- raw JSONL output and stderr
+- parsed trace availability
+- `expect.skill_used`
+- `expect.skill_not_used`
+- `expect.commands`
+- `expect.commands_succeeded`
+- `expect.exit_code`
+
+Workspace diff checks such as `files_created` and `files_changed` are still pending.
 
 ## Evaluate Scripted Skills
 

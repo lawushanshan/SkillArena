@@ -165,6 +165,14 @@ Useful normalized event categories:
 - `assistant_message`
 - `error`
 
+Parsed traces are written under:
+
+```text
+.skillarena/runs/<run-id>/parsed/<suite>__<case>.json
+```
+
+The parser is intentionally tolerant. Unknown Codex events are preserved as `unknown` normalized events, and invalid JSONL lines are recorded as parse errors instead of crashing the whole run.
+
 ### Workspace Inspector
 
 Responsible for checking the filesystem before and after a run.
@@ -187,6 +195,8 @@ v0 should prioritize deterministic checks:
 - Were expected files created or changed?
 - Did expected commands run?
 - Did disallowed commands avoid running?
+
+The first implemented deterministic checks use normalized trace events for `skill_used`, `skill_not_used`, `commands`, `commands_succeeded`, and `exit_code`. Workspace diff checks are still pending.
 
 LLM-based judging can be added later, but it should not be required for the first reliable version.
 

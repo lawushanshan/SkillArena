@@ -25,7 +25,11 @@ describe("runEvals", () => {
     await initProject(root);
     const fakeCodex = await createFakeCodex(root, {
       exitCode: 0,
-      stdout: JSON.stringify({ type: "message", text: "ok" })
+      stdout: [
+        JSON.stringify({ type: "file_read", path: ".codex/skills/sample-skill/SKILL.md" }),
+        JSON.stringify({ type: "exec_command_begin", command: "echo ok" }),
+        JSON.stringify({ type: "exec_command_end", command: "echo ok", exit_code: 0 })
+      ].join("\n")
     });
 
     const result = await runEvals({
@@ -44,13 +48,21 @@ describe("runEvals", () => {
     expect(result.report.summary.failed).toBe(0);
     expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
     expect(existsSync(result.executions[0]!.codex.rawOutputPath)).toBe(true);
+    expect(result.executions[0]!.parsedTrace?.events).toHaveLength(3);
 
     const reportJson = JSON.parse(await readFile(result.runStore.reportJsonPath, "utf8")) as {
       mode: string;
       summary: { passed: number };
+      suites: Array<{ cases: Array<{ checks: Array<{ name: string; status: string }> }> }>;
     };
     expect(reportJson.mode).toBe("run");
     expect(reportJson.summary.passed).toBe(1);
+    expect(reportJson.suites[0]?.cases[0]?.checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "parsed-trace", status: "pass" }),
+        expect.objectContaining({ name: "expect.commands_succeeded", status: "pass" })
+      ])
+    );
   });
 
   it("marks failed Codex exits as failed cases", async () => {
@@ -90,4 +102,3 @@ async function createFakeCodex(
   await chmod(scriptPath, 0o755);
   return scriptPath;
 }
-

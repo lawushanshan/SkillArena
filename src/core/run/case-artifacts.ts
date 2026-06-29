@@ -15,3 +15,6 @@ export function createStderrPath(runStore: RunStore, suiteName: string, caseId: 
   return resolve(runStore.rawDir, `${createCaseArtifactBase(runStore, suiteName, caseId)}.stderr.txt`);
 }
 
+export function createParsedTracePath(runStore: RunStore, suiteName: string, caseId: string): string {
+  return resolve(runStore.parsedDir, `${createCaseArtifactBase(runStore, suiteName, caseId)}.json`);
+}

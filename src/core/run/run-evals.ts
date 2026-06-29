@@ -3,8 +3,10 @@ import { collectRunMetadata } from "../metadata/metadata.js";
 import { createRunReport, type CaseExecutionResult } from "../report/create-run-report.js";
 import type { SkillArenaReport } from "../report/report-schema.js";
 import { writeReport } from "../report/write-report.js";
+import { parseCodexJsonlTrace } from "../trace/codex-jsonl-parser.js";
+import { writeParsedTrace } from "../trace/write-parsed-trace.js";
 import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
-import { createRawTracePath, createStderrPath } from "./case-artifacts.js";
+import { createParsedTracePath, createRawTracePath, createStderrPath } from "./case-artifacts.js";
 import { createRunPlan, type LoadedEvalSuite } from "./run-plan.js";
 import { createRunStore, type RunStore } from "./run-store.js";
 
@@ -63,11 +65,16 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         codexCommand: options.codexCommand,
         codexCommandArgs: options.codexCommandArgs
       });
+      const parsedTrace = await parseCodexJsonlTrace(codex.rawOutputPath);
+      const parsedTracePath = createParsedTracePath(runStore, loadedSuite.suite.name, testCase.id);
+      await writeParsedTrace(parsedTracePath, parsedTrace);
 
       executions.push({
         suiteName: loadedSuite.suite.name,
         caseId: testCase.id,
-        codex
+        codex,
+        parsedTracePath,
+        parsedTrace
       });
     }
   }
