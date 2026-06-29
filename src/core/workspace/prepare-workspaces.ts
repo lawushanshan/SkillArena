@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import type { EvalCase } from "../eval/eval-schema.js";
 import { SkillArenaError } from "../errors.js";
 import type { SkillArenaProject } from "../project/project.js";
-import type { LoadedEvalSuite } from "../run/dry-run.js";
+import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunStore } from "../run/run-store.js";
 import { sanitizePathSegment } from "./sanitize-path-segment.js";
 
@@ -75,4 +75,3 @@ async function prepareCaseWorkspace(
     fixture: testCase.workspace.fixture
   };
 }
-

@@ -109,7 +109,7 @@ The loader should validate eval files before any Codex process starts.
 
 Responsible for invoking Codex.
 
-v0 only supports:
+v0 supports:
 
 ```text
 codex exec --json
@@ -122,6 +122,7 @@ The adapter should own:
 - Timeout handling
 - Process exit capture
 - Raw JSONL trace capture
+- stderr capture
 
 Do not spread direct `codex` command calls across the codebase.
 

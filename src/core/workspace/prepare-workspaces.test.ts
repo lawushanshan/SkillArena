@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { SkillArenaProject } from "../project/project.js";
-import type { LoadedEvalSuite } from "../run/dry-run.js";
+import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunStore } from "../run/run-store.js";
 import { prepareWorkspaces } from "./prepare-workspaces.js";
 import { sanitizePathSegment } from "./sanitize-path-segment.js";
@@ -111,4 +111,3 @@ function createSuites(suiteName: string, caseId: string, fixture: string): Loade
     }
   ];
 }
-

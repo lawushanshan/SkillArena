@@ -10,6 +10,7 @@
 - Capture JSONL traces and command metadata
 - Capture reproducibility metadata
 - Implement deterministic graders
+- Parse normalized events from Codex JSONL traces
 - Classify failures
 - Generate Markdown and JSON reports
 - Support CI exit codes

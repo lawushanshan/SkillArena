@@ -4,7 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 import type { SkillArenaProject } from "../project/project.js";
-import type { LoadedEvalSuite } from "../run/dry-run.js";
+import type { LoadedEvalSuite } from "../run/run-plan.js";
 import { hashDirectory, hashFile } from "./hash.js";
 
 const execFileAsync = promisify(execFile);
@@ -102,4 +102,3 @@ async function getCodexVersion(): Promise<string | undefined> {
     return undefined;
   }
 }
-

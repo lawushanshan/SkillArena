@@ -1,4 +1,4 @@
-import type { LoadedEvalSuite } from "../run/dry-run.js";
+import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunMetadata } from "../metadata/metadata.js";
 import type { SkillArenaReport, ReportCase, ReportSuite } from "./report-schema.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";

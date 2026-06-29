@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { formatUnknownError } from "../core/errors.js";
 import { initProject } from "../core/init/init-project.js";
 import { runDryRun } from "../core/run/dry-run.js";
+import { runEvals } from "../core/run/run-evals.js";
 
 const VERSION = "0.0.0";
 const program = new Command();
@@ -48,25 +49,34 @@ program
   .argument("[evalFile]", "Eval YAML file to run")
   .option("--case <caseId>", "Run a single eval case")
   .option("--dry-run", "Load and validate evals without invoking Codex.")
-  .action(async (evalFile: string | undefined, options: { case?: string; dryRun?: boolean }) => {
-    if (!options.dryRun) {
-      console.error("Real eval execution is not implemented yet. Use --dry-run to validate suites.");
-      process.exitCode = 1;
-      return;
-    }
-
+  .option("--timeout-ms <ms>", "Per-case Codex execution timeout in milliseconds", "300000")
+  .option("--codex-command <command>", "Codex command to execute", "codex")
+  .action(async (
+    evalFile: string | undefined,
+    options: { case?: string; dryRun?: boolean; timeoutMs: string; codexCommand: string }
+  ) => {
     try {
-      const result = await runDryRun({
-        cwd: process.cwd(),
-        evalFile,
-        caseId: options.case,
-        command: process.argv.slice(2),
-        skillarenaVersion: VERSION
-      });
+      const timeoutMs = parsePositiveInteger(options.timeoutMs, "--timeout-ms");
 
-      console.log("SkillArena dry run");
-      console.log(`Project: ${result.project.root}`);
-      console.log(`Agent: ${result.project.config.agent}`);
+      const result = options.dryRun
+        ? await runDryRun({
+            cwd: process.cwd(),
+            evalFile,
+            caseId: options.case,
+            command: process.argv.slice(2),
+            skillarenaVersion: VERSION
+          })
+        : await runEvals({
+            cwd: process.cwd(),
+            evalFile,
+            caseId: options.case,
+            command: process.argv.slice(2),
+            skillarenaVersion: VERSION,
+            timeoutMs,
+            codexCommand: options.codexCommand
+          });
+
+      console.log(options.dryRun ? "SkillArena dry run" : "SkillArena run");
       console.log(`Suites: ${result.suites.length}`);
       console.log(`Cases: ${result.totalCases}`);
       console.log(`Run: ${result.runStore.runDir}`);
@@ -85,6 +95,7 @@ program
       }
 
       console.log(`\nReport: ${result.runStore.reportMarkdownPath}`);
+      process.exitCode = result.report.summary.failed > 0 || result.report.summary.blocked > 0 ? 1 : 0;
     } catch (error) {
       console.error(formatUnknownError(error));
       process.exitCode = 1;
@@ -101,3 +112,13 @@ program
   });
 
 program.parse();
+
+function parsePositiveInteger(value: string, flagName: string): number {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${flagName} must be a positive integer.`);
+  }
+
+  return parsed;
+}

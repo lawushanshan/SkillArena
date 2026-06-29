@@ -1,16 +1,10 @@
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-
-import { SkillArenaError } from "../errors.js";
-import { loadEvalSuite } from "../eval/load-eval-suite.js";
-import type { EvalCase, EvalSuite } from "../eval/eval-schema.js";
 import { collectRunMetadata } from "../metadata/metadata.js";
-import { listEvalFiles } from "../project/list-eval-files.js";
 import { loadProject, type SkillArenaProject } from "../project/project.js";
 import { createDryRunReport } from "../report/create-dry-run-report.js";
 import type { SkillArenaReport } from "../report/report-schema.js";
 import { writeReport } from "../report/write-report.js";
 import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
+import { createRunPlan, type LoadedEvalSuite } from "./run-plan.js";
 import { createRunStore, type RunStore } from "./run-store.js";
 
 export interface DryRunOptions {
@@ -19,13 +13,6 @@ export interface DryRunOptions {
   caseId?: string;
   command?: string[];
   skillarenaVersion: string;
-}
-
-export interface LoadedEvalSuite {
-  path: string;
-  suite: EvalSuite;
-  selectedCases: EvalCase[];
-  selectedCaseCount: number;
 }
 
 export interface DryRunResult {
@@ -40,40 +27,7 @@ export interface DryRunResult {
 
 export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
   const startedAt = new Date();
-  const project = await loadProject(options.cwd);
-  const evalFiles = await resolveEvalFiles(project, options);
-  const suites: LoadedEvalSuite[] = [];
-  const warnings: string[] = [];
-  let totalCases = 0;
-
-  if (evalFiles.length === 0) {
-    throw new SkillArenaError(`No eval files found in ${project.evalsDir}`);
-  }
-
-  for (const evalPath of evalFiles) {
-    const suite = await loadEvalSuite(evalPath);
-    const selectedCases = options.caseId
-      ? suite.cases.filter((testCase) => testCase.id === options.caseId)
-      : suite.cases;
-
-    if (options.caseId && selectedCases.length === 0) {
-      continue;
-    }
-
-    validateReferences(project, suite, warnings);
-
-    suites.push({
-      path: evalPath,
-      suite,
-      selectedCases,
-      selectedCaseCount: selectedCases.length
-    });
-    totalCases += selectedCases.length;
-  }
-
-  if (options.caseId && totalCases === 0) {
-    throw new SkillArenaError(`No eval case found with id: ${options.caseId}`);
-  }
+  const { project, suites, totalCases, warnings } = await createRunPlan(options);
 
   const runStore = await createRunStore(project);
   const workspaces = await prepareWorkspaces(project, runStore, suites);
@@ -107,44 +61,4 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     totalCases,
     warnings
   };
-}
-
-async function resolveEvalFiles(project: SkillArenaProject, options: DryRunOptions): Promise<string[]> {
-  if (options.evalFile) {
-    return [resolve(options.cwd, options.evalFile)];
-  }
-
-  if (!existsSync(project.evalsDir)) {
-    throw new SkillArenaError(`Eval directory does not exist: ${project.evalsDir}`);
-  }
-
-  return listEvalFiles(project.evalsDir);
-}
-
-function validateReferences(
-  project: SkillArenaProject,
-  suite: EvalSuite,
-  warnings: string[]
-): void {
-  if (suite.skill) {
-    const skillPath = resolve(project.root, suite.skill.path);
-
-    if (!existsSync(skillPath)) {
-      warnings.push(`Skill path does not exist yet: ${suite.skill.path}`);
-    }
-  }
-
-  for (const testCase of suite.cases) {
-    if (!testCase.workspace.fixture) {
-      continue;
-    }
-
-    const fixturePath = resolve(project.root, testCase.workspace.fixture);
-
-    if (!existsSync(fixturePath)) {
-      throw new SkillArenaError(
-        `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
-      );
-    }
-  }
 }
