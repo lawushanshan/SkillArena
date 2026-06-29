@@ -26,7 +26,12 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 - Markdown and JSON reports
 - CI-friendly exit codes
 
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Roadmap](ROADMAP.md)
+- [Contributing](CONTRIBUTING.md)
+
 ## Repository Status
 
 This repository is at the project definition stage. The next step is to implement the Codex runner and a minimal eval format.
-
