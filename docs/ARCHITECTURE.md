@@ -233,6 +233,104 @@ ParsedRun + WorkspaceState + EvalCase -> Grader -> CaseResult
 CaseResult[] -> Reporter -> Report
 ```
 
+## Agent Adapter Boundary
+
+SkillArena v0 is Codex-only, but the core should not depend directly on Codex-specific trace fields.
+
+The adapter boundary is the reserved extension point for future agents such as Claude Code, Gemini CLI, or OpenCode.
+
+```text
+                 +----------------------+
+                 |  SkillArena Core     |
+                 |  runner/grader/report|
+                 +----------+-----------+
+                            |
+                            v
+                 +----------------------+
+                 |  AgentAdapter        |
+                 |  Stable contract     |
+                 +----------+-----------+
+                            |
+        +-------------------+-------------------+
+        |                   |                   |
+        v                   v                   v
++---------------+   +---------------+   +---------------+
+| Codex Adapter |   | Claude Adapter|   | OpenCode      |
+| v0 supported  |   | future        |   | future        |
++---------------+   +---------------+   +---------------+
+```
+
+An adapter should be responsible for agent-specific behavior:
+
+- Building the command line invocation
+- Preparing the agent environment
+- Capturing raw output and process metadata
+- Parsing or routing raw trace events into the normalized model
+- Reporting adapter capabilities
+
+The core runner should only depend on normalized behavior:
+
+- Was a skill or instruction file read?
+- Which commands started and finished?
+- Which files were read, created, or changed?
+- Did the agent produce a final answer?
+- Did the process fail, timeout, or exit successfully?
+
+This keeps the first version focused while preserving a clean path to more agents later.
+
+## Normalized Event Model
+
+Each adapter should translate its native trace format into a small common event model.
+
+Suggested normalized events:
+
+```text
+SkillRead
+CommandStarted
+CommandFinished
+FileRead
+FileChanged
+AssistantMessage
+RunError
+```
+
+The grader should use normalized events rather than raw Codex JSONL fields.
+
+Raw traces still remain available for debugging and adapter-specific reports.
+
+## Capability Flags
+
+Not every agent exposes the same trace detail. Adapters should declare capabilities so eval cases can fail early when they require unsupported checks.
+
+Possible capability flags:
+
+```text
+skill_read_trace
+command_trace
+file_read_trace
+file_change_detection
+token_usage
+cost_usage
+structured_final_output
+```
+
+For example, an eval that asserts `skill_used` should require an adapter with `skill_read_trace`. If a future adapter cannot provide that signal directly, it should either mark the capability unsupported or provide a documented approximation.
+
+## Scripted Skills
+
+SkillArena should not bypass the agent to run scripts embedded in a skill.
+
+For an end-to-end skill eval, the agent must decide whether to follow the skill instructions and run the script. SkillArena observes the trace and grades the result.
+
+This allows SkillArena to catch important failures:
+
+- The agent never selected the skill
+- The agent read the skill but ignored the script instructions
+- The script ran with the wrong arguments
+- The script succeeded but did not improve the task outcome
+
+Direct script contract tests may be added later as a debugging aid, but they should not replace agent-in-the-loop skill evaluation.
+
 ## v0 Non-goals
 
 - Supporting Claude Code, Gemini CLI, OpenCode, or other agents
@@ -250,4 +348,3 @@ CaseResult[] -> Reporter -> Report
 - Every failure should be reproducible locally.
 - Reports should be useful in both terminal and CI.
 - Keep the first architecture boring enough that contributors can extend it quickly.
-
