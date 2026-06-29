@@ -2,12 +2,18 @@
 
 ## v0: Codex Skill Eval Harness
 
+- Choose implementation stack and package manager
+- Define project config and eval schema
+- Define report JSON schema
 - Define eval case format
 - Run prompts with `codex exec --json`
 - Capture JSONL traces and command metadata
+- Capture reproducibility metadata
 - Implement deterministic graders
+- Classify failures
 - Generate Markdown and JSON reports
 - Support CI exit codes
+- Add a minimal example eval project
 
 ## v0.1: A/B Evaluation
 
@@ -33,4 +39,3 @@ Non-goals for the first milestone:
 - General-purpose observability platform
 - Multi-agent framework support
 - Hosted SaaS
-

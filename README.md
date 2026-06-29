@@ -30,6 +30,7 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 
 - [Usage](docs/USAGE.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Product and Architecture Review](docs/PRODUCT-ARCHITECTURE-REVIEW.md)
 - [Product Shape Decision](docs/ADR-0001-product-shape.md)
 - [Roadmap](ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
