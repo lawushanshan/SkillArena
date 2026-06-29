@@ -268,6 +268,20 @@ Reports also include reproducibility metadata such as SkillArena version, Node v
 
 Each case report includes the prepared workspace path. Future Codex execution will use that path as the case working directory.
 
+Render the latest report again:
+
+```powershell
+skillarena report
+```
+
+Render a specific run directory:
+
+```powershell
+skillarena report .skillarena/runs/2026-06-29T120000Z
+```
+
+The command reads `report.json`, rewrites `report.md`, and prints a concise summary. This is useful when inspecting or sharing a saved run without invoking Codex again.
+
 ## CI Usage
 
 SkillArena should exit with:

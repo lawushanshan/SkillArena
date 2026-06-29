@@ -4,6 +4,7 @@ import { Command } from "commander";
 
 import { formatUnknownError } from "../core/errors.js";
 import { initProject } from "../core/init/init-project.js";
+import { renderConsoleReportSummary, runReportCommand } from "../core/report/report-command.js";
 import { runDryRun } from "../core/run/dry-run.js";
 import { runEvals } from "../core/run/run-evals.js";
 
@@ -106,9 +107,22 @@ program
   .command("report")
   .description("Render or inspect a SkillArena run report.")
   .argument("[runDir]", "Run directory under .skillarena/runs")
-  .action(() => {
-    console.log("skillarena report is not implemented yet.");
-    process.exitCode = 1;
+  .option("--no-write-markdown", "Do not rewrite report.md from report.json")
+  .action(async (runDir: string | undefined, options: { writeMarkdown?: boolean }) => {
+    try {
+      const result = await runReportCommand({
+        cwd: process.cwd(),
+        runDir,
+        writeMarkdown: options.writeMarkdown
+      });
+
+      console.log(renderConsoleReportSummary(result));
+      process.exitCode =
+        result.report.summary.failed > 0 || result.report.summary.blocked > 0 ? 1 : 0;
+    } catch (error) {
+      console.error(formatUnknownError(error));
+      process.exitCode = 1;
+    }
   });
 
 program.parse();
