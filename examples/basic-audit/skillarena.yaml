@@ -1,0 +1,10 @@
+schemaVersion: "0.1"
+agent: codex
+paths:
+  evals: evals
+  fixtures: fixtures
+  runs: .skillarena/runs
+skills:
+  - name: code-audit
+    path: .codex/skills/code-audit
+

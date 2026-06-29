@@ -27,13 +27,14 @@ describe("runDryRun", () => {
     const result = await runDryRun({
       cwd: root,
       command: ["run", "--dry-run"],
-      skillarenaVersion: "0.0.0-test"
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
     });
 
     expect(result.project.root).toBe(root);
     expect(result.suites).toHaveLength(1);
     expect(result.totalCases).toBe(1);
-    expect(result.suites[0]?.suite.name).toBe("sample-skill");
+    expect(result.suites[0]?.suite.name).toBe("sample-audit");
     expect(result.workspaces).toHaveLength(1);
     expect(existsSync(join(result.workspaces[0]!.path, "README.md"))).toBe(true);
     expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
@@ -55,9 +56,10 @@ describe("runDryRun", () => {
 
     const result = await runDryRun({
       cwd: root,
-      caseId: "sample-dry-run",
-      command: ["run", "--dry-run", "--case", "sample-dry-run"],
-      skillarenaVersion: "0.0.0-test"
+      caseId: "creates-audit-report",
+      command: ["run", "--dry-run", "--case", "creates-audit-report"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
     });
 
     expect(result.totalCases).toBe(1);
@@ -73,7 +75,8 @@ describe("runDryRun", () => {
         cwd: root,
         caseId: "missing-case",
         command: ["run", "--dry-run"],
-        skillarenaVersion: "0.0.0-test"
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
       })
     ).rejects.toThrow("No eval case found with id: missing-case");
   });
@@ -97,7 +100,8 @@ describe("runDryRun", () => {
       runDryRun({
         cwd: root,
         command: ["run", "--dry-run"],
-        skillarenaVersion: "0.0.0-test"
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
       })
     ).rejects.toThrow("duplicate case id: duplicate");
   });
@@ -116,7 +120,8 @@ describe("runDryRun", () => {
         cwd: root,
         evalFile: "evals/missing-fixture.yaml",
         command: ["run", "--dry-run"],
-        skillarenaVersion: "0.0.0-test"
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
       })
     ).rejects.toThrow("Fixture does not exist for case missing-fixture");
   });

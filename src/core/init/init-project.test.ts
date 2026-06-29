@@ -26,11 +26,17 @@ describe("initProject", () => {
 
     expect(result.created.length).toBeGreaterThan(0);
     expect(existsSync(join(root, "skillarena.yaml"))).toBe(true);
-    expect(existsSync(join(root, "evals", "sample-skill.yaml"))).toBe(true);
+    expect(existsSync(join(root, "evals", "sample-audit.yaml"))).toBe(true);
     expect(existsSync(join(root, "fixtures", "sample-workspace", "README.md"))).toBe(true);
+    expect(existsSync(join(root, "fixtures", "sample-workspace", "package.json"))).toBe(true);
+    expect(existsSync(join(root, "fixtures", "sample-workspace", "src", "app.js"))).toBe(true);
 
     const config = await readFile(join(root, "skillarena.yaml"), "utf8");
     expect(config).toContain('schemaVersion: "0.1"');
+    const evalFile = await readFile(join(root, "evals", "sample-audit.yaml"), "utf8");
+    expect(evalFile).toContain("files_created");
+    expect(evalFile).toContain("files_changed");
+    expect(evalFile).toContain("files_unchanged");
   });
 
   it("does not overwrite existing files", async () => {
@@ -42,10 +48,11 @@ describe("initProject", () => {
     expect(result.skipped).toEqual(
       expect.arrayContaining([
         join(root, "skillarena.yaml"),
-        join(root, "evals", "sample-skill.yaml"),
-        join(root, "fixtures", "sample-workspace", "README.md")
+        join(root, "evals", "sample-audit.yaml"),
+        join(root, "fixtures", "sample-workspace", "README.md"),
+        join(root, "fixtures", "sample-workspace", "package.json"),
+        join(root, "fixtures", "sample-workspace", "src", "app.js")
       ])
     );
   });
 });
-

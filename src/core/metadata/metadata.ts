@@ -42,6 +42,7 @@ export interface CollectMetadataInput {
   startedAt: Date;
   command: string[];
   skillarenaVersion: string;
+  detectCodexVersion?: boolean;
 }
 
 export async function collectRunMetadata(input: CollectMetadataInput): Promise<RunMetadata> {
@@ -60,7 +61,7 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
     nodeVersion: process.version,
     platform: process.platform,
     arch: process.arch,
-    codexVersion: await getCodexVersion(),
+    codexVersion: input.detectCodexVersion === false ? undefined : await getCodexVersion(),
     startedAt: input.startedAt.toISOString(),
     command: input.command,
     projectRoot: input.project.root,
@@ -96,7 +97,7 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
 
 async function getCodexVersion(): Promise<string | undefined> {
   try {
-    const result = await execFileAsync("codex", ["--version"], { timeout: 5000 });
+    const result = await execFileAsync("codex", ["--version"], { timeout: 1000 });
     return result.stdout.trim() || result.stderr.trim() || undefined;
   } catch {
     return undefined;

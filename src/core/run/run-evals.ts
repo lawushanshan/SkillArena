@@ -20,6 +20,7 @@ export interface RunEvalsOptions {
   timeoutMs: number;
   codexCommand?: string;
   codexCommandArgs?: string[];
+  detectCodexVersion?: boolean;
 }
 
 export interface RunEvalsResult {
@@ -42,7 +43,8 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
     suites,
     startedAt,
     command: options.command ?? [],
-    skillarenaVersion: options.skillarenaVersion
+    skillarenaVersion: options.skillarenaVersion,
+    detectCodexVersion: options.detectCodexVersion
   });
   const executions: CaseExecutionResult[] = [];
 

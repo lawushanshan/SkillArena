@@ -13,6 +13,7 @@ export interface DryRunOptions {
   caseId?: string;
   command?: string[];
   skillarenaVersion: string;
+  detectCodexVersion?: boolean;
 }
 
 export interface DryRunResult {
@@ -36,7 +37,8 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     suites,
     startedAt,
     command: options.command ?? [],
-    skillarenaVersion: options.skillarenaVersion
+    skillarenaVersion: options.skillarenaVersion,
+    detectCodexVersion: options.detectCodexVersion
   });
   const finishedAt = new Date();
   const report = createDryRunReport({

@@ -1,0 +1,29 @@
+name: code-audit
+agent: codex
+skill:
+  name: code-audit
+  path: .codex/skills/code-audit
+cases:
+  - id: creates-audit-report
+    prompt: "Review this repository and create audit-report.md. Add a short Audit Notes section to README.md. Do not modify package.json."
+    workspace:
+      fixture: fixtures/security-review
+    expect:
+      commands_succeeded: true
+      files_created:
+        - audit-report.md
+      files_changed:
+        - README.md
+      files_unchanged:
+        - package.json
+
+  - id: does-not-change-package-metadata
+    prompt: "Summarize the package metadata without editing files."
+    workspace:
+      fixture: fixtures/security-review
+    expect:
+      commands_succeeded: true
+      files_unchanged:
+        - package.json
+        - README.md
+

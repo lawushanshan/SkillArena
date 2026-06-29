@@ -53,15 +53,35 @@ skillarena init
 Expected generated files:
 
 ```text
+skillarena.yaml
 evals/
-  skillarena.yaml
-  examples/
-    sample-skill.yaml
+  sample-audit.yaml
+fixtures/
+  sample-workspace/
+    README.md
+    package.json
+    src/app.js
 .skillarena/
   runs/
 ```
 
-The init command should not modify existing skill files.
+The generated eval demonstrates file creation, file changes, and unchanged file assertions. The init command should not modify existing skill files.
+
+## Example Project
+
+The repository includes a complete example at:
+
+```text
+examples/basic-audit/
+```
+
+It contains:
+
+- `skillarena.yaml`
+- `evals/code-audit.yaml`
+- `fixtures/security-review/`
+
+Use it to understand how eval files and fixtures fit together.
 
 ## Write Eval Cases
 

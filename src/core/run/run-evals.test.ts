@@ -24,15 +24,15 @@ describe("runEvals", () => {
     const root = await makeTempDir();
     await initProject(root);
     await writeFile(
-      join(root, "evals", "sample-skill.yaml"),
-      `name: sample-skill\nagent: codex\ncases:\n  - id: sample-dry-run\n    prompt: "Do a task."\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      commands_succeeded: true\n      files_created:\n        - audit-report.md\n      files_changed:\n        - README.md\n      files_unchanged:\n        - untouched.txt\n`,
+      join(root, "evals", "sample-audit.yaml"),
+      `name: sample-audit\nagent: codex\ncases:\n  - id: creates-audit-report\n    prompt: "Do a task."\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      commands_succeeded: true\n      files_created:\n        - audit-report.md\n      files_changed:\n        - README.md\n      files_unchanged:\n        - untouched.txt\n`,
       "utf8"
     );
     await writeFile(join(root, "fixtures", "sample-workspace", "untouched.txt"), "same\n", "utf8");
     const fakeCodex = await createFakeCodex(root, {
       exitCode: 0,
       stdout: [
-        JSON.stringify({ type: "file_read", path: ".codex/skills/sample-skill/SKILL.md" }),
+        JSON.stringify({ type: "file_read", path: ".codex/skills/sample-audit/SKILL.md" }),
         JSON.stringify({ type: "exec_command_begin", command: "echo ok" }),
         JSON.stringify({ type: "exec_command_end", command: "echo ok", exit_code: 0 })
       ].join("\n"),
@@ -49,7 +49,8 @@ describe("runEvals", () => {
       skillarenaVersion: "0.0.0-test",
       timeoutMs: 5000,
       codexCommand: process.execPath,
-      codexCommandArgs: [fakeCodex]
+      codexCommandArgs: [fakeCodex],
+      detectCodexVersion: false
     });
 
     expect(result.totalCases).toBe(1);
@@ -93,7 +94,8 @@ describe("runEvals", () => {
       skillarenaVersion: "0.0.0-test",
       timeoutMs: 5000,
       codexCommand: process.execPath,
-      codexCommandArgs: [fakeCodex]
+      codexCommandArgs: [fakeCodex],
+      detectCodexVersion: false
     });
 
     expect(result.report.summary.failed).toBe(1);

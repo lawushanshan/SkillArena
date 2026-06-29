@@ -14,29 +14,48 @@ paths:
   fixtures: fixtures
   runs: .skillarena/runs
 skills:
-  - name: sample-skill
-    path: .codex/skills/sample-skill
+  - name: sample-audit
+    path: .codex/skills/sample-audit
 `;
 
-const EVAL_TEMPLATE = `name: sample-skill
+const EVAL_TEMPLATE = `name: sample-audit
 agent: codex
 skill:
-  name: sample-skill
-  path: .codex/skills/sample-skill
+  name: sample-audit
+  path: .codex/skills/sample-audit
 cases:
-  - id: sample-dry-run
-    prompt: "Summarize README.md and mention the project name."
+  - id: creates-audit-report
+    prompt: "Review this small project, create audit-report.md, add an Audit Notes section to README.md, and leave package.json unchanged."
     workspace:
       fixture: fixtures/sample-workspace
     expect:
       commands_succeeded: true
-      files_unchanged:
+      files_created:
+        - audit-report.md
+      files_changed:
         - README.md
+      files_unchanged:
+        - package.json
 `;
 
 const FIXTURE_README = `# Sample Workspace
 
-This fixture is used by SkillArena's generated sample eval.
+This fixture is used by SkillArena's generated sample audit eval.
+`;
+
+const FIXTURE_PACKAGE_JSON = `{
+  "name": "sample-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node src/app.js"
+  }
+}
+`;
+
+const FIXTURE_APP_JS = `const secret = process.env.SAMPLE_TOKEN || "development-token";
+
+console.log("sample workspace", secret.length);
 `;
 
 export async function initProject(rootDir: string): Promise<InitProjectResult> {
@@ -45,13 +64,26 @@ export async function initProject(rootDir: string): Promise<InitProjectResult> {
 
   await ensureDir(resolve(rootDir, "evals"), created);
   await ensureDir(resolve(rootDir, "fixtures", "sample-workspace"), created);
+  await ensureDir(resolve(rootDir, "fixtures", "sample-workspace", "src"), created);
   await ensureDir(resolve(rootDir, ".skillarena", "runs"), created);
 
   await writeIfMissing(resolve(rootDir, "skillarena.yaml"), CONFIG_TEMPLATE, created, skipped);
-  await writeIfMissing(resolve(rootDir, "evals", "sample-skill.yaml"), EVAL_TEMPLATE, created, skipped);
+  await writeIfMissing(resolve(rootDir, "evals", "sample-audit.yaml"), EVAL_TEMPLATE, created, skipped);
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "README.md"),
     FIXTURE_README,
+    created,
+    skipped
+  );
+  await writeIfMissing(
+    resolve(rootDir, "fixtures", "sample-workspace", "package.json"),
+    FIXTURE_PACKAGE_JSON,
+    created,
+    skipped
+  );
+  await writeIfMissing(
+    resolve(rootDir, "fixtures", "sample-workspace", "src", "app.js"),
+    FIXTURE_APP_JS,
     created,
     skipped
   );
@@ -83,4 +115,3 @@ async function writeIfMissing(
   await writeFile(path, content, "utf8");
   created.push(path);
 }
-

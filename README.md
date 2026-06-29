@@ -46,9 +46,13 @@ skillarena run
 
 Developers write eval cases in YAML, run them against Codex with `codex exec --json`, and inspect Markdown or JSON reports under `.skillarena/runs/`.
 
+## Examples
+
+- [Basic Audit Example](examples/basic-audit/README.md)
+
 ## Repository Status
 
-This repository has a TypeScript CLI with project initialization, eval schema dry-run validation, per-case workspaces, minimal Codex execution, and JSON/Markdown reports. The next step is to parse Codex JSONL traces and implement deterministic skill graders.
+This repository has a TypeScript CLI with project initialization, eval schema dry-run validation, per-case workspaces, Codex execution, normalized trace parsing, deterministic graders, workspace diff checks, and JSON/Markdown reports.
 
 ## Development
 
