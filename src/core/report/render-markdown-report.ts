@@ -45,6 +45,9 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
       lines.push(`#### ${testCase.id}`);
       lines.push("");
       lines.push(`- Status: ${testCase.status}`);
+      if (testCase.workspace) {
+        lines.push(`- Workspace: ${testCase.workspace.path}`);
+      }
       lines.push("");
 
       for (const check of testCase.checks) {
@@ -65,4 +68,3 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
 
   return `${lines.join("\n")}\n`;
 }
-

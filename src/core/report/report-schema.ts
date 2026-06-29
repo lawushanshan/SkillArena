@@ -24,6 +24,10 @@ export interface ReportCase {
   id: string;
   prompt: string;
   status: CaseStatus;
+  workspace?: {
+    path: string;
+    fixture?: string;
+  };
   checks: ReportCheck[];
 }
 
@@ -57,4 +61,3 @@ export interface SkillArenaReport {
   suites: ReportSuite[];
   warnings: string[];
 }
-

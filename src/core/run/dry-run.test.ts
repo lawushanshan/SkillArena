@@ -34,15 +34,19 @@ describe("runDryRun", () => {
     expect(result.suites).toHaveLength(1);
     expect(result.totalCases).toBe(1);
     expect(result.suites[0]?.suite.name).toBe("sample-skill");
+    expect(result.workspaces).toHaveLength(1);
+    expect(existsSync(join(result.workspaces[0]!.path, "README.md"))).toBe(true);
     expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
     expect(existsSync(result.runStore.reportMarkdownPath)).toBe(true);
 
     const reportJson = JSON.parse(await readFile(result.runStore.reportJsonPath, "utf8")) as {
       schemaVersion: string;
       summary: { cases: number };
+      suites: Array<{ cases: Array<{ workspace?: { path: string; fixture?: string } }> }>;
     };
     expect(reportJson.schemaVersion).toBe("0.1");
     expect(reportJson.summary.cases).toBe(1);
+    expect(reportJson.suites[0]?.cases[0]?.workspace?.fixture).toBe("fixtures/sample-workspace");
   });
 
   it("filters by case id", async () => {

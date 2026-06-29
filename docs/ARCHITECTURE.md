@@ -60,13 +60,14 @@ The v0 architecture is intentionally small. It should answer one question well:
 
 1. A developer writes eval cases in `evals/*.yaml`.
 2. The CLI loads the eval suite and creates an isolated run directory.
-3. The Codex adapter executes each prompt with `codex exec --json`.
-4. Raw JSONL output is stored without modification.
-5. The trace parser converts Codex events into SkillArena's internal event model.
-6. The workspace inspector records file changes, command results, and exit status.
-7. The grader engine evaluates deterministic assertions.
-8. Reporters generate human-readable and machine-readable results.
-9. CI exits non-zero when required checks fail.
+3. SkillArena copies each case fixture into a per-case workspace.
+4. The Codex adapter executes each prompt with `codex exec --json` from the prepared workspace.
+5. Raw JSONL output is stored without modification.
+6. The trace parser converts Codex events into SkillArena's internal event model.
+7. The workspace inspector records file changes, command results, and exit status.
+8. The grader engine evaluates deterministic assertions.
+9. Reporters generate human-readable and machine-readable results.
+10. CI exits non-zero when required checks fail.
 
 ## Major Components
 
@@ -136,6 +137,9 @@ Suggested output shape:
 .skillarena/
   runs/
     2026-06-29T120000Z/
+      workspaces/
+        suite-name/
+          case-id/
       raw/
         case-id.jsonl
       parsed/

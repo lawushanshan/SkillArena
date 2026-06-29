@@ -10,6 +10,7 @@ import { loadProject, type SkillArenaProject } from "../project/project.js";
 import { createDryRunReport } from "../report/create-dry-run-report.js";
 import type { SkillArenaReport } from "../report/report-schema.js";
 import { writeReport } from "../report/write-report.js";
+import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
 import { createRunStore, type RunStore } from "./run-store.js";
 
 export interface DryRunOptions {
@@ -31,6 +32,7 @@ export interface DryRunResult {
   project: SkillArenaProject;
   runStore: RunStore;
   report: SkillArenaReport;
+  workspaces: PreparedWorkspace[];
   suites: LoadedEvalSuite[];
   totalCases: number;
   warnings: string[];
@@ -74,6 +76,7 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
   }
 
   const runStore = await createRunStore(project);
+  const workspaces = await prepareWorkspaces(project, runStore, suites);
   const metadata = await collectRunMetadata({
     project,
     suites,
@@ -89,6 +92,7 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     finishedAt,
     metadata,
     suites,
+    workspaces,
     warnings
   });
 
@@ -98,6 +102,7 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     project,
     runStore,
     report,
+    workspaces,
     suites,
     totalCases,
     warnings

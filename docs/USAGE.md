@@ -107,7 +107,7 @@ The first eval format should support:
 
 ## Run Evals
 
-The current implementation supports dry-run validation. Dry-run mode loads project config, validates eval YAML, checks fixture references, records run metadata, and writes reports without invoking Codex.
+The current implementation supports dry-run validation. Dry-run mode loads project config, validates eval YAML, copies fixtures into per-case workspaces, records run metadata, and writes reports without invoking Codex.
 
 Run all evals:
 
@@ -199,6 +199,9 @@ Each run should produce a directory like:
 .skillarena/
   runs/
     2026-06-29T120000Z/
+      workspaces/
+        markdown-skill/
+          creates-table-of-contents/
       raw/
         creates-table-of-contents.jsonl
       parsed/
@@ -222,6 +225,8 @@ The JSON report starts with:
 ```
 
 Reports also include reproducibility metadata such as SkillArena version, Node version, platform, config hash, eval file hashes, fixture hashes, and Codex version when detected.
+
+Each case report includes the prepared workspace path. Future Codex execution will use that path as the case working directory.
 
 ## CI Usage
 
