@@ -23,12 +23,23 @@ describe("runEvals", () => {
   it("runs fake Codex against prepared workspaces and writes a run report", async () => {
     const root = await makeTempDir();
     await initProject(root);
+    await writeFile(
+      join(root, "evals", "sample-skill.yaml"),
+      `name: sample-skill\nagent: codex\ncases:\n  - id: sample-dry-run\n    prompt: "Do a task."\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      commands_succeeded: true\n      files_created:\n        - audit-report.md\n      files_changed:\n        - README.md\n      files_unchanged:\n        - untouched.txt\n`,
+      "utf8"
+    );
+    await writeFile(join(root, "fixtures", "sample-workspace", "untouched.txt"), "same\n", "utf8");
     const fakeCodex = await createFakeCodex(root, {
       exitCode: 0,
       stdout: [
         JSON.stringify({ type: "file_read", path: ".codex/skills/sample-skill/SKILL.md" }),
         JSON.stringify({ type: "exec_command_begin", command: "echo ok" }),
         JSON.stringify({ type: "exec_command_end", command: "echo ok", exit_code: 0 })
+      ].join("\n"),
+      script: [
+        "const fs = require('node:fs');",
+        "fs.appendFileSync('README.md', '\\nupdated\\n');",
+        "fs.writeFileSync('audit-report.md', 'report\\n');"
       ].join("\n")
     });
 
@@ -60,7 +71,10 @@ describe("runEvals", () => {
     expect(reportJson.suites[0]?.cases[0]?.checks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "parsed-trace", status: "pass" }),
-        expect.objectContaining({ name: "expect.commands_succeeded", status: "pass" })
+        expect.objectContaining({ name: "expect.commands_succeeded", status: "pass" }),
+        expect.objectContaining({ name: "expect.files_created", status: "pass" }),
+        expect.objectContaining({ name: "expect.files_changed", status: "pass" }),
+        expect.objectContaining({ name: "expect.files_unchanged", status: "pass" })
       ])
     );
   });
@@ -89,12 +103,13 @@ describe("runEvals", () => {
 
 async function createFakeCodex(
   root: string,
-  options: { exitCode: number; stdout: string }
+  options: { exitCode: number; stdout: string; script?: string }
 ): Promise<string> {
   const scriptPath = join(root, "fake-codex.js");
   await writeFile(
     scriptPath,
     `if (process.argv[2] !== "exec") process.exit(2);\n` +
+      `${options.script ?? ""}\n` +
       `if (${JSON.stringify(options.stdout)}.length > 0) console.log(${JSON.stringify(options.stdout)});\n` +
       `process.exit(${options.exitCode});\n`,
     "utf8"

@@ -2,11 +2,13 @@ import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
 import type { EvalCase } from "../eval/eval-schema.js";
 import type { ReportCheck } from "../report/report-schema.js";
 import type { ParsedTrace } from "../trace/normalized-events.js";
+import type { WorkspaceDiff } from "../workspace/workspace-snapshot.js";
 
 export interface GradeCaseInput {
   testCase: EvalCase;
   codex: CodexExecResult;
   parsedTrace?: ParsedTrace;
+  workspaceDiff?: WorkspaceDiff;
 }
 
 export function gradeDeterministicExpectations(input: GradeCaseInput): ReportCheck[] {
@@ -95,7 +97,45 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
     });
   }
 
+  checks.push(...gradeFileList("expect.files_created", expect.files_created, input.workspaceDiff?.created));
+  checks.push(...gradeFileList("expect.files_changed", expect.files_changed, input.workspaceDiff?.changed));
+  checks.push(
+    ...gradeFileList("expect.files_unchanged", expect.files_unchanged, input.workspaceDiff?.unchanged)
+  );
+
   return checks;
+}
+
+function gradeFileList(name: string, expectedPaths: string[], actualPaths: string[] | undefined): ReportCheck[] {
+  if (expectedPaths.length === 0) {
+    return [];
+  }
+
+  if (!actualPaths) {
+    return [
+      {
+        name,
+        status: "fail",
+        message: "Workspace diff is not available.",
+        category: "artifact_mismatch"
+      }
+    ];
+  }
+
+  const actualSet = new Set(actualPaths.map(normalizePath));
+  const missing = expectedPaths.filter((path) => !actualSet.has(normalizePath(path)));
+
+  return [
+    {
+      name,
+      status: missing.length === 0 ? "pass" : "fail",
+      message:
+        missing.length === 0
+          ? `Matched ${expectedPaths.length} expected path(s).`
+          : `Missing expected path(s): ${missing.join(", ")}`,
+      category: missing.length === 0 ? undefined : "artifact_mismatch"
+    }
+  ];
 }
 
 function getSkillReadEvents(parsedTrace: ParsedTrace | undefined) {
@@ -117,4 +157,8 @@ function matchesSkill(skillName: string | undefined, path: string | undefined, e
       path?.toLowerCase().includes(`/${normalizedExpected}/skill.md`) ||
       path?.toLowerCase().includes(`\\${normalizedExpected}\\skill.md`)
   );
+}
+
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, "/");
 }

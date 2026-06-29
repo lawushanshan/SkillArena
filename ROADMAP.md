@@ -11,7 +11,6 @@
 - Capture reproducibility metadata
 - Implement deterministic graders
 - Parse normalized events from Codex JSONL traces
-- Add workspace diff graders for created, changed, and unchanged files
 - Classify failures
 - Generate Markdown and JSON reports
 - Support CI exit codes

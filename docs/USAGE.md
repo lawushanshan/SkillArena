@@ -160,8 +160,9 @@ The current Codex execution path grades process-level results and the first dete
 - `expect.commands`
 - `expect.commands_succeeded`
 - `expect.exit_code`
-
-Workspace diff checks such as `files_created` and `files_changed` are still pending.
+- `expect.files_created`
+- `expect.files_changed`
+- `expect.files_unchanged`
 
 ## Evaluate Scripted Skills
 

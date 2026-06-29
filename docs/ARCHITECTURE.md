@@ -196,7 +196,7 @@ v0 should prioritize deterministic checks:
 - Did expected commands run?
 - Did disallowed commands avoid running?
 
-The first implemented deterministic checks use normalized trace events for `skill_used`, `skill_not_used`, `commands`, `commands_succeeded`, and `exit_code`. Workspace diff checks are still pending.
+The first implemented deterministic checks use normalized trace events for `skill_used`, `skill_not_used`, `commands`, `commands_succeeded`, and `exit_code`. Workspace snapshots provide `files_created`, `files_changed`, and `files_unchanged` checks.
 
 LLM-based judging can be added later, but it should not be required for the first reliable version.
 

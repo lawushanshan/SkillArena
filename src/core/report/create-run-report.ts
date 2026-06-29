@@ -4,6 +4,7 @@ import type { RunMetadata } from "../metadata/metadata.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { ParsedTrace } from "../trace/normalized-events.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";
+import type { WorkspaceDiff } from "../workspace/workspace-snapshot.js";
 import type { ReportCase, ReportCheck, ReportSuite, SkillArenaReport } from "./report-schema.js";
 
 export interface CaseExecutionResult {
@@ -12,6 +13,7 @@ export interface CaseExecutionResult {
   codex: CodexExecResult;
   parsedTracePath?: string;
   parsedTrace?: ParsedTrace;
+  workspaceDiff?: WorkspaceDiff;
 }
 
 export interface CreateRunReportInput {
@@ -51,7 +53,8 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
           ? gradeDeterministicExpectations({
               testCase,
               codex: execution.codex,
-              parsedTrace: execution.parsedTrace
+              parsedTrace: execution.parsedTrace,
+              workspaceDiff: execution.workspaceDiff
             })
           : [])
       ];

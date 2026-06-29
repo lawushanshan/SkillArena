@@ -6,6 +6,7 @@ import { writeReport } from "../report/write-report.js";
 import { parseCodexJsonlTrace } from "../trace/codex-jsonl-parser.js";
 import { writeParsedTrace } from "../trace/write-parsed-trace.js";
 import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
+import { diffWorkspaceSnapshots, snapshotWorkspace } from "../workspace/workspace-snapshot.js";
 import { createParsedTracePath, createRawTracePath, createStderrPath } from "./case-artifacts.js";
 import { createRunPlan, type LoadedEvalSuite } from "./run-plan.js";
 import { createRunStore, type RunStore } from "./run-store.js";
@@ -56,6 +57,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         continue;
       }
 
+      const beforeSnapshot = await snapshotWorkspace(workspace.path);
       const codex = await runCodexExec({
         prompt: testCase.prompt,
         cwd: workspace.path,
@@ -65,6 +67,8 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         codexCommand: options.codexCommand,
         codexCommandArgs: options.codexCommandArgs
       });
+      const afterSnapshot = await snapshotWorkspace(workspace.path);
+      const workspaceDiff = diffWorkspaceSnapshots(beforeSnapshot, afterSnapshot);
       const parsedTrace = await parseCodexJsonlTrace(codex.rawOutputPath);
       const parsedTracePath = createParsedTracePath(runStore, loadedSuite.suite.name, testCase.id);
       await writeParsedTrace(parsedTracePath, parsedTrace);
@@ -74,7 +78,8 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         caseId: testCase.id,
         codex,
         parsedTracePath,
-        parsedTrace
+        parsedTrace,
+        workspaceDiff
       });
     }
   }
