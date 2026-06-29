@@ -30,12 +30,13 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 
 - [Usage](docs/USAGE.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Product Shape Decision](docs/ADR-0001-product-shape.md)
 - [Roadmap](ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
 
 ## Target Usage
 
-SkillArena is designed to be used from the command line:
+SkillArena v0 is designed as a standalone command-line tool:
 
 ```powershell
 skillarena init

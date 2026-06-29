@@ -26,7 +26,7 @@ SkillArena is for developers who maintain Codex skills and want to answer:
 
 ## Installation
 
-The package format is not decided yet. The target experience should be one command.
+SkillArena v0 is intended to be a standalone CLI package. The exact package ecosystem is not decided yet, but the target experience should be one command.
 
 Possible future install commands:
 
@@ -269,4 +269,3 @@ The v0 local sandbox should provide:
 - Optional workspace preservation for failed cases
 
 It is not a security sandbox for untrusted code. Container or VM isolation can be added later.
-
