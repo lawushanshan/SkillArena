@@ -8,7 +8,7 @@ import type { SkillArenaProject } from "../project/project.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunStore } from "../run/run-store.js";
 import { prepareWorkspaces } from "./prepare-workspaces.js";
-import { sanitizePathSegment } from "./sanitize-path-segment.js";
+import { createStablePathSegment, sanitizePathSegment } from "./sanitize-path-segment.js";
 
 const tempDirs: string[] = [];
 
@@ -57,12 +57,39 @@ describe("prepareWorkspaces", () => {
       )
     ).rejects.toThrow("Fixture path must resolve inside the configured fixtures directory");
   });
+
+  it("keeps workspaces separate when sanitized suite names collide", async () => {
+    const root = await makeTempDir();
+    const fixtureDir = join(root, "fixtures", "basic");
+    const workspacesDir = join(root, ".skillarena", "runs", "run-1", "workspaces");
+    await mkdir(fixtureDir, { recursive: true });
+    await mkdir(workspacesDir, { recursive: true });
+    await writeFile(join(fixtureDir, "README.md"), "# Fixture\n", "utf8");
+
+    const workspaces = await prepareWorkspaces(
+      createProject(root),
+      createRunStore(root, workspacesDir),
+      [
+        ...createSuites("suite/name", "case-1", "fixtures/basic"),
+        ...createSuites("suite-name", "case-1", "fixtures/basic")
+      ]
+    );
+
+    expect(workspaces).toHaveLength(2);
+    expect(workspaces[0]!.path).not.toBe(workspaces[1]!.path);
+  });
 });
 
 describe("sanitizePathSegment", () => {
   it("keeps workspace paths filesystem-friendly", () => {
     expect(sanitizePathSegment("suite/name with spaces")).toBe("suite-name-with-spaces");
     expect(sanitizePathSegment("")).toBe("unnamed");
+  });
+
+  it("adds a stable hash suffix to avoid path collisions", () => {
+    expect(createStablePathSegment("suite/name")).toBe(createStablePathSegment("suite/name"));
+    expect(createStablePathSegment("suite/name")).not.toBe(createStablePathSegment("suite-name"));
+    expect(createStablePathSegment("suite/name")).toMatch(/^suite-name-[a-f0-9]{8}$/);
   });
 });
 

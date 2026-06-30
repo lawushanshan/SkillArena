@@ -8,7 +8,7 @@ import { resolveFixturePath } from "../project/path-safety.js";
 import type { SkillArenaProject } from "../project/project.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunStore } from "../run/run-store.js";
-import { sanitizePathSegment } from "./sanitize-path-segment.js";
+import { createStablePathSegment } from "./sanitize-path-segment.js";
 
 export interface PreparedWorkspace {
   suiteName: string;
@@ -41,8 +41,8 @@ async function prepareCaseWorkspace(
 ): Promise<PreparedWorkspace> {
   const workspacePath = resolve(
     runStore.workspacesDir,
-    sanitizePathSegment(suiteName),
-    sanitizePathSegment(testCase.id)
+    createStablePathSegment(suiteName),
+    createStablePathSegment(testCase.id)
   );
 
   await mkdir(workspacePath, { recursive: true });
