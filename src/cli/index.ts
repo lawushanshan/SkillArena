@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { formatUnknownError } from "../core/errors.js";
 import { initProject } from "../core/init/init-project.js";
 import { renderConsoleReportSummary, runReportCommand } from "../core/report/report-command.js";
+import type { SkillArenaReport } from "../core/report/report-schema.js";
 import { runDryRun } from "../core/run/dry-run.js";
 import { runEvals } from "../core/run/run-evals.js";
 
@@ -50,6 +51,7 @@ program
   .argument("[evalFile]", "Eval YAML file to run")
   .option("--case <caseId>", "Run a single eval case")
   .option("--max-cases <count>", "Limit the number of selected eval cases to run")
+  .option("--fail-fast", "Stop after the first failed eval case.")
   .option("--dry-run", "Load and validate evals without invoking Codex.")
   .option("--timeout-ms <ms>", "Per-case Codex execution timeout in milliseconds", "300000")
   .option("--codex-command <command>", "Codex command to execute", "codex")
@@ -58,6 +60,7 @@ program
     options: {
       case?: string;
       maxCases?: string;
+      failFast?: boolean;
       dryRun?: boolean;
       timeoutMs: string;
       codexCommand: string;
@@ -87,6 +90,7 @@ program
             command: process.argv.slice(2),
             skillarenaVersion: VERSION,
             timeoutMs,
+            failFast: options.failFast,
             codexCommand: options.codexCommand
           });
 
@@ -95,10 +99,10 @@ program
       console.log(`Cases: ${result.totalCases}`);
       console.log(`Run: ${result.runStore.runDir}`);
 
-      for (const loadedSuite of result.suites) {
-        console.log(`\nPASS ${loadedSuite.suite.name}`);
-        console.log(`  File: ${loadedSuite.path}`);
-        console.log(`  Cases: ${loadedSuite.selectedCaseCount}`);
+      for (const suite of result.report.suites) {
+        console.log(`\n${formatStatus(suite.status)} ${suite.name}`);
+        console.log(`  File: ${suite.path}`);
+        console.log(`  Cases: ${suite.cases.length}`);
       }
 
       if (result.warnings.length > 0) {
@@ -148,4 +152,8 @@ function parsePositiveInteger(value: string, flagName: string): number {
   }
 
   return parsed;
+}
+
+function formatStatus(status: SkillArenaReport["suites"][number]["status"]): string {
+  return status.toUpperCase();
 }

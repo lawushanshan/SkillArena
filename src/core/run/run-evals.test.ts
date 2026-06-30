@@ -115,6 +115,42 @@ describe("runEvals", () => {
     expect(result.report.summary.failed).toBe(1);
     expect(result.report.suites[0]?.cases[0]?.checks[0]?.category).toBe("adapter_error");
   });
+
+  it("stops after the first failed case when failFast is enabled", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "evals", "sample-audit.yaml"),
+      `name: sample-audit\nagent: codex\ncases:\n  - id: first-case\n    prompt: "first prompt"\n    workspace:\n      fixture: fixtures/sample-workspace\n  - id: second-case\n    prompt: "second prompt"\n    workspace:\n      fixture: fixtures/sample-workspace\n`,
+      "utf8"
+    );
+    const fakeCodex = await createFakeCodex(root, {
+      exitCode: 0,
+      stdout: "",
+      script: "if (process.argv.includes('first prompt')) process.exit(9);"
+    });
+
+    const result = await runEvals({
+      cwd: root,
+      command: ["run", "--fail-fast"],
+      skillarenaVersion: "0.0.0-test",
+      timeoutMs: 5000,
+      failFast: true,
+      codexCommand: process.execPath,
+      codexCommandArgs: [fakeCodex],
+      detectCodexVersion: false
+    });
+
+    expect(result.executions).toHaveLength(1);
+    expect(result.totalCases).toBe(1);
+    expect(result.report.summary.failed).toBe(1);
+    expect(result.report.suites[0]?.cases.map((testCase) => testCase.id)).toEqual(["first-case"]);
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        "Stopped after failed case because --fail-fast is enabled: first-case"
+      ])
+    );
+  });
 });
 
 async function createFakeCodex(
