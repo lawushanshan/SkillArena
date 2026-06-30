@@ -28,6 +28,11 @@ export interface ReportCase {
     path: string;
     fixture?: string;
   };
+  artifacts?: {
+    rawTrace?: string;
+    stderr?: string;
+    parsedTrace?: string;
+  };
   checks: ReportCheck[];
 }
 

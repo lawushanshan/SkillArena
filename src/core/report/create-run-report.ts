@@ -70,6 +70,13 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
               fixture: workspace.fixture
             }
           : undefined,
+        artifacts: execution
+          ? {
+              rawTrace: execution.codex.rawOutputPath,
+              stderr: execution.codex.stderrPath,
+              parsedTrace: execution.parsedTracePath
+            }
+          : undefined,
         checks
       };
     });

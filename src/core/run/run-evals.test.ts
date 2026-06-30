@@ -65,10 +65,24 @@ describe("runEvals", () => {
     const reportJson = JSON.parse(await readFile(result.runStore.reportJsonPath, "utf8")) as {
       mode: string;
       summary: { passed: number };
-      suites: Array<{ cases: Array<{ checks: Array<{ name: string; status: string }> }> }>;
+      suites: Array<{
+        cases: Array<{
+          artifacts?: { rawTrace?: string; stderr?: string; parsedTrace?: string };
+          checks: Array<{ name: string; status: string }>;
+        }>;
+      }>;
     };
     expect(reportJson.mode).toBe("run");
     expect(reportJson.summary.passed).toBe(1);
+    const reportCase = reportJson.suites[0]?.cases[0];
+    expect(reportCase?.artifacts).toEqual({
+      rawTrace: result.executions[0]!.codex.rawOutputPath,
+      stderr: result.executions[0]!.codex.stderrPath,
+      parsedTrace: result.executions[0]!.parsedTracePath
+    });
+    expect(existsSync(reportCase!.artifacts!.rawTrace!)).toBe(true);
+    expect(existsSync(reportCase!.artifacts!.stderr!)).toBe(true);
+    expect(existsSync(reportCase!.artifacts!.parsedTrace!)).toBe(true);
     expect(reportJson.suites[0]?.cases[0]?.checks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "parsed-trace", status: "pass" }),

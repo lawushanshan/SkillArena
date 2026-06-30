@@ -15,6 +15,7 @@ export interface RunEvalsOptions {
   cwd: string;
   evalFile?: string;
   caseId?: string;
+  maxCases?: number;
   command?: string[];
   skillarenaVersion: string;
   timeoutMs: number;

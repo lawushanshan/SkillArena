@@ -87,6 +87,29 @@ describe("runDryRun", () => {
     expect(result.suites[0]?.selectedCases[0]?.id).toBe("selected-case");
   });
 
+  it("limits selected cases with maxCases", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "evals", "sample-audit.yaml"),
+      `name: sample-audit\ncases:\n  - id: first-case\n    prompt: first\n    workspace:\n      fixture: fixtures/sample-workspace\n  - id: second-case\n    prompt: second\n    workspace:\n      fixture: fixtures/sample-workspace\n`,
+      "utf8"
+    );
+
+    const result = await runDryRun({
+      cwd: root,
+      maxCases: 1,
+      command: ["run", "--dry-run", "--max-cases", "1"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
+    });
+
+    expect(result.totalCases).toBe(1);
+    expect(result.workspaces).toHaveLength(1);
+    expect(result.suites[0]?.selectedCases.map((testCase) => testCase.id)).toEqual(["first-case"]);
+    expect(result.report.summary.cases).toBe(1);
+  });
+
   it("fails when the selected case id does not exist", async () => {
     const root = await makeTempDir();
     await initProject(root);
@@ -145,6 +168,44 @@ describe("runDryRun", () => {
         detectCodexVersion: false
       })
     ).rejects.toThrow("Fixture does not exist for case missing-fixture");
+  });
+
+  it("resolves explicit eval files relative to the project root when run from a subdirectory", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await mkdir(join(root, "nested"), { recursive: true });
+
+    const result = await runDryRun({
+      cwd: join(root, "nested"),
+      evalFile: "evals/sample-audit.yaml",
+      command: ["run", "--dry-run", "evals/sample-audit.yaml"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
+    });
+
+    expect(result.project.root).toBe(root);
+    expect(result.totalCases).toBe(1);
+    expect(result.suites[0]?.path).toBe(join(root, "evals", "sample-audit.yaml"));
+  });
+
+  it("rejects explicit eval files outside the configured evals directory", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "outside.yaml"),
+      `name: outside\ncases:\n  - id: outside\n    prompt: test\n`,
+      "utf8"
+    );
+
+    await expect(
+      runDryRun({
+        cwd: root,
+        evalFile: "outside.yaml",
+        command: ["run", "--dry-run", "outside.yaml"],
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
+      })
+    ).rejects.toThrow("Eval file must resolve inside the configured evals directory");
   });
 
   it("rejects fixture paths outside the configured fixtures directory", async () => {

@@ -5,13 +5,14 @@ import { SkillArenaError } from "../errors.js";
 import { loadEvalSuite } from "../eval/load-eval-suite.js";
 import type { EvalCase, EvalSuite } from "../eval/eval-schema.js";
 import { listEvalFiles } from "../project/list-eval-files.js";
-import { resolveFixturePath } from "../project/path-safety.js";
+import { resolveEvalFilePath, resolveFixturePath } from "../project/path-safety.js";
 import { loadProject, type SkillArenaProject } from "../project/project.js";
 
 export interface RunSelectionOptions {
   cwd: string;
   evalFile?: string;
   caseId?: string;
+  maxCases?: number;
 }
 
 export interface LoadedEvalSuite {
@@ -41,12 +42,20 @@ export async function createRunPlan(options: RunSelectionOptions): Promise<RunPl
 
   for (const evalPath of evalFiles) {
     const suite = await loadEvalSuite(evalPath);
-    const selectedCases = options.caseId
+    const candidateCases = options.caseId
       ? suite.cases.filter((testCase) => testCase.id === options.caseId)
       : suite.cases;
+    const remainingCases =
+      options.maxCases === undefined ? undefined : Math.max(options.maxCases - totalCases, 0);
+    const selectedCases =
+      remainingCases === undefined ? candidateCases : candidateCases.slice(0, remainingCases);
 
-    if (options.caseId && selectedCases.length === 0) {
+    if (options.caseId && candidateCases.length === 0) {
       continue;
+    }
+
+    if (selectedCases.length === 0) {
+      break;
     }
 
     validateReferences(project, suite, selectedCases, warnings);
@@ -77,7 +86,7 @@ async function resolveEvalFiles(
   options: RunSelectionOptions
 ): Promise<string[]> {
   if (options.evalFile) {
-    return [resolve(options.cwd, options.evalFile)];
+    return [resolveEvalFilePath(options.cwd, project.root, project.evalsDir, options.evalFile)];
   }
 
   if (!existsSync(project.evalsDir)) {

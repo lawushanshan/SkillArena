@@ -48,6 +48,17 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
       if (testCase.workspace) {
         lines.push(`- Workspace: ${testCase.workspace.path}`);
       }
+      if (testCase.artifacts) {
+        if (testCase.artifacts.rawTrace) {
+          lines.push(`- Raw trace: ${testCase.artifacts.rawTrace}`);
+        }
+        if (testCase.artifacts.parsedTrace) {
+          lines.push(`- Parsed trace: ${testCase.artifacts.parsedTrace}`);
+        }
+        if (testCase.artifacts.stderr) {
+          lines.push(`- Stderr: ${testCase.artifacts.stderr}`);
+        }
+      }
       lines.push("");
 
       for (const check of testCase.checks) {

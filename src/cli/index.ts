@@ -49,21 +49,33 @@ program
   .description("Run SkillArena evals.")
   .argument("[evalFile]", "Eval YAML file to run")
   .option("--case <caseId>", "Run a single eval case")
+  .option("--max-cases <count>", "Limit the number of selected eval cases to run")
   .option("--dry-run", "Load and validate evals without invoking Codex.")
   .option("--timeout-ms <ms>", "Per-case Codex execution timeout in milliseconds", "300000")
   .option("--codex-command <command>", "Codex command to execute", "codex")
   .action(async (
     evalFile: string | undefined,
-    options: { case?: string; dryRun?: boolean; timeoutMs: string; codexCommand: string }
+    options: {
+      case?: string;
+      maxCases?: string;
+      dryRun?: boolean;
+      timeoutMs: string;
+      codexCommand: string;
+    }
   ) => {
     try {
       const timeoutMs = parsePositiveInteger(options.timeoutMs, "--timeout-ms");
+      const maxCases =
+        options.maxCases === undefined
+          ? undefined
+          : parsePositiveInteger(options.maxCases, "--max-cases");
 
       const result = options.dryRun
         ? await runDryRun({
             cwd: process.cwd(),
             evalFile,
             caseId: options.case,
+            maxCases,
             command: process.argv.slice(2),
             skillarenaVersion: VERSION
           })
@@ -71,6 +83,7 @@ program
             cwd: process.cwd(),
             evalFile,
             caseId: options.case,
+            maxCases,
             command: process.argv.slice(2),
             skillarenaVersion: VERSION,
             timeoutMs,
