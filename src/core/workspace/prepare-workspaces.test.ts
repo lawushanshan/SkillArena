@@ -43,6 +43,20 @@ describe("prepareWorkspaces", () => {
       "# Fixture\n"
     );
   });
+
+  it("rejects fixture paths outside the configured fixtures directory", async () => {
+    const root = await makeTempDir();
+    const workspacesDir = join(root, ".skillarena", "runs", "run-1", "workspaces");
+    await mkdir(workspacesDir, { recursive: true });
+
+    await expect(
+      prepareWorkspaces(
+        createProject(root),
+        createRunStore(root, workspacesDir),
+        createSuites("sample suite", "case-1", "../")
+      )
+    ).rejects.toThrow("Fixture path must resolve inside the configured fixtures directory");
+  });
 });
 
 describe("sanitizePathSegment", () => {

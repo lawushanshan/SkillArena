@@ -5,6 +5,7 @@ import { SkillArenaError } from "../errors.js";
 import { loadEvalSuite } from "../eval/load-eval-suite.js";
 import type { EvalCase, EvalSuite } from "../eval/eval-schema.js";
 import { listEvalFiles } from "../project/list-eval-files.js";
+import { resolveFixturePath } from "../project/path-safety.js";
 import { loadProject, type SkillArenaProject } from "../project/project.js";
 
 export interface RunSelectionOptions {
@@ -104,7 +105,11 @@ function validateReferences(
       continue;
     }
 
-    const fixturePath = resolve(project.root, testCase.workspace.fixture);
+    const fixturePath = resolveFixturePath(
+      project.root,
+      project.fixturesDir,
+      testCase.workspace.fixture
+    );
 
     if (!existsSync(fixturePath)) {
       throw new SkillArenaError(
@@ -113,4 +118,3 @@ function validateReferences(
     }
   }
 }
-

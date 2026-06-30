@@ -50,6 +50,27 @@ describe("gradeDeterministicExpectations", () => {
       category: "skill_misfire"
     });
   });
+
+  it("requires a finished command event when command expectations include exit_code", () => {
+    const trace = createParsedTrace();
+    trace.events = trace.events.filter((event) => event.type !== "command_finished");
+
+    const checks = gradeDeterministicExpectations({
+      testCase: createCase({
+        commands: [{ contains: "scripts/audit.js", exit_code: 0 }]
+      }),
+      codex: createCodexResult(0),
+      parsedTrace: trace
+    });
+
+    expect(checks).toEqual([
+      expect.objectContaining({
+        name: "expect.commands[0]",
+        status: "fail",
+        category: "command_failed"
+      })
+    ]);
+  });
 });
 
 function createCase(expect: Partial<CaseExpectation>): EvalCase {

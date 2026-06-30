@@ -72,22 +72,16 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
   }
 
   for (const [index, commandExpectation] of (expect.commands ?? []).entries()) {
-    const commandEvents = [
-      ...getCommandStartedEvents(input.parsedTrace),
-      ...getCommandFinishedEvents(input.parsedTrace)
-    ];
-    const matched = commandEvents.some((event) => {
-      const command = event.command ?? "";
-      const commandMatches = commandExpectation.exact
-        ? command === commandExpectation.exact
-        : command.includes(commandExpectation.contains ?? "");
-      const exitCodeMatches =
-        commandExpectation.exit_code === undefined ||
-        !("exitCode" in event) ||
-        event.exitCode === commandExpectation.exit_code;
-
-      return commandMatches && exitCodeMatches;
-    });
+    const matched =
+      commandExpectation.exit_code === undefined
+        ? [...getCommandStartedEvents(input.parsedTrace), ...getCommandFinishedEvents(input.parsedTrace)].some(
+            (event) => commandMatchesExpectation(event.command, commandExpectation)
+          )
+        : getCommandFinishedEvents(input.parsedTrace).some(
+            (event) =>
+              commandMatchesExpectation(event.command, commandExpectation) &&
+              event.exitCode === commandExpectation.exit_code
+          );
 
     checks.push({
       name: `expect.commands[${index}]`,
@@ -157,6 +151,14 @@ function matchesSkill(skillName: string | undefined, path: string | undefined, e
       path?.toLowerCase().includes(`/${normalizedExpected}/skill.md`) ||
       path?.toLowerCase().includes(`\\${normalizedExpected}\\skill.md`)
   );
+}
+
+function commandMatchesExpectation(
+  command: string | undefined,
+  expectation: { contains?: string; exact?: string }
+): boolean {
+  const value = command ?? "";
+  return expectation.exact ? value === expectation.exact : value.includes(expectation.contains ?? "");
 }
 
 function normalizePath(path: string): string {

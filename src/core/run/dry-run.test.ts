@@ -125,4 +125,24 @@ describe("runDryRun", () => {
       })
     ).rejects.toThrow("Fixture does not exist for case missing-fixture");
   });
+
+  it("rejects fixture paths outside the configured fixtures directory", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "evals", "outside-fixture.yaml"),
+      `name: outside-fixture\ncases:\n  - id: outside-fixture\n    prompt: test\n    workspace:\n      fixture: ../\n`,
+      "utf8"
+    );
+
+    await expect(
+      runDryRun({
+        cwd: root,
+        evalFile: "evals/outside-fixture.yaml",
+        command: ["run", "--dry-run"],
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
+      })
+    ).rejects.toThrow("Fixture path must resolve inside the configured fixtures directory");
+  });
 });

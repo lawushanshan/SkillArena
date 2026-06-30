@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 import type { EvalCase } from "../eval/eval-schema.js";
 import { SkillArenaError } from "../errors.js";
+import { resolveFixturePath } from "../project/path-safety.js";
 import type { SkillArenaProject } from "../project/project.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunStore } from "../run/run-store.js";
@@ -54,7 +55,7 @@ async function prepareCaseWorkspace(
     };
   }
 
-  const fixturePath = resolve(project.root, testCase.workspace.fixture);
+  const fixturePath = resolveFixturePath(project.root, project.fixturesDir, testCase.workspace.fixture);
 
   if (!existsSync(fixturePath)) {
     throw new SkillArenaError(
