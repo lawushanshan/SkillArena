@@ -66,6 +66,27 @@ describe("runDryRun", () => {
     expect(result.suites[0]?.selectedCaseCount).toBe(1);
   });
 
+  it("does not validate fixtures for unselected cases", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "evals", "sample-audit.yaml"),
+      `name: sample-audit\ncases:\n  - id: selected-case\n    prompt: selected\n    workspace:\n      fixture: fixtures/sample-workspace\n  - id: unselected-case\n    prompt: unselected\n    workspace:\n      fixture: fixtures/does-not-exist\n`,
+      "utf8"
+    );
+
+    const result = await runDryRun({
+      cwd: root,
+      caseId: "selected-case",
+      command: ["run", "--dry-run", "--case", "selected-case"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
+    });
+
+    expect(result.totalCases).toBe(1);
+    expect(result.suites[0]?.selectedCases[0]?.id).toBe("selected-case");
+  });
+
   it("fails when the selected case id does not exist", async () => {
     const root = await makeTempDir();
     await initProject(root);

@@ -49,7 +49,7 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
   const fixturePaths = new Set<string>();
 
   for (const loadedSuite of input.suites) {
-    for (const testCase of loadedSuite.suite.cases) {
+    for (const testCase of loadedSuite.selectedCases) {
       if (testCase.workspace.fixture) {
         fixturePaths.add(testCase.workspace.fixture);
       }

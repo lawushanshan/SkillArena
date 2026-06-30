@@ -49,7 +49,7 @@ export async function createRunPlan(options: RunSelectionOptions): Promise<RunPl
       continue;
     }
 
-    validateReferences(project, suite, warnings);
+    validateReferences(project, suite, selectedCases, warnings);
 
     suites.push({
       path: evalPath,
@@ -90,6 +90,7 @@ async function resolveEvalFiles(
 function validateReferences(
   project: SkillArenaProject,
   suite: EvalSuite,
+  selectedCases: EvalCase[],
   warnings: string[]
 ): void {
   if (suite.skill) {
@@ -100,7 +101,7 @@ function validateReferences(
     }
   }
 
-  for (const testCase of suite.cases) {
+  for (const testCase of selectedCases) {
     if (!testCase.workspace.fixture) {
       continue;
     }
