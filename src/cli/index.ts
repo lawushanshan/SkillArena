@@ -2,6 +2,7 @@
 
 import { Command } from "commander";
 
+import { renderCompareSummary, runCompareCommand } from "../core/compare/compare-runs.js";
 import { formatUnknownError } from "../core/errors.js";
 import { initProject } from "../core/init/init-project.js";
 import { renderConsoleReportSummary, runReportCommand } from "../core/report/report-command.js";
@@ -136,6 +137,31 @@ program
       console.log(renderConsoleReportSummary(result));
       process.exitCode =
         result.report.summary.failed > 0 || result.report.summary.blocked > 0 ? 1 : 0;
+    } catch (error) {
+      console.error(formatUnknownError(error));
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command("compare")
+  .description("Compare two SkillArena run reports.")
+  .argument("[baselineRunDir]", "Baseline run directory or run id")
+  .argument("[candidateRunDir]", "Candidate run directory or run id")
+  .option("--json", "Print the comparison as JSON.")
+  .action(async (
+    baselineRunDir: string | undefined,
+    candidateRunDir: string | undefined,
+    options: { json?: boolean }
+  ) => {
+    try {
+      const result = await runCompareCommand({
+        cwd: process.cwd(),
+        baselineRunDir,
+        candidateRunDir
+      });
+
+      console.log(options.json ? JSON.stringify(result, null, 2) : renderCompareSummary(result));
     } catch (error) {
       console.error(formatUnknownError(error));
       process.exitCode = 1;

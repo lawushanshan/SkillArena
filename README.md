@@ -35,6 +35,84 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 - [Roadmap](ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
 
+## Core Concepts FAQ
+
+### What is an eval?
+
+An eval is a repeatable test definition for a Codex skill. It describes a task to give Codex and the observable behavior SkillArena should check afterward.
+
+An eval helps answer questions such as:
+
+- Did Codex select the expected skill?
+- Did Codex avoid the skill when it should not be used?
+- Did Codex run the expected commands?
+- Did the commands succeed?
+- Did the expected files get created, changed, or left unchanged?
+
+### What is an eval case?
+
+An eval case is one executable test case inside an eval suite. You can think of it as a task brief plus acceptance criteria.
+
+For example:
+
+```yaml
+cases:
+  - id: creates-audit-report
+    prompt: "Review this repository and create audit-report.md."
+    workspace:
+      fixture: fixtures/security-review
+    expect:
+      files_created:
+        - audit-report.md
+      commands_succeeded: true
+```
+
+In this case:
+
+- `id` names the case.
+- `prompt` is the task sent to Codex.
+- `workspace.fixture` selects the initial project files for the run.
+- `expect` defines the pass/fail checks.
+
+### What is a fixture?
+
+A fixture is an initial workspace template. It is a directory of prepared files that SkillArena copies before running an eval case.
+
+The original fixture is not modified by Codex. Each run gets a fresh copy, so cases that use the same fixture start from the same file state every time.
+
+Different fixtures can represent different scenarios:
+
+```text
+fixtures/
+  security-review/
+  markdown-doc/
+  broken-node-app/
+```
+
+### What is a workspace?
+
+A workspace is the actual per-case directory where Codex runs.
+
+`workspace` is a SkillArena concept, not a Codex-specific object. SkillArena creates it by copying the selected fixture into the current run directory, then invokes Codex with that directory as the working directory.
+
+The flow is:
+
+```text
+fixture template
+  -> copied into a fresh workspace
+  -> Codex runs the prompt there
+  -> SkillArena compares before/after file state
+  -> report is generated
+```
+
+Run workspaces are created under:
+
+```text
+.skillarena/runs/<run-id>/workspaces/<suite>/<case>/
+```
+
+Each selected eval case gets its own workspace. Even when two cases use the same fixture, SkillArena copies that fixture separately so the cases do not affect each other.
+
 ## Target Usage
 
 SkillArena v0 is designed as a standalone command-line tool:
@@ -42,9 +120,12 @@ SkillArena v0 is designed as a standalone command-line tool:
 ```powershell
 skillarena init
 skillarena run
+skillarena compare
 ```
 
 Developers write eval cases in YAML, run them against Codex with `codex exec --json`, and inspect Markdown or JSON reports under `.skillarena/runs/`.
+
+Use `skillarena compare` to compare the latest two saved run reports during A/B skill iteration. You can also pass two explicit run ids or run directories.
 
 ## Examples
 

@@ -213,23 +213,38 @@ This catches failures that direct script tests cannot catch, such as Codex readi
 
 ## Compare Skill Versions
 
-The target v0.1 workflow is A/B evaluation.
+SkillArena can compare two saved run reports for A/B evaluation.
 
 Example:
 
 ```powershell
-skillarena run evals/markdown-skill.yaml --variant baseline
-skillarena run evals/markdown-skill.yaml --variant candidate
-skillarena compare baseline candidate
+skillarena run evals/markdown-skill.yaml
+skillarena run evals/markdown-skill.yaml
+skillarena compare
 ```
 
-The report should show:
+When no run directories are provided, `compare` uses the latest two runs from the configured runs directory. You can also pass run ids or explicit run directories:
+
+```powershell
+skillarena compare <baseline-run-id> <candidate-run-id>
+skillarena compare .skillarena/runs/<baseline-run-id> .skillarena/runs/<candidate-run-id>
+```
+
+The comparison shows:
 
 - Pass rate change
-- Skill trigger rate change
-- False-positive rate change
+- Passed, failed, and blocked case deltas
+- Case status changes across common suite/case ids
+- Trigger rate from `expect.skill_used`
+- False-positive rate from failed `expect.skill_not_used` checks
+- Concrete improved, regressed, added, and removed case ids
 - Runtime change
-- Token or cost change when available
+
+Print machine-readable comparison data:
+
+```powershell
+skillarena compare --json
+```
 
 ## Reports
 
