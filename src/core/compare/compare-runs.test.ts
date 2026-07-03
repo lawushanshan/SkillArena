@@ -50,6 +50,8 @@ describe("compareReports", () => {
 
     const comparison = compareReports(baseline, candidate);
 
+    expect(comparison.verdict).toBe("mixed");
+    expect(comparison.hasRegression).toBe(true);
     expect(comparison.baseline.passRate).toBeCloseTo(2 / 3);
     expect(comparison.candidate.passRate).toBeCloseTo(3 / 4);
     expect(comparison.baseline.triggerRate).toBe(0);
@@ -97,8 +99,45 @@ describe("compareReports", () => {
       }
     ]);
     expect(renderCompareSummary(comparison)).toContain("Case changes: 1 improved, 1 regressed");
+    expect(renderCompareSummary(comparison)).toContain("Verdict: mixed");
     expect(renderCompareSummary(comparison)).toContain("Trigger rate: 0.0% -> 100.0%");
     expect(renderCompareSummary(comparison)).toContain("suite/improves: fail -> pass");
+  });
+
+  it("marks a pure candidate improvement as improved without regression", () => {
+    const comparison = compareReports(
+      createReport({
+        runId: "baseline",
+        durationMs: 100,
+        cases: [createCase("suite", "case-1", "fail", [])]
+      }),
+      createReport({
+        runId: "candidate",
+        durationMs: 100,
+        cases: [createCase("suite", "case-1", "pass", [])]
+      })
+    );
+
+    expect(comparison.verdict).toBe("improved");
+    expect(comparison.hasRegression).toBe(false);
+  });
+
+  it("marks a pure candidate regression as regressed", () => {
+    const comparison = compareReports(
+      createReport({
+        runId: "baseline",
+        durationMs: 100,
+        cases: [createCase("suite", "case-1", "pass", [])]
+      }),
+      createReport({
+        runId: "candidate",
+        durationMs: 100,
+        cases: [createCase("suite", "case-1", "fail", [])]
+      })
+    );
+
+    expect(comparison.verdict).toBe("regressed");
+    expect(comparison.hasRegression).toBe(true);
   });
 });
 

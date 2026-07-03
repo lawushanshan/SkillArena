@@ -232,6 +232,7 @@ skillarena compare .skillarena/runs/<baseline-run-id> .skillarena/runs/<candidat
 
 The comparison shows:
 
+- Verdict: `improved`, `regressed`, `mixed`, or `unchanged`
 - Pass rate change
 - Passed, failed, and blocked case deltas
 - Case status changes across common suite/case ids
@@ -245,6 +246,14 @@ Print machine-readable comparison data:
 ```powershell
 skillarena compare --json
 ```
+
+Fail the command when the candidate run has a regression:
+
+```powershell
+skillarena compare --fail-on-regression
+```
+
+A regression means at least one negative comparison signal was observed: pass rate decreased, a common case regressed, trigger rate decreased, or false-positive rate increased. `mixed` results also count as regressions for this flag because they contain at least one negative signal.
 
 ## Reports
 

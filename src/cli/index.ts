@@ -149,10 +149,11 @@ program
   .argument("[baselineRunDir]", "Baseline run directory or run id")
   .argument("[candidateRunDir]", "Candidate run directory or run id")
   .option("--json", "Print the comparison as JSON.")
+  .option("--fail-on-regression", "Exit with code 1 when the candidate has regressions.")
   .action(async (
     baselineRunDir: string | undefined,
     candidateRunDir: string | undefined,
-    options: { json?: boolean }
+    options: { json?: boolean; failOnRegression?: boolean }
   ) => {
     try {
       const result = await runCompareCommand({
@@ -162,6 +163,10 @@ program
       });
 
       console.log(options.json ? JSON.stringify(result, null, 2) : renderCompareSummary(result));
+
+      if (options.failOnRegression && result.hasRegression) {
+        process.exitCode = 1;
+      }
     } catch (error) {
       console.error(formatUnknownError(error));
       process.exitCode = 1;

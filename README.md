@@ -125,7 +125,7 @@ skillarena compare
 
 Developers write eval cases in YAML, run them against Codex with `codex exec --json`, and inspect Markdown or JSON reports under `.skillarena/runs/`.
 
-Use `skillarena compare` to compare the latest two saved run reports during A/B skill iteration. You can also pass two explicit run ids or run directories.
+Use `skillarena compare` to compare the latest two saved run reports during A/B skill iteration. You can also pass two explicit run ids or run directories, and use `--fail-on-regression` in CI to fail when the candidate run regresses.
 
 ## Examples
 

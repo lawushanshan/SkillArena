@@ -55,6 +55,8 @@ export interface CaseStatusChange {
 }
 
 export interface RunComparison {
+  verdict: ComparisonVerdict;
+  hasRegression: boolean;
   baseline: RunComparisonMetrics;
   candidate: RunComparisonMetrics;
   delta: {
@@ -73,6 +75,8 @@ export interface RunComparison {
   cases: CaseStatusComparison;
 }
 
+export type ComparisonVerdict = "improved" | "regressed" | "mixed" | "unchanged";
+
 export async function runCompareCommand(options: CompareRunsOptions): Promise<RunComparison> {
   const runDirs = await resolveComparisonRunDirs(options);
   const baseline = await loadRunReport(runDirs.baselineRunDir);
@@ -88,28 +92,32 @@ export function compareReports(
   const baselineMetrics = createRunMetrics(baseline);
   const candidateMetrics = createRunMetrics(candidate);
   const caseComparison = compareCaseStatuses(baseline, candidate);
+  const delta = {
+    passRatePoints: candidateMetrics.passRate - baselineMetrics.passRate,
+    triggerRatePoints: candidateMetrics.triggerRate - baselineMetrics.triggerRate,
+    falsePositiveRatePoints:
+      candidateMetrics.falsePositiveRate - baselineMetrics.falsePositiveRate,
+    passed: candidateMetrics.passed - baselineMetrics.passed,
+    failed: candidateMetrics.failed - baselineMetrics.failed,
+    blocked: candidateMetrics.blocked - baselineMetrics.blocked,
+    durationMs: candidateMetrics.durationMs - baselineMetrics.durationMs,
+    skillUsedPassed:
+      candidateMetrics.skillUsedChecks.passed - baselineMetrics.skillUsedChecks.passed,
+    skillUsedFailed:
+      candidateMetrics.skillUsedChecks.failed - baselineMetrics.skillUsedChecks.failed,
+    skillNotUsedPassed:
+      candidateMetrics.skillNotUsedChecks.passed - baselineMetrics.skillNotUsedChecks.passed,
+    skillNotUsedFailed:
+      candidateMetrics.skillNotUsedChecks.failed - baselineMetrics.skillNotUsedChecks.failed
+  };
+  const verdict = determineVerdict(delta, caseComparison);
 
   return {
+    verdict,
+    hasRegression: verdict === "regressed" || verdict === "mixed",
     baseline: baselineMetrics,
     candidate: candidateMetrics,
-    delta: {
-      passRatePoints: candidateMetrics.passRate - baselineMetrics.passRate,
-      triggerRatePoints: candidateMetrics.triggerRate - baselineMetrics.triggerRate,
-      falsePositiveRatePoints:
-        candidateMetrics.falsePositiveRate - baselineMetrics.falsePositiveRate,
-      passed: candidateMetrics.passed - baselineMetrics.passed,
-      failed: candidateMetrics.failed - baselineMetrics.failed,
-      blocked: candidateMetrics.blocked - baselineMetrics.blocked,
-      durationMs: candidateMetrics.durationMs - baselineMetrics.durationMs,
-      skillUsedPassed:
-        candidateMetrics.skillUsedChecks.passed - baselineMetrics.skillUsedChecks.passed,
-      skillUsedFailed:
-        candidateMetrics.skillUsedChecks.failed - baselineMetrics.skillUsedChecks.failed,
-      skillNotUsedPassed:
-        candidateMetrics.skillNotUsedChecks.passed - baselineMetrics.skillNotUsedChecks.passed,
-      skillNotUsedFailed:
-        candidateMetrics.skillNotUsedChecks.failed - baselineMetrics.skillNotUsedChecks.failed
-    },
+    delta,
     cases: caseComparison
   };
 }
@@ -117,6 +125,7 @@ export function compareReports(
 export function renderCompareSummary(comparison: RunComparison): string {
   return [
     "SkillArena compare",
+    `Verdict: ${comparison.verdict}`,
     `Baseline: ${comparison.baseline.runId}`,
     `Candidate: ${comparison.candidate.runId}`,
     `Pass rate: ${formatPercent(comparison.baseline.passRate)} -> ${formatPercent(
@@ -255,6 +264,36 @@ function createRunMetrics(report: SkillArenaReport): RunComparisonMetrics {
     skillUsedChecks,
     skillNotUsedChecks
   };
+}
+
+function determineVerdict(
+  delta: RunComparison["delta"],
+  cases: CaseStatusComparison
+): ComparisonVerdict {
+  const hasPositiveSignal =
+    delta.passRatePoints > 0 ||
+    delta.triggerRatePoints > 0 ||
+    delta.falsePositiveRatePoints < 0 ||
+    cases.improved > 0;
+  const hasNegativeSignal =
+    delta.passRatePoints < 0 ||
+    delta.triggerRatePoints < 0 ||
+    delta.falsePositiveRatePoints > 0 ||
+    cases.regressed > 0;
+
+  if (hasPositiveSignal && hasNegativeSignal) {
+    return "mixed";
+  }
+
+  if (hasNegativeSignal) {
+    return "regressed";
+  }
+
+  if (hasPositiveSignal) {
+    return "improved";
+  }
+
+  return "unchanged";
 }
 
 function createCheckMetrics(checks: ReportCheck[], name: string): CheckMetrics {
