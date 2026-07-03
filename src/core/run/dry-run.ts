@@ -10,6 +10,7 @@ import { createRunStore, type RunStore } from "./run-store.js";
 export interface DryRunOptions {
   cwd: string;
   evalFile?: string;
+  suiteName?: string;
   caseId?: string;
   maxCases?: number;
   command?: string[];

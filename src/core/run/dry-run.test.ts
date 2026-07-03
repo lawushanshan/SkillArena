@@ -66,6 +66,44 @@ describe("runDryRun", () => {
     expect(result.suites[0]?.selectedCaseCount).toBe(1);
   });
 
+  it("filters by suite name", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "evals", "other-suite.yaml"),
+      `name: other-suite\ncases:\n  - id: other-case\n    prompt: other\n    workspace:\n      fixture: fixtures/sample-workspace\n`,
+      "utf8"
+    );
+
+    const result = await runDryRun({
+      cwd: root,
+      suiteName: "other-suite",
+      command: ["run", "--dry-run", "--suite", "other-suite"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
+    });
+
+    expect(result.totalCases).toBe(1);
+    expect(result.suites).toHaveLength(1);
+    expect(result.suites[0]?.suite.name).toBe("other-suite");
+    expect(result.suites[0]?.selectedCases[0]?.id).toBe("other-case");
+  });
+
+  it("fails when the selected suite name does not exist", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+
+    await expect(
+      runDryRun({
+        cwd: root,
+        suiteName: "missing-suite",
+        command: ["run", "--dry-run", "--suite", "missing-suite"],
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
+      })
+    ).rejects.toThrow("No eval suite found with name: missing-suite");
+  });
+
   it("does not validate fixtures for unselected cases", async () => {
     const root = await makeTempDir();
     await initProject(root);

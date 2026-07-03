@@ -50,6 +50,7 @@ program
   .command("run")
   .description("Run SkillArena evals.")
   .argument("[evalFile]", "Eval YAML file to run")
+  .option("--suite <suiteName>", "Run a single eval suite by name")
   .option("--case <caseId>", "Run a single eval case")
   .option("--max-cases <count>", "Limit the number of selected eval cases to run")
   .option("--fail-fast", "Stop after the first failed eval case.")
@@ -59,6 +60,7 @@ program
   .action(async (
     evalFile: string | undefined,
     options: {
+      suite?: string;
       case?: string;
       maxCases?: string;
       failFast?: boolean;
@@ -78,6 +80,7 @@ program
         ? await runDryRun({
             cwd: process.cwd(),
             evalFile,
+            suiteName: options.suite,
             caseId: options.case,
             maxCases,
             command: process.argv.slice(2),
@@ -86,6 +89,7 @@ program
         : await runEvals({
             cwd: process.cwd(),
             evalFile,
+            suiteName: options.suite,
             caseId: options.case,
             maxCases,
             command: process.argv.slice(2),

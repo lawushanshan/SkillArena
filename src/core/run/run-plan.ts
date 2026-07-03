@@ -11,6 +11,7 @@ import { loadProject, type SkillArenaProject } from "../project/project.js";
 export interface RunSelectionOptions {
   cwd: string;
   evalFile?: string;
+  suiteName?: string;
   caseId?: string;
   maxCases?: number;
 }
@@ -35,6 +36,7 @@ export async function createRunPlan(options: RunSelectionOptions): Promise<RunPl
   const suites: LoadedEvalSuite[] = [];
   const warnings: string[] = [];
   let totalCases = 0;
+  let matchedSuite = false;
 
   if (evalFiles.length === 0) {
     throw new SkillArenaError(`No eval files found in ${project.evalsDir}`);
@@ -42,6 +44,13 @@ export async function createRunPlan(options: RunSelectionOptions): Promise<RunPl
 
   for (const evalPath of evalFiles) {
     const suite = await loadEvalSuite(evalPath);
+
+    if (options.suiteName && suite.name !== options.suiteName) {
+      continue;
+    }
+
+    matchedSuite = true;
+
     const candidateCases = options.caseId
       ? suite.cases.filter((testCase) => testCase.id === options.caseId)
       : suite.cases;
@@ -67,6 +76,10 @@ export async function createRunPlan(options: RunSelectionOptions): Promise<RunPl
       selectedCaseCount: selectedCases.length
     });
     totalCases += selectedCases.length;
+  }
+
+  if (options.suiteName && !matchedSuite) {
+    throw new SkillArenaError(`No eval suite found with name: ${options.suiteName}`);
   }
 
   if (options.caseId && totalCases === 0) {

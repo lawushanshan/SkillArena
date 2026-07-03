@@ -143,10 +143,22 @@ Run a specific eval file:
 skillarena run evals/markdown-skill.yaml
 ```
 
+Run a specific suite by name:
+
+```powershell
+skillarena run --suite markdown-skill
+```
+
 Run a specific case:
 
 ```powershell
 skillarena run evals/markdown-skill.yaml --case creates-table-of-contents
+```
+
+Limit the number of selected cases:
+
+```powershell
+skillarena run --max-cases 5
 ```
 
 Validate without invoking Codex:
