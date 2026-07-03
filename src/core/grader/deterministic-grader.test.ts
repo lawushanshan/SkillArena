@@ -71,6 +71,28 @@ describe("gradeDeterministicExpectations", () => {
       })
     ]);
   });
+
+  it("passes deleted file expectations when workspace diff matches", () => {
+    const checks = gradeDeterministicExpectations({
+      testCase: createCase({
+        files_deleted: ["delete-me.txt"]
+      }),
+      codex: createCodexResult(0),
+      workspaceDiff: {
+        created: [],
+        changed: [],
+        deleted: ["delete-me.txt"],
+        unchanged: []
+      }
+    });
+
+    expect(checks).toEqual([
+      expect.objectContaining({
+        name: "expect.files_deleted",
+        status: "pass"
+      })
+    ]);
+  });
 });
 
 function createCase(expect: Partial<CaseExpectation>): EvalCase {
@@ -82,6 +104,7 @@ function createCase(expect: Partial<CaseExpectation>): EvalCase {
       commands: [],
       files_created: [],
       files_changed: [],
+      files_deleted: [],
       files_unchanged: [],
       ...expect
     }

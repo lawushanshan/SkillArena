@@ -140,6 +140,7 @@ function createSuites(suiteName: string, caseId: string, fixture: string): Loade
             commands: [],
             files_created: [],
             files_changed: [],
+            files_deleted: [],
             files_unchanged: []
           }
         }

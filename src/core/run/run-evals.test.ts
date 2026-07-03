@@ -25,10 +25,11 @@ describe("runEvals", () => {
     await initProject(root);
     await writeFile(
       join(root, "evals", "sample-audit.yaml"),
-      `name: sample-audit\nagent: codex\ncases:\n  - id: creates-audit-report\n    prompt: "Do a task."\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      commands_succeeded: true\n      files_created:\n        - audit-report.md\n      files_changed:\n        - README.md\n      files_unchanged:\n        - untouched.txt\n`,
+      `name: sample-audit\nagent: codex\ncases:\n  - id: creates-audit-report\n    prompt: "Do a task."\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      commands_succeeded: true\n      files_created:\n        - audit-report.md\n      files_changed:\n        - README.md\n      files_deleted:\n        - delete-me.txt\n      files_unchanged:\n        - untouched.txt\n`,
       "utf8"
     );
     await writeFile(join(root, "fixtures", "sample-workspace", "untouched.txt"), "same\n", "utf8");
+    await writeFile(join(root, "fixtures", "sample-workspace", "delete-me.txt"), "remove\n", "utf8");
     const fakeCodex = await createFakeCodex(root, {
       exitCode: 0,
       stdout: [
@@ -39,7 +40,8 @@ describe("runEvals", () => {
       script: [
         "const fs = require('node:fs');",
         "fs.appendFileSync('README.md', '\\nupdated\\n');",
-        "fs.writeFileSync('audit-report.md', 'report\\n');"
+        "fs.writeFileSync('audit-report.md', 'report\\n');",
+        "fs.rmSync('delete-me.txt');"
       ].join("\n")
     });
 
@@ -89,6 +91,7 @@ describe("runEvals", () => {
         expect.objectContaining({ name: "expect.commands_succeeded", status: "pass" }),
         expect.objectContaining({ name: "expect.files_created", status: "pass" }),
         expect.objectContaining({ name: "expect.files_changed", status: "pass" }),
+        expect.objectContaining({ name: "expect.files_deleted", status: "pass" }),
         expect.objectContaining({ name: "expect.files_unchanged", status: "pass" })
       ])
     );

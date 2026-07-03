@@ -64,6 +64,8 @@ cases:
     expect:
       files_created:
         - audit-report.md
+      files_deleted:
+        - TODO.tmp
       commands_succeeded: true
 ```
 

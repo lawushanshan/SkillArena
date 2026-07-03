@@ -34,6 +34,8 @@ cases:
         - audit-report.md
       files_changed:
         - README.md
+      files_deleted:
+        - TODO.tmp
       files_unchanged:
         - package.json
 `;
@@ -56,6 +58,9 @@ const FIXTURE_PACKAGE_JSON = `{
 const FIXTURE_APP_JS = `const secret = process.env.SAMPLE_TOKEN || "development-token";
 
 console.log("sample workspace", secret.length);
+`;
+
+const FIXTURE_TODO = `temporary notes
 `;
 
 export async function initProject(rootDir: string): Promise<InitProjectResult> {
@@ -84,6 +89,12 @@ export async function initProject(rootDir: string): Promise<InitProjectResult> {
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "src", "app.js"),
     FIXTURE_APP_JS,
+    created,
+    skipped
+  );
+  await writeIfMissing(
+    resolve(rootDir, "fixtures", "sample-workspace", "TODO.tmp"),
+    FIXTURE_TODO,
     created,
     skipped
   );

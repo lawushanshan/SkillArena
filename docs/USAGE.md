@@ -65,7 +65,7 @@ fixtures/
   runs/
 ```
 
-The generated eval demonstrates file creation, file changes, and unchanged file assertions. The init command should not modify existing skill files.
+The generated eval demonstrates file creation, file changes, file deletion, and unchanged file assertions. The init command should not modify existing skill files.
 
 ## Example Project
 
@@ -122,6 +122,7 @@ The first eval format should support:
 - `expect.commands`
 - `expect.files_created`
 - `expect.files_changed`
+- `expect.files_deleted`
 - `expect.files_unchanged`
 - `expect.exit_code`
 
@@ -194,6 +195,7 @@ The current Codex execution path grades process-level results and the first dete
 - `expect.exit_code`
 - `expect.files_created`
 - `expect.files_changed`
+- `expect.files_deleted`
 - `expect.files_unchanged`
 
 ## Evaluate Scripted Skills

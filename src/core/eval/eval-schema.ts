@@ -28,6 +28,7 @@ export const CaseExpectationSchema = z
     commands_succeeded: z.boolean().optional(),
     files_created: PathListSchema,
     files_changed: PathListSchema,
+    files_deleted: PathListSchema,
     files_unchanged: PathListSchema,
     exit_code: z.number().int().optional()
   })
@@ -55,6 +56,7 @@ export const EvalCaseSchema = z
       commands: [],
       files_created: [],
       files_changed: [],
+      files_deleted: [],
       files_unchanged: []
     })
   })
@@ -88,4 +90,3 @@ export type CommandExpectation = z.infer<typeof CommandExpectationSchema>;
 export type CaseExpectation = z.infer<typeof CaseExpectationSchema>;
 export type EvalCase = z.infer<typeof EvalCaseSchema>;
 export type EvalSuite = z.infer<typeof EvalSuiteSchema>;
-

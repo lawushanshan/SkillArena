@@ -93,6 +93,7 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
 
   checks.push(...gradeFileList("expect.files_created", expect.files_created, input.workspaceDiff?.created));
   checks.push(...gradeFileList("expect.files_changed", expect.files_changed, input.workspaceDiff?.changed));
+  checks.push(...gradeFileList("expect.files_deleted", expect.files_deleted, input.workspaceDiff?.deleted));
   checks.push(
     ...gradeFileList("expect.files_unchanged", expect.files_unchanged, input.workspaceDiff?.unchanged)
   );
