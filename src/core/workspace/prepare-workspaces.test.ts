@@ -138,6 +138,7 @@ function createSuites(suiteName: string, caseId: string, fixture: string): Loade
           workspace: { fixture },
           expect: {
             commands: [],
+            commands_not_run: [],
             files_created: [],
             files_changed: [],
             files_deleted: [],

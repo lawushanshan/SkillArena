@@ -109,6 +109,8 @@ cases:
       fixture: fixtures/markdown-basic
     expect:
       skill_not_used: markdown
+      commands_not_run:
+        - contains: "npm publish"
       commands_succeeded: true
 ```
 
@@ -120,6 +122,7 @@ The first eval format should support:
 - `expect.skill_used`
 - `expect.skill_not_used`
 - `expect.commands`
+- `expect.commands_not_run`
 - `expect.files_created`
 - `expect.files_changed`
 - `expect.files_deleted`
@@ -191,6 +194,7 @@ The current Codex execution path grades process-level results and the first dete
 - `expect.skill_used`
 - `expect.skill_not_used`
 - `expect.commands`
+- `expect.commands_not_run`
 - `expect.commands_succeeded`
 - `expect.exit_code`
 - `expect.files_created`

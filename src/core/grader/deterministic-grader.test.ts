@@ -72,6 +72,42 @@ describe("gradeDeterministicExpectations", () => {
     ]);
   });
 
+  it("passes when disallowed commands are not observed", () => {
+    const checks = gradeDeterministicExpectations({
+      testCase: createCase({
+        commands_not_run: [{ contains: "npm publish" }]
+      }),
+      codex: createCodexResult(0),
+      parsedTrace: createParsedTrace()
+    });
+
+    expect(checks).toEqual([
+      expect.objectContaining({
+        name: "expect.commands_not_run[0]",
+        status: "pass"
+      })
+    ]);
+  });
+
+  it("fails when disallowed commands are observed", () => {
+    const checks = gradeDeterministicExpectations({
+      testCase: createCase({
+        commands_not_run: [{ contains: "scripts/audit.js" }]
+      }),
+      codex: createCodexResult(0),
+      parsedTrace: createParsedTrace()
+    });
+
+    expect(checks).toEqual([
+      expect.objectContaining({
+        name: "expect.commands_not_run[0]",
+        status: "fail",
+        category: "command_failed"
+      })
+    ]);
+  });
+
+
   it("passes deleted file expectations when workspace diff matches", () => {
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
@@ -102,6 +138,7 @@ function createCase(expect: Partial<CaseExpectation>): EvalCase {
     workspace: {},
     expect: {
       commands: [],
+      commands_not_run: [],
       files_created: [],
       files_changed: [],
       files_deleted: [],

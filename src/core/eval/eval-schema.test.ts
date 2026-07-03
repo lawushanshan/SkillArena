@@ -17,6 +17,7 @@ describe("EvalSuiteSchema", () => {
     expect(result.agent).toBe("codex");
     expect(result.cases[0]?.expect.files_changed).toEqual([]);
     expect(result.cases[0]?.expect.commands).toEqual([]);
+    expect(result.cases[0]?.expect.commands_not_run).toEqual([]);
   });
 
   it("rejects command expectations without a matcher", () => {
@@ -35,5 +36,21 @@ describe("EvalSuiteSchema", () => {
 
     expect(result.success).toBe(false);
   });
-});
 
+  it("rejects disallowed command expectations without a matcher", () => {
+    const result = EvalSuiteSchema.safeParse({
+      name: "example",
+      cases: [
+        {
+          id: "case-1",
+          prompt: "Do a task.",
+          expect: {
+            commands_not_run: [{ exit_code: 0 }]
+          }
+        }
+      ]
+    });
+
+    expect(result.success).toBe(false);
+  });
+});

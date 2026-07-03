@@ -91,6 +91,20 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
     });
   }
 
+  for (const [index, commandExpectation] of (expect.commands_not_run ?? []).entries()) {
+    const matched = [
+      ...getCommandStartedEvents(input.parsedTrace),
+      ...getCommandFinishedEvents(input.parsedTrace)
+    ].some((event) => commandMatchesExpectation(event.command, commandExpectation));
+
+    checks.push({
+      name: `expect.commands_not_run[${index}]`,
+      status: matched ? "fail" : "pass",
+      message: matched ? "Disallowed command was observed." : "Disallowed command was not observed.",
+      category: matched ? "command_failed" : undefined
+    });
+  }
+
   checks.push(...gradeFileList("expect.files_created", expect.files_created, input.workspaceDiff?.created));
   checks.push(...gradeFileList("expect.files_changed", expect.files_changed, input.workspaceDiff?.changed));
   checks.push(...gradeFileList("expect.files_deleted", expect.files_deleted, input.workspaceDiff?.deleted));

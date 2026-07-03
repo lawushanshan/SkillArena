@@ -25,6 +25,7 @@ export const CaseExpectationSchema = z
     skill_used: z.string().min(1).optional(),
     skill_not_used: z.string().min(1).optional(),
     commands: z.array(CommandExpectationSchema).default([]),
+    commands_not_run: z.array(CommandExpectationSchema).default([]),
     commands_succeeded: z.boolean().optional(),
     files_created: PathListSchema,
     files_changed: PathListSchema,
@@ -54,6 +55,7 @@ export const EvalCaseSchema = z
       .default({}),
     expect: CaseExpectationSchema.default({
       commands: [],
+      commands_not_run: [],
       files_created: [],
       files_changed: [],
       files_deleted: [],

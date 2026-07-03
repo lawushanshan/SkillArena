@@ -66,6 +66,8 @@ cases:
         - audit-report.md
       files_deleted:
         - TODO.tmp
+      commands_not_run:
+        - contains: "npm publish"
       commands_succeeded: true
 ```
 
