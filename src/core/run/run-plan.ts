@@ -129,22 +129,6 @@ function validateReferences(
   }
 
   for (const testCase of selectedCases) {
-    if (!testCase.workspace.fixture) {
-      continue;
-    }
-
-    const fixturePath = resolveFixturePath(
-      project.root,
-      project.fixturesDir,
-      testCase.workspace.fixture
-    );
-
-    if (!existsSync(fixturePath)) {
-      throw new SkillArenaError(
-        `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
-      );
-    }
-
     for (const expectation of testCase.expect.file_snapshots) {
       if (!isRelativeWorkspacePath(expectation.path)) {
         throw new SkillArenaError(
@@ -159,6 +143,22 @@ function validateReferences(
           `Snapshot does not exist for case ${testCase.id}: ${expectation.snapshot}`
         );
       }
+    }
+
+    if (!testCase.workspace.fixture) {
+      continue;
+    }
+
+    const fixturePath = resolveFixturePath(
+      project.root,
+      project.fixturesDir,
+      testCase.workspace.fixture
+    );
+
+    if (!existsSync(fixturePath)) {
+      throw new SkillArenaError(
+        `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
+      );
     }
   }
 }
