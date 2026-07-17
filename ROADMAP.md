@@ -26,7 +26,7 @@
 
 - [ ] Add rubric-based LLM judge support
 - [x] Add snapshot fixtures for expected artifacts
-- [ ] Add failure trace summaries
+- [x] Add failure trace summaries
 
 ## Later
 

@@ -189,7 +189,9 @@ skillarena report
 skillarena report .skillarena/runs/<run-id>
 ```
 
-调试失败时，依次查看控制台摘要、`report.md` 中的 case、`parsed/` 下归一化 trace、`raw/` 下原始 JSONL 与 stderr，以及保存的 workspace。当前实现会保留每次运行的 workspace。
+调试失败时，依次查看控制台摘要、`report.md` 中 case 下的失败 trace 摘要、`parsed/` 下归一化 trace、`raw/` 下原始 JSONL 与 stderr，以及保存的 workspace。当前实现会保留每次运行的 workspace。
+
+失败摘要会展示首要失败类别、已读取的 Skill、非零退出命令、运行错误和 JSONL 解析错误位置。它刻意不复制命令输出、assistant 消息或原始解析错误文本；需要这些细节时再查看保存的 artifact。
 
 ## CI 与本地安全
 

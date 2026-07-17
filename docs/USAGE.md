@@ -383,7 +383,7 @@ The exact installation command will be updated after the implementation language
 When an eval fails, developers should inspect:
 
 1. The console summary
-2. The case section in `report.md`
+2. The failure trace summary in the case section of `report.md`
 3. The normalized trace in `parsed/*.json`
 4. The raw Codex JSONL trace in `raw/*.jsonl`
 5. The preserved workspace when `--keep-workspace` is enabled
@@ -394,6 +394,10 @@ Useful debug commands:
 skillarena run --case creates-table-of-contents --keep-workspace
 skillarena report .skillarena/runs/2026-06-29T120000Z
 ```
+
+Failure summaries identify the primary failure category and list the observed skill reads, non-zero
+commands, run errors, and JSONL parse-error locations. They intentionally exclude command output,
+assistant messages, and raw parse-error text; use the preserved artifacts when those details are needed.
 
 ## Local Safety Model
 

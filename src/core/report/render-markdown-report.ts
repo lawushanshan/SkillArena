@@ -69,6 +69,31 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
         lines.push(`- ${check.status}: ${check.name} - ${check.message}`);
       }
 
+      if (testCase.failureTraceSummary) {
+        lines.push("");
+        lines.push("##### Failure Trace Summary");
+        lines.push("");
+        lines.push(`- Category: ${testCase.failureTraceSummary.category ?? "unknown"}`);
+        lines.push(
+          `- Skills read: ${testCase.failureTraceSummary.skillsRead.join(", ") || "none"}`
+        );
+        lines.push(`- Failed commands: ${testCase.failureTraceSummary.failedCommands.length}`);
+
+        for (const command of testCase.failureTraceSummary.failedCommands) {
+          lines.push(`  - exitCode=${command.exitCode ?? "unknown"}: ${command.command}`);
+        }
+
+        lines.push(`- Run errors: ${testCase.failureTraceSummary.runErrors.length}`);
+        for (const error of testCase.failureTraceSummary.runErrors) {
+          lines.push(`  - ${error}`);
+        }
+
+        lines.push(`- Trace parse errors: ${testCase.failureTraceSummary.parseErrors.length}`);
+        for (const error of testCase.failureTraceSummary.parseErrors) {
+          lines.push(`  - line ${error.line}: ${error.message}`);
+        }
+      }
+
       lines.push("");
     }
   }

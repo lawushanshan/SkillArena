@@ -20,6 +20,20 @@ export interface ReportCheck {
   category?: FailureCategory;
 }
 
+export interface FailureTraceSummary {
+  category?: FailureCategory;
+  skillsRead: string[];
+  failedCommands: Array<{
+    command: string;
+    exitCode?: number;
+  }>;
+  runErrors: string[];
+  parseErrors: Array<{
+    line: number;
+    message: string;
+  }>;
+}
+
 export interface ReportCase {
   id: string;
   prompt: string;
@@ -38,6 +52,7 @@ export interface ReportCase {
     stderr?: string;
     parsedTrace?: string;
   };
+  failureTraceSummary?: FailureTraceSummary;
   checks: ReportCheck[];
 }
 

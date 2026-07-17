@@ -5,6 +5,7 @@ import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { ParsedTrace } from "../trace/normalized-events.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";
 import type { WorkspaceDiff } from "../workspace/workspace-snapshot.js";
+import { createFailureTraceSummary } from "./create-failure-trace-summary.js";
 import type { ReportCase, ReportCheck, ReportSuite, SkillArenaReport } from "./report-schema.js";
 
 export interface CaseExecutionResult {
@@ -79,6 +80,9 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
               stderr: execution.codex.stderrPath,
               parsedTrace: execution.parsedTracePath
             }
+          : undefined,
+        failureTraceSummary: failed
+          ? createFailureTraceSummary(checks, execution?.parsedTrace)
           : undefined,
         checks
       };

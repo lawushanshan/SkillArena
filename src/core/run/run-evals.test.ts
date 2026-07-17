@@ -117,6 +117,13 @@ describe("runEvals", () => {
 
     expect(result.report.summary.failed).toBe(1);
     expect(result.report.suites[0]?.cases[0]?.checks[0]?.category).toBe("adapter_error");
+    expect(result.report.suites[0]?.cases[0]?.failureTraceSummary).toMatchObject({
+      category: "adapter_error",
+      skillsRead: [],
+      failedCommands: [],
+      runErrors: [],
+      parseErrors: []
+    });
   });
 
   it("stops after the first failed case when failFast is enabled", async () => {

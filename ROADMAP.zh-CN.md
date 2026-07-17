@@ -23,7 +23,7 @@
 
 - [ ] 增加基于 rubric 的 LLM judge
 - [x] 增加预期产物的 snapshot fixture
-- [ ] 增加失败 trace 摘要
+- [x] 增加失败 trace 摘要
 
 ## 后续
 
