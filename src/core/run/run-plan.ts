@@ -5,7 +5,12 @@ import { SkillArenaError } from "../errors.js";
 import { loadEvalSuite } from "../eval/load-eval-suite.js";
 import type { EvalCase, EvalSuite } from "../eval/eval-schema.js";
 import { listEvalFiles } from "../project/list-eval-files.js";
-import { resolveEvalFilePath, resolveFixturePath } from "../project/path-safety.js";
+import {
+  isRelativeWorkspacePath,
+  resolveEvalFilePath,
+  resolveFixturePath,
+  resolveSnapshotPath
+} from "../project/path-safety.js";
 import { loadProject, type SkillArenaProject } from "../project/project.js";
 
 export interface RunSelectionOptions {
@@ -138,6 +143,22 @@ function validateReferences(
       throw new SkillArenaError(
         `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
       );
+    }
+
+    for (const expectation of testCase.expect.file_snapshots) {
+      if (!isRelativeWorkspacePath(expectation.path)) {
+        throw new SkillArenaError(
+          `Snapshot target path must be relative to the workspace: ${expectation.path}`
+        );
+      }
+
+      const snapshotPath = resolveSnapshotPath(project.snapshotsDir, expectation.snapshot);
+
+      if (!existsSync(snapshotPath)) {
+        throw new SkillArenaError(
+          `Snapshot does not exist for case ${testCase.id}: ${expectation.snapshot}`
+        );
+      }
     }
   }
 }

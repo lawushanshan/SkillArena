@@ -20,6 +20,13 @@ export const CommandExpectationSchema = z
     }
   });
 
+export const FileSnapshotExpectationSchema = z
+  .object({
+    path: z.string().min(1),
+    snapshot: z.string().min(1)
+  })
+  .strict();
+
 export const CaseExpectationSchema = z
   .object({
     skill_used: z.string().min(1).optional(),
@@ -31,6 +38,7 @@ export const CaseExpectationSchema = z
     files_changed: PathListSchema,
     files_deleted: PathListSchema,
     files_unchanged: PathListSchema,
+    file_snapshots: z.array(FileSnapshotExpectationSchema).default([]),
     exit_code: z.number().int().optional()
   })
   .strict()
@@ -59,7 +67,8 @@ export const EvalCaseSchema = z
       files_created: [],
       files_changed: [],
       files_deleted: [],
-      files_unchanged: []
+      files_unchanged: [],
+      file_snapshots: []
     })
   })
   .strict();
@@ -89,6 +98,7 @@ export const EvalSuiteSchema = z
   });
 
 export type CommandExpectation = z.infer<typeof CommandExpectationSchema>;
+export type FileSnapshotExpectation = z.infer<typeof FileSnapshotExpectationSchema>;
 export type CaseExpectation = z.infer<typeof CaseExpectationSchema>;
 export type EvalCase = z.infer<typeof EvalCaseSchema>;
 export type EvalSuite = z.infer<typeof EvalSuiteSchema>;

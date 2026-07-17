@@ -9,6 +9,8 @@ export interface GradeCaseInput {
   codex: CodexExecResult;
   parsedTrace?: ParsedTrace;
   workspaceDiff?: WorkspaceDiff;
+  workspacePath?: string;
+  snapshotsDir?: string;
 }
 
 export function gradeDeterministicExpectations(input: GradeCaseInput): ReportCheck[] {
@@ -111,8 +113,48 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
   checks.push(
     ...gradeFileList("expect.files_unchanged", expect.files_unchanged, input.workspaceDiff?.unchanged)
   );
+  checks.push(...gradeFileSnapshots(expect.file_snapshots, input.workspacePath, input.snapshotsDir));
 
   return checks;
+}
+
+function gradeFileSnapshots(
+  expectations: Array<{ path: string; snapshot: string }>,
+  workspacePath: string | undefined,
+  snapshotsDir: string | undefined
+): ReportCheck[] {
+  if (expectations.length === 0) {
+    return [];
+  }
+
+  if (!workspacePath || !snapshotsDir) {
+    return [
+      {
+        name: "expect.file_snapshots",
+        status: "fail",
+        message: "Workspace or snapshots directory is not available.",
+        category: "artifact_mismatch"
+      }
+    ];
+  }
+
+  return expectations.map((expectation, index) => {
+    const actualPath = resolve(workspacePath, expectation.path);
+    const snapshotPath = resolve(snapshotsDir, expectation.snapshot);
+    const matched =
+      existsSync(actualPath) &&
+      existsSync(snapshotPath) &&
+      readFileSync(actualPath).equals(readFileSync(snapshotPath));
+
+    return {
+      name: `expect.file_snapshots[${index}]`,
+      status: matched ? "pass" : "fail",
+      message: matched
+        ? `Snapshot matched: ${expectation.path}`
+        : `Snapshot did not match: ${expectation.path}`,
+      category: matched ? undefined : "artifact_mismatch"
+    };
+  });
 }
 
 function gradeFileList(name: string, expectedPaths: string[], actualPaths: string[] | undefined): ReportCheck[] {
@@ -179,3 +221,5 @@ function commandMatchesExpectation(
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
 }
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";

@@ -153,12 +153,14 @@ function createProject(root: string): SkillArenaProject {
       paths: {
         evals: "evals",
         fixtures: "fixtures",
+        snapshots: "snapshots",
         runs: ".skillarena/runs"
       },
       skills: []
     },
     evalsDir: resolve(root, "evals"),
     fixturesDir: resolve(root, "fixtures"),
+    snapshotsDir: resolve(root, "snapshots"),
     runsDir: resolve(root, ".skillarena", "runs")
   };
 }
@@ -197,7 +199,8 @@ function createSuites(
             files_created: [],
             files_changed: [],
             files_deleted: [],
-            files_unchanged: []
+            files_unchanged: [],
+            file_snapshots: []
           }
         }
       ],

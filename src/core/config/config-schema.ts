@@ -13,6 +13,7 @@ export const PathConfigSchema = z
   .object({
     evals: z.string().min(1).default("evals"),
     fixtures: z.string().min(1).default("fixtures"),
+    snapshots: z.string().min(1).default("snapshots"),
     runs: z.string().min(1).default(".skillarena/runs")
   })
   .strict();
@@ -24,6 +25,7 @@ export const SkillArenaConfigSchema = z
     paths: PathConfigSchema.default({
       evals: "evals",
       fixtures: "fixtures",
+      snapshots: "snapshots",
       runs: ".skillarena/runs"
     }),
     skills: z.array(SkillReferenceSchema).default([])

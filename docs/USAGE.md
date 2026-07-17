@@ -132,7 +132,25 @@ The first eval format should support:
 - `expect.files_changed`
 - `expect.files_deleted`
 - `expect.files_unchanged`
+- `expect.file_snapshots`
 - `expect.exit_code`
+
+`file_snapshots` compares a generated workspace file byte-for-byte with a file below the configured
+`paths.snapshots` directory. Each `snapshot` value is relative to that directory:
+
+```yaml
+paths:
+  snapshots: snapshots
+
+# In an eval case
+expect:
+  file_snapshots:
+    - path: audit-report.md
+      snapshot: code-audit/audit-report.md
+```
+
+The snapshot must exist before the run starts. A missing snapshot is a configuration error; a
+content mismatch fails the case with `artifact_mismatch`. Use this only for stable artifacts.
 
 ## Run Evals
 

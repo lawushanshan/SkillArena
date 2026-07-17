@@ -94,8 +94,25 @@ cases:
 - `expect.commands`、`expect.commands_not_run`
 - `expect.commands_succeeded`、`expect.exit_code`
 - `expect.files_created`、`expect.files_changed`、`expect.files_deleted`、`expect.files_unchanged`
+- `expect.file_snapshots`
 
 `commands` 与 `commands_not_run` 中的每项必须包含 `contains` 或 `exact`；`commands` 可额外用 `exit_code` 限制命令退出码。
+
+`file_snapshots` 将 workspace 中生成的文件与配置 `paths.snapshots` 目录下的文件按字节精确比较。每项的
+`snapshot` 都相对于该目录：
+
+```yaml
+paths:
+  snapshots: snapshots
+
+# eval case 内
+expect:
+  file_snapshots:
+    - path: audit-report.md
+      snapshot: code-audit/audit-report.md
+```
+
+运行开始前 snapshot 必须已存在；缺失属于配置错误，内容不一致会以 `artifact_mismatch` 使 case 失败。仅应对稳定产物使用该断言。
 
 ## 运行 eval
 

@@ -18,6 +18,7 @@ describe("EvalSuiteSchema", () => {
     expect(result.cases[0]?.expect.files_changed).toEqual([]);
     expect(result.cases[0]?.expect.commands).toEqual([]);
     expect(result.cases[0]?.expect.commands_not_run).toEqual([]);
+    expect(result.cases[0]?.expect.file_snapshots).toEqual([]);
   });
 
   it("rejects command expectations without a matcher", () => {

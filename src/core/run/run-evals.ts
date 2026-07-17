@@ -90,7 +90,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
       executions.push(execution);
       addExecutedCase(executedSuites, loadedSuite, testCase);
 
-      if (options.failFast && caseExecutionFailed(testCase, execution)) {
+      if (options.failFast && caseExecutionFailed(testCase, execution, workspace)) {
         warnings.push(`Stopped after failed case because --fail-fast is enabled: ${testCase.id}`);
         shouldStop = true;
         break;
@@ -153,7 +153,11 @@ function addExecutedCase(
   executedSuite.selectedCaseCount = executedSuite.selectedCases.length;
 }
 
-function caseExecutionFailed(testCase: EvalCase, execution: CaseExecutionResult): boolean {
+function caseExecutionFailed(
+  testCase: EvalCase,
+  execution: CaseExecutionResult,
+  workspace: PreparedWorkspace
+): boolean {
   const adapterFailed =
     execution.codex.exitCode !== 0 || execution.codex.timedOut || Boolean(execution.codex.error);
 
@@ -165,6 +169,8 @@ function caseExecutionFailed(testCase: EvalCase, execution: CaseExecutionResult)
     testCase,
     codex: execution.codex,
     parsedTrace: execution.parsedTrace,
-    workspaceDiff: execution.workspaceDiff
+    workspaceDiff: execution.workspaceDiff,
+    workspacePath: workspace.path,
+    snapshotsDir: workspace.snapshotsDir
   }).some((check) => check.status === "fail");
 }

@@ -2,31 +2,31 @@
 
 ## v0: Codex Skill Eval Harness
 
-- Choose implementation stack and package manager
-- Define project config and eval schema
-- Define report JSON schema
-- Define eval case format
-- Run prompts with `codex exec --json`
-- Capture JSONL traces and command metadata
-- Capture reproducibility metadata
-- Implement deterministic graders
-- Parse normalized events from Codex JSONL traces
-- Classify failures
-- Generate Markdown and JSON reports
-- Support CI exit codes
-- Add a minimal example eval project
+- [x] Choose implementation stack and package manager
+- [x] Define project config and eval schema
+- [x] Define report JSON schema
+- [x] Define eval case format
+- [x] Run prompts with `codex exec --json`
+- [x] Capture JSONL traces and command metadata
+- [x] Capture reproducibility metadata
+- [x] Implement deterministic graders
+- [x] Parse normalized events from Codex JSONL traces
+- [x] Classify failures
+- [x] Generate Markdown and JSON reports
+- [x] Support CI exit codes
+- [x] Add a minimal example eval project
 
 ## v0.1: A/B Evaluation
 
-- Compare runs with and without a skill
-- Compare skill version A vs version B
-- Report trigger rate, false-positive rate, pass rate, runtime, and cost signals when available
+- [x] Compare runs with and without a skill
+- [x] Compare skill version A vs version B
+- [x] Report trigger rate, false-positive rate, pass rate, runtime, and cost signals when available
 
 ## v0.2: Better Grading
 
-- Add rubric-based LLM judge support
-- Add snapshot fixtures for expected artifacts
-- Add failure trace summaries
+- [ ] Add rubric-based LLM judge support
+- [x] Add snapshot fixtures for expected artifacts
+- [ ] Add failure trace summaries
 
 ## Later
 

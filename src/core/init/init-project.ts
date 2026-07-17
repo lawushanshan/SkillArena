@@ -12,6 +12,7 @@ agent: codex
 paths:
   evals: evals
   fixtures: fixtures
+  snapshots: snapshots
   runs: .skillarena/runs
 skills:
   - name: sample-audit
@@ -81,6 +82,7 @@ export async function initProject(rootDir: string): Promise<InitProjectResult> {
   await ensureDir(resolve(rootDir, "evals"), created);
   await ensureDir(resolve(rootDir, "fixtures", "sample-workspace"), created);
   await ensureDir(resolve(rootDir, "fixtures", "sample-workspace", "src"), created);
+  await ensureDir(resolve(rootDir, "snapshots"), created);
   await ensureDir(resolve(rootDir, ".codex", "skills", "sample-audit"), created);
   await ensureDir(resolve(rootDir, ".skillarena", "runs"), created);
 

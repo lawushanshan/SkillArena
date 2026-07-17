@@ -54,7 +54,9 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
               testCase,
               codex: execution.codex,
               parsedTrace: execution.parsedTrace,
-              workspaceDiff: execution.workspaceDiff
+              workspaceDiff: execution.workspaceDiff,
+              workspacePath: workspace?.path,
+              snapshotsDir: workspace?.snapshotsDir
             })
           : [])
       ];

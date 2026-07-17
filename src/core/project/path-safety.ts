@@ -18,6 +18,26 @@ export function resolveFixturePath(projectRoot: string, fixturesDir: string, fix
   return resolved;
 }
 
+export function resolveSnapshotPath(snapshotsDir: string, snapshot: string): string {
+  if (isAbsolute(snapshot)) {
+    throw new SkillArenaError(`Snapshot path must be relative to the configured snapshots directory: ${snapshot}`);
+  }
+
+  const resolved = resolve(snapshotsDir, snapshot);
+
+  if (!isPathWithin(snapshotsDir, resolved)) {
+    throw new SkillArenaError(
+      `Snapshot path must resolve inside the configured snapshots directory: ${snapshot}`
+    );
+  }
+
+  return resolved;
+}
+
+export function isRelativeWorkspacePath(path: string): boolean {
+  return !isAbsolute(path) && isPathWithin(".", resolve(".", path));
+}
+
 export function resolveEvalFilePath(
   cwd: string,
   projectRoot: string,

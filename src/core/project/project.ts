@@ -11,6 +11,7 @@ export interface SkillArenaProject {
   config: SkillArenaConfig;
   evalsDir: string;
   fixturesDir: string;
+  snapshotsDir: string;
   runsDir: string;
 }
 
@@ -50,7 +51,7 @@ export async function loadProject(startDir: string): Promise<SkillArenaProject> 
     config,
     evalsDir: resolve(root, config.paths.evals),
     fixturesDir: resolve(root, config.paths.fixtures),
+    snapshotsDir: resolve(root, config.paths.snapshots),
     runsDir: resolve(root, config.paths.runs)
   };
 }
-

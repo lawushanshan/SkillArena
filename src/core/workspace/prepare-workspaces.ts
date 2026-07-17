@@ -16,6 +16,7 @@ export interface PreparedWorkspace {
   caseId: string;
   path: string;
   fixture?: string;
+  snapshotsDir: string;
   skill?: PreparedSkill;
 }
 
@@ -81,6 +82,7 @@ async function prepareCaseWorkspace(
     caseId: testCase.id,
     path: workspacePath,
     fixture: testCase.workspace.fixture,
+    snapshotsDir: project.snapshotsDir,
     skill
   };
 }

@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
@@ -129,6 +132,43 @@ describe("gradeDeterministicExpectations", () => {
       })
     ]);
   });
+
+  it("compares files against expected snapshots", () => {
+    const root = mkdtempSync(join(tmpdir(), "skillarena-snapshot-grade-"));
+    const workspacePath = join(root, "workspace");
+    const snapshotsDir = join(root, "snapshots");
+    mkdirSync(workspacePath);
+    mkdirSync(snapshotsDir);
+    writeFileSync(join(workspacePath, "audit-report.md"), "expected\n", "utf8");
+    writeFileSync(join(snapshotsDir, "audit-report.md"), "expected\n", "utf8");
+    writeFileSync(join(workspacePath, "different.md"), "actual\n", "utf8");
+    writeFileSync(join(snapshotsDir, "different.md"), "expected\n", "utf8");
+
+    try {
+      const checks = gradeDeterministicExpectations({
+        testCase: createCase({
+          file_snapshots: [
+            { path: "audit-report.md", snapshot: "audit-report.md" },
+            { path: "different.md", snapshot: "different.md" }
+          ]
+        }),
+        codex: createCodexResult(0),
+        workspacePath,
+        snapshotsDir
+      });
+
+      expect(checks).toEqual([
+        expect.objectContaining({ name: "expect.file_snapshots[0]", status: "pass" }),
+        expect.objectContaining({
+          name: "expect.file_snapshots[1]",
+          status: "fail",
+          category: "artifact_mismatch"
+        })
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 function createCase(expect: Partial<CaseExpectation>): EvalCase {
@@ -143,6 +183,7 @@ function createCase(expect: Partial<CaseExpectation>): EvalCase {
       files_changed: [],
       files_deleted: [],
       files_unchanged: [],
+      file_snapshots: [],
       ...expect
     }
   };
