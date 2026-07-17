@@ -60,7 +60,7 @@ The v0 architecture is intentionally small. It should answer one question well:
 
 1. A developer writes eval cases in `evals/*.yaml`.
 2. The CLI loads the eval suite and creates an isolated run directory.
-3. SkillArena copies each case fixture into a per-case workspace.
+3. SkillArena copies each case fixture and declared local skill into a per-case workspace.
 4. The Codex adapter executes each prompt with `codex exec --json` from the prepared workspace.
 5. Raw JSONL output is stored without modification.
 6. The trace parser converts Codex events into SkillArena's internal event model.
@@ -125,6 +125,18 @@ The adapter should own:
 - stderr capture
 
 Do not spread direct `codex` command calls across the codebase.
+
+### Skill Provisioning
+
+When an eval suite declares `skill.name` and `skill.path`, SkillArena requires the path to be a
+directory containing `SKILL.md`. It copies the skill into each isolated workspace at:
+
+```text
+.codex/skills/<skill-name>/
+```
+
+This keeps the evaluated skill local to the case, preserves the source skill, and avoids replacing
+the user's `CODEX_HOME`, authentication, or global configuration.
 
 ### Trace Store
 

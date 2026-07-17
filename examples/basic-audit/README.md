@@ -12,5 +12,6 @@ The eval describes a task that should create `audit-report.md`, change `README.m
 
 The fixture provides the starting workspace copied for each case.
 
-Real Codex execution may pass or fail depending on the available skills and model behavior. Dry-run mode validates the project shape without invoking Codex.
+The suite's local `code-audit` skill is copied into each case workspace before Codex runs.
 
+Real Codex execution may pass or fail depending on the available skills and model behavior. Dry-run mode validates the project shape without invoking Codex.

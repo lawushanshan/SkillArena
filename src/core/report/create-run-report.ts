@@ -67,7 +67,8 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
         workspace: workspace
           ? {
               path: workspace.path,
-              fixture: workspace.fixture
+              fixture: workspace.fixture,
+              skill: workspace.skill
             }
           : undefined,
         artifacts: execution

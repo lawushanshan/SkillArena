@@ -1,7 +1,8 @@
-import { cp, mkdir } from "node:fs/promises";
+import { cp, mkdir, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
+import type { SkillReference } from "../config/config-schema.js";
 import type { EvalCase } from "../eval/eval-schema.js";
 import { SkillArenaError } from "../errors.js";
 import { resolveFixturePath } from "../project/path-safety.js";
@@ -15,6 +16,13 @@ export interface PreparedWorkspace {
   caseId: string;
   path: string;
   fixture?: string;
+  skill?: PreparedSkill;
+}
+
+export interface PreparedSkill {
+  name: string;
+  sourcePath: string;
+  workspacePath: string;
 }
 
 export async function prepareWorkspaces(
@@ -26,7 +34,7 @@ export async function prepareWorkspaces(
 
   for (const loadedSuite of suites) {
     for (const testCase of loadedSuite.selectedCases) {
-      workspaces.push(await prepareCaseWorkspace(project, runStore, loadedSuite.suite.name, testCase));
+      workspaces.push(await prepareCaseWorkspace(project, runStore, loadedSuite, testCase));
     }
   }
 
@@ -36,9 +44,10 @@ export async function prepareWorkspaces(
 async function prepareCaseWorkspace(
   project: SkillArenaProject,
   runStore: RunStore,
-  suiteName: string,
+  loadedSuite: LoadedEvalSuite,
   testCase: EvalCase
 ): Promise<PreparedWorkspace> {
+  const suiteName = loadedSuite.suite.name;
   const workspacePath = resolve(
     runStore.workspacesDir,
     createStablePathSegment(suiteName),
@@ -47,32 +56,65 @@ async function prepareCaseWorkspace(
 
   await mkdir(workspacePath, { recursive: true });
 
-  if (!testCase.workspace.fixture) {
-    return {
-      suiteName,
-      caseId: testCase.id,
-      path: workspacePath
-    };
+  if (testCase.workspace.fixture) {
+    const fixturePath = resolveFixturePath(project.root, project.fixturesDir, testCase.workspace.fixture);
+
+    if (!existsSync(fixturePath)) {
+      throw new SkillArenaError(
+        `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
+      );
+    }
+
+    await cp(fixturePath, workspacePath, {
+      recursive: true,
+      force: false,
+      errorOnExist: false
+    });
   }
 
-  const fixturePath = resolveFixturePath(project.root, project.fixturesDir, testCase.workspace.fixture);
-
-  if (!existsSync(fixturePath)) {
-    throw new SkillArenaError(
-      `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
-    );
-  }
-
-  await cp(fixturePath, workspacePath, {
-    recursive: true,
-    force: false,
-    errorOnExist: false
-  });
+  const skill = loadedSuite.suite.skill
+    ? await provisionSkill(project.root, workspacePath, loadedSuite.suite.skill)
+    : undefined;
 
   return {
     suiteName,
     caseId: testCase.id,
     path: workspacePath,
-    fixture: testCase.workspace.fixture
+    fixture: testCase.workspace.fixture,
+    skill
+  };
+}
+
+async function provisionSkill(
+  projectRoot: string,
+  workspacePath: string,
+  skill: SkillReference
+): Promise<PreparedSkill> {
+  const sourcePath = resolve(projectRoot, skill.path);
+
+  if (!existsSync(sourcePath)) {
+    throw new SkillArenaError(`Skill path does not exist: ${skill.path}`);
+  }
+
+  if (!(await stat(sourcePath)).isDirectory()) {
+    throw new SkillArenaError(`Skill path must be a directory: ${skill.path}`);
+  }
+
+  if (!existsSync(resolve(sourcePath, "SKILL.md"))) {
+    throw new SkillArenaError(`Skill directory must contain SKILL.md: ${skill.path}`);
+  }
+
+  const workspaceSkillPath = resolve(workspacePath, ".codex", "skills", skill.name);
+  await mkdir(dirname(workspaceSkillPath), { recursive: true });
+  await cp(sourcePath, workspaceSkillPath, {
+    recursive: true,
+    force: false,
+    errorOnExist: true
+  });
+
+  return {
+    name: skill.name,
+    sourcePath,
+    workspacePath: workspaceSkillPath
   };
 }

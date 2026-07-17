@@ -47,6 +47,10 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
       lines.push(`- Status: ${testCase.status}`);
       if (testCase.workspace) {
         lines.push(`- Workspace: ${testCase.workspace.path}`);
+        if (testCase.workspace.skill) {
+          lines.push(`- Skill: ${testCase.workspace.skill.name}`);
+          lines.push(`- Skill source: ${testCase.workspace.skill.sourcePath}`);
+        }
       }
       if (testCase.artifacts) {
         if (testCase.artifacts.rawTrace) {

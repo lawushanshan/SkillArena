@@ -87,6 +87,11 @@ Use it to understand how eval files and fixtures fit together.
 
 An eval file describes prompts and expected observable behavior.
 
+When a suite declares `skill`, its `path` must point to a directory containing `SKILL.md`.
+SkillArena copies that directory into each isolated case workspace at
+`.codex/skills/<skill-name>/` before invoking Codex. The source skill and fixture are never
+modified by the run.
+
 Example:
 
 ```yaml

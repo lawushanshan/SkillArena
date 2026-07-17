@@ -27,6 +27,11 @@ export interface ReportCase {
   workspace?: {
     path: string;
     fixture?: string;
+    skill?: {
+      name: string;
+      sourcePath: string;
+      workspacePath: string;
+    };
   };
   artifacts?: {
     rawTrace?: string;

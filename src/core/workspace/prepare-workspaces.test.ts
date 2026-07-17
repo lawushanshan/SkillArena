@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 
+import type { SkillReference } from "../config/config-schema.js";
 import type { SkillArenaProject } from "../project/project.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunStore } from "../run/run-store.js";
@@ -78,6 +79,55 @@ describe("prepareWorkspaces", () => {
     expect(workspaces).toHaveLength(2);
     expect(workspaces[0]!.path).not.toBe(workspaces[1]!.path);
   });
+
+  it("provisions the suite skill into every case workspace", async () => {
+    const root = await makeTempDir();
+    const skillDir = join(root, ".codex", "skills", "code-audit");
+    const fixtureDir = join(root, "fixtures", "basic");
+    const workspacesDir = join(root, ".skillarena", "runs", "run-1", "workspaces");
+    await mkdir(skillDir, { recursive: true });
+    await mkdir(fixtureDir, { recursive: true });
+    await mkdir(workspacesDir, { recursive: true });
+    await writeFile(join(skillDir, "SKILL.md"), "# Code Audit\n", "utf8");
+
+    const workspaces = await prepareWorkspaces(
+      createProject(root),
+      createRunStore(root, workspacesDir),
+      createSuites("sample suite", "case-1", "fixtures/basic", {
+        name: "code-audit",
+        path: ".codex/skills/code-audit"
+      })
+    );
+
+    expect(workspaces[0]!.skill).toMatchObject({
+      name: "code-audit",
+      sourcePath: skillDir
+    });
+    await expect(
+      readFile(join(workspaces[0]!.path, ".codex", "skills", "code-audit", "SKILL.md"), "utf8")
+    ).resolves.toBe("# Code Audit\n");
+  });
+
+  it("rejects a suite skill without SKILL.md", async () => {
+    const root = await makeTempDir();
+    const skillDir = join(root, ".codex", "skills", "incomplete");
+    const fixtureDir = join(root, "fixtures", "basic");
+    const workspacesDir = join(root, ".skillarena", "runs", "run-1", "workspaces");
+    await mkdir(skillDir, { recursive: true });
+    await mkdir(fixtureDir, { recursive: true });
+    await mkdir(workspacesDir, { recursive: true });
+
+    await expect(
+      prepareWorkspaces(
+        createProject(root),
+        createRunStore(root, workspacesDir),
+        createSuites("sample suite", "case-1", "fixtures/basic", {
+          name: "incomplete",
+          path: ".codex/skills/incomplete"
+        })
+      )
+    ).rejects.toThrow("Skill directory must contain SKILL.md");
+  });
 });
 
 describe("sanitizePathSegment", () => {
@@ -126,7 +176,12 @@ function createRunStore(root: string, workspacesDir: string): RunStore {
   };
 }
 
-function createSuites(suiteName: string, caseId: string, fixture: string): LoadedEvalSuite[] {
+function createSuites(
+  suiteName: string,
+  caseId: string,
+  fixture: string,
+  skill?: SkillReference
+): LoadedEvalSuite[] {
   return [
     {
       path: "evals/sample.yaml",
@@ -149,6 +204,7 @@ function createSuites(suiteName: string, caseId: string, fixture: string): Loade
       suite: {
         name: suiteName,
         agent: "codex",
+        skill,
         cases: []
       }
     }

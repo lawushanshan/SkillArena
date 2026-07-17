@@ -1,4 +1,5 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
@@ -48,5 +49,84 @@ describe("parseCodexJsonlTrace", () => {
       skillName: "code-audit"
     });
   });
-});
 
+  it("normalizes command and message items emitted by current Codex JSONL output", async () => {
+    const dir = await makeTempDir();
+    const rawPath = join(dir, "trace.jsonl");
+    await writeFile(
+      rawPath,
+      [
+        JSON.stringify({
+          type: "item.started",
+          item: {
+            type: "command_execution",
+            command: "Get-Content .codex/skills/code-audit/SKILL.md"
+          }
+        }),
+        JSON.stringify({
+          type: "item.completed",
+          item: {
+            type: "command_execution",
+            command: "Get-Content .codex/skills/code-audit/SKILL.md",
+            exit_code: 0
+          }
+        }),
+        JSON.stringify({
+          type: "item.completed",
+          item: { type: "agent_message", text: "Done" }
+        }),
+        JSON.stringify({ type: "turn.failed", error: "request failed" })
+      ].join("\n"),
+      "utf8"
+    );
+
+    const parsed = await parseCodexJsonlTrace(rawPath);
+
+    expect(parsed.events.map((event) => event.type)).toEqual([
+      "command_started",
+      "skill_read",
+      "command_finished",
+      "assistant_message",
+      "run_error"
+    ]);
+    expect(parsed.events[1]).toMatchObject({
+      skillName: "code-audit",
+      path: ".codex/skills/code-audit/SKILL.md"
+    });
+    expect(parsed.events[2]).toMatchObject({
+      command: "Get-Content .codex/skills/code-audit/SKILL.md",
+      exitCode: 0
+    });
+  });
+
+  it("parses a sanitized golden fixture captured from Codex JSONL", async () => {
+    const fixturePath = fileURLToPath(new URL("./fixtures/codex-0.144-item-events.jsonl", import.meta.url));
+
+    const parsed = await parseCodexJsonlTrace(fixturePath);
+
+    expect(parsed.stats).toMatchObject({
+      rawEvents: 7,
+      normalizedEvents: 9,
+      parseErrors: 0
+    });
+    expect(parsed.events.map((event) => event.type)).toEqual([
+      "unknown",
+      "assistant_message",
+      "command_started",
+      "skill_read",
+      "command_finished",
+      "unknown",
+      "file_changed",
+      "file_changed",
+      "unknown"
+    ]);
+    expect(parsed.events[3]).toMatchObject({
+      skillName: "code-audit",
+      path: ".codex\\skills\\code-audit\\SKILL.md"
+    });
+    expect(parsed.events.filter((event) => event.type === "file_changed")).toEqual([
+      expect.objectContaining({ path: "README.md" }),
+      expect.objectContaining({ path: "audit-report.md" })
+    ]);
+  });
+});

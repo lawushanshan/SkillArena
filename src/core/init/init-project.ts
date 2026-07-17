@@ -63,6 +63,17 @@ console.log("sample workspace", secret.length);
 const FIXTURE_TODO = `temporary notes
 `;
 
+const SAMPLE_SKILL = `---
+name: sample-audit
+description: Review a small project and produce a concise audit report.
+---
+
+# Sample Audit
+
+Review the workspace for risks. Create \`audit-report.md\`, add an \`Audit Notes\` section to
+\`README.md\`, remove \`TODO.tmp\` when it is no longer needed, and do not modify \`package.json\`.
+`;
+
 export async function initProject(rootDir: string): Promise<InitProjectResult> {
   const created: string[] = [];
   const skipped: string[] = [];
@@ -70,6 +81,7 @@ export async function initProject(rootDir: string): Promise<InitProjectResult> {
   await ensureDir(resolve(rootDir, "evals"), created);
   await ensureDir(resolve(rootDir, "fixtures", "sample-workspace"), created);
   await ensureDir(resolve(rootDir, "fixtures", "sample-workspace", "src"), created);
+  await ensureDir(resolve(rootDir, ".codex", "skills", "sample-audit"), created);
   await ensureDir(resolve(rootDir, ".skillarena", "runs"), created);
 
   await writeIfMissing(resolve(rootDir, "skillarena.yaml"), CONFIG_TEMPLATE, created, skipped);
@@ -95,6 +107,12 @@ export async function initProject(rootDir: string): Promise<InitProjectResult> {
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "TODO.tmp"),
     FIXTURE_TODO,
+    created,
+    skipped
+  );
+  await writeIfMissing(
+    resolve(rootDir, ".codex", "skills", "sample-audit", "SKILL.md"),
+    SAMPLE_SKILL,
     created,
     skipped
   );

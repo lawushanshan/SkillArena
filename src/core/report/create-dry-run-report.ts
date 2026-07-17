@@ -33,7 +33,8 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
         workspace: workspace
           ? {
               path: workspace.path,
-              fixture: workspace.fixture
+              fixture: workspace.fixture,
+              skill: workspace.skill
             }
           : undefined,
         checks: [
@@ -56,7 +57,16 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
             message: testCase.workspace.fixture
               ? `Fixture copied: ${testCase.workspace.fixture}`
               : "No fixture required."
-          }
+          },
+          ...(workspace?.skill
+            ? [
+                {
+                  name: "skill",
+                  status: "pass" as const,
+                  message: `Skill provisioned: ${workspace.skill.name}`
+                }
+              ]
+            : [])
         ]
       };
     });
