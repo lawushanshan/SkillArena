@@ -208,6 +208,48 @@ describe("runDryRun", () => {
     ).rejects.toThrow("Fixture does not exist for case missing-fixture");
   });
 
+  it("validates snapshot files for selected cases", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(join(root, "snapshots", "audit-report.md"), "expected\n", "utf8");
+    await writeFile(
+      join(root, "evals", "snapshot.yaml"),
+      `name: snapshot\ncases:\n  - id: snapshot-case\n    prompt: test\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      file_snapshots:\n        - path: audit-report.md\n          snapshot: audit-report.md\n`,
+      "utf8"
+    );
+
+    const result = await runDryRun({
+      cwd: root,
+      evalFile: "evals/snapshot.yaml",
+      command: ["run", "--dry-run"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
+    });
+
+    expect(result.totalCases).toBe(1);
+  });
+
+  it("rejects snapshot paths outside the configured snapshots directory", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(join(root, "outside.md"), "outside\n", "utf8");
+    await writeFile(
+      join(root, "evals", "outside-snapshot.yaml"),
+      `name: outside-snapshot\ncases:\n  - id: outside-snapshot\n    prompt: test\n    expect:\n      file_snapshots:\n        - path: report.md\n          snapshot: ../outside.md\n`,
+      "utf8"
+    );
+
+    await expect(
+      runDryRun({
+        cwd: root,
+        evalFile: "evals/outside-snapshot.yaml",
+        command: ["run", "--dry-run"],
+        skillarenaVersion: "0.0.0-test",
+        detectCodexVersion: false
+      })
+    ).rejects.toThrow("Snapshot path must resolve inside the configured snapshots directory");
+  });
+
   it("resolves explicit eval files relative to the project root when run from a subdirectory", async () => {
     const root = await makeTempDir();
     await initProject(root);
