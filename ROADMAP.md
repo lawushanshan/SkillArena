@@ -30,6 +30,12 @@
 - [x] Add snapshot fixtures for expected artifacts
 - [x] Add failure trace summaries
 
+## v0.3: Evaluation Integrity
+
+- [x] Block comparisons across run modes or changed benchmark definitions by default
+- [x] Surface Skill source changes and execution-environment warnings in comparisons
+- [x] Document compatible baseline and candidate comparison rules
+
 ## Later
 
 - Adapter interface for other coding agents

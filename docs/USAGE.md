@@ -330,6 +330,21 @@ skillarena compare <baseline-run-id> <candidate-run-id>
 skillarena compare .skillarena/runs/<baseline-run-id> .skillarena/runs/<candidate-run-id>
 ```
 
+By default, SkillArena compares only runs with the same mode, project configuration hash, eval
+hashes, fixture hashes, and selected suite/case set. This prevents a dry-run, changed benchmark,
+or partial selection from being reported as a Skill improvement. Skill source hash changes are
+expected in A/B evaluation and are shown in the result. Codex, Node, and platform changes are
+reported as warnings because they can influence agent behavior.
+
+For diagnostics only, compare otherwise incompatible reports explicitly:
+
+```powershell
+skillarena compare <baseline-run-id> <candidate-run-id> --allow-incompatible
+```
+
+Do not use an incompatible comparison as a CI regression gate. Create a baseline from the same
+eval and fixture version, then change only the Skill source before running the candidate.
+
 The comparison shows:
 
 - Verdict: `improved`, `regressed`, `mixed`, or `unchanged`

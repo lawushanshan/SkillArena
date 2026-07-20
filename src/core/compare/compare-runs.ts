@@ -11,6 +11,7 @@ export interface CompareRunsOptions {
   cwd: string;
   baselineRunDir?: string;
   candidateRunDir?: string;
+  allowIncompatible?: boolean;
 }
 
 export interface RunComparisonMetrics {
@@ -57,6 +58,7 @@ export interface CaseStatusChange {
 export interface RunComparison {
   verdict: ComparisonVerdict;
   hasRegression: boolean;
+  compatibility: ComparisonCompatibility;
   baseline: RunComparisonMetrics;
   candidate: RunComparisonMetrics;
   delta: {
@@ -77,12 +79,30 @@ export interface RunComparison {
 
 export type ComparisonVerdict = "improved" | "regressed" | "mixed" | "unchanged";
 
+export interface ComparisonCompatibility {
+  compatible: boolean;
+  blockingReasons: string[];
+  warnings: string[];
+  skillChanges: string[];
+}
+
 export async function runCompareCommand(options: CompareRunsOptions): Promise<RunComparison> {
   const runDirs = await resolveComparisonRunDirs(options);
   const baseline = await loadRunReport(runDirs.baselineRunDir);
   const candidate = await loadRunReport(runDirs.candidateRunDir);
+  const comparison = compareReports(baseline, candidate);
 
-  return compareReports(baseline, candidate);
+  if (!comparison.compatibility.compatible && !options.allowIncompatible) {
+    throw new SkillArenaError(
+      [
+        "Runs are not comparable for A/B evaluation:",
+        ...comparison.compatibility.blockingReasons.map((reason) => `- ${reason}`),
+        "Use --allow-incompatible only for diagnostic comparisons."
+      ].join("\n")
+    );
+  }
+
+  return comparison;
 }
 
 export function compareReports(
@@ -92,6 +112,7 @@ export function compareReports(
   const baselineMetrics = createRunMetrics(baseline);
   const candidateMetrics = createRunMetrics(candidate);
   const caseComparison = compareCaseStatuses(baseline, candidate);
+  const compatibility = assessCompatibility(baseline, candidate);
   const delta = {
     passRatePoints: candidateMetrics.passRate - baselineMetrics.passRate,
     triggerRatePoints: candidateMetrics.triggerRate - baselineMetrics.triggerRate,
@@ -115,6 +136,7 @@ export function compareReports(
   return {
     verdict,
     hasRegression: verdict === "regressed" || verdict === "mixed",
+    compatibility,
     baseline: baselineMetrics,
     candidate: candidateMetrics,
     delta,
@@ -128,6 +150,8 @@ export function renderCompareSummary(comparison: RunComparison): string {
     `Verdict: ${comparison.verdict}`,
     `Baseline: ${comparison.baseline.runId}`,
     `Candidate: ${comparison.candidate.runId}`,
+    `Compatibility: ${comparison.compatibility.compatible ? "compatible" : "incompatible"}`,
+    ...formatCompatibilityLines(comparison.compatibility),
     `Pass rate: ${formatPercent(comparison.baseline.passRate)} -> ${formatPercent(
       comparison.candidate.passRate
     )} (${formatSignedPercentPoints(comparison.delta.passRatePoints)})`,
@@ -163,6 +187,118 @@ export function renderCompareSummary(comparison: RunComparison): string {
     ...formatCaseChangeLines("Added cases", comparison.cases.addedCases),
     ...formatCaseChangeLines("Removed cases", comparison.cases.removedCases)
   ].join("\n");
+}
+
+function assessCompatibility(
+  baseline: SkillArenaReport,
+  candidate: SkillArenaReport
+): ComparisonCompatibility {
+  const blockingReasons: string[] = [];
+  const warnings: string[] = [];
+
+  if (baseline.mode !== candidate.mode) {
+    blockingReasons.push(`Run modes differ: ${baseline.mode} -> ${candidate.mode}.`);
+  }
+
+  if (baseline.metadata.configHash !== candidate.metadata.configHash) {
+    blockingReasons.push("Project configuration hash differs.");
+  }
+
+  if (!sameHashedEntries(baseline.metadata.evals, candidate.metadata.evals)) {
+    blockingReasons.push("Eval definitions differ.");
+  }
+
+  if (!sameHashedEntries(baseline.metadata.fixtures, candidate.metadata.fixtures)) {
+    blockingReasons.push("Fixture definitions differ.");
+  }
+
+  if (!sameCaseSet(baseline, candidate)) {
+    blockingReasons.push("Selected suite/case set differs.");
+  }
+
+  const skillChanges = describeSkillChanges(baseline, candidate);
+
+  if (baseline.metadata.codexVersion !== candidate.metadata.codexVersion) {
+    warnings.push(
+      `Codex version differs: ${baseline.metadata.codexVersion ?? "not detected"} -> ${candidate.metadata.codexVersion ?? "not detected"}.`
+    );
+  }
+
+  if (
+    baseline.metadata.nodeVersion !== candidate.metadata.nodeVersion ||
+    baseline.metadata.platform !== candidate.metadata.platform ||
+    baseline.metadata.arch !== candidate.metadata.arch
+  ) {
+    warnings.push("Node or platform metadata differs between runs.");
+  }
+
+  return {
+    compatible: blockingReasons.length === 0,
+    blockingReasons,
+    warnings,
+    skillChanges
+  };
+}
+
+function sameHashedEntries(
+  baseline: Array<{ path: string; hash: string }>,
+  candidate: Array<{ path: string; hash: string }>
+): boolean {
+  return sameEntries(
+    baseline.map((entry) => `${entry.path}\0${entry.hash}`),
+    candidate.map((entry) => `${entry.path}\0${entry.hash}`)
+  );
+}
+
+function sameCaseSet(baseline: SkillArenaReport, candidate: SkillArenaReport): boolean {
+  return sameEntries(
+    [...createCaseStatusMap(baseline).keys()],
+    [...createCaseStatusMap(candidate).keys()]
+  );
+}
+
+function sameEntries(baseline: string[], candidate: string[]): boolean {
+  if (baseline.length !== candidate.length) {
+    return false;
+  }
+
+  const baselineEntries = [...baseline].sort();
+  const candidateEntries = [...candidate].sort();
+
+  return baselineEntries.every((entry, index) => entry === candidateEntries[index]);
+}
+
+function describeSkillChanges(baseline: SkillArenaReport, candidate: SkillArenaReport): string[] {
+  const baselineSkills = new Map(
+    baseline.metadata.skills.map((skill) => [`${skill.name}\0${skill.path}`, skill.hash ?? "missing"])
+  );
+  const candidateSkills = new Map(
+    candidate.metadata.skills.map((skill) => [`${skill.name}\0${skill.path}`, skill.hash ?? "missing"])
+  );
+  const keys = new Set([...baselineSkills.keys(), ...candidateSkills.keys()]);
+  const changes: string[] = [];
+
+  for (const key of [...keys].sort()) {
+    const baselineHash = baselineSkills.get(key);
+    const candidateHash = candidateSkills.get(key);
+
+    if (baselineHash === candidateHash) {
+      continue;
+    }
+
+    const [name, path] = key.split("\0");
+    changes.push(`${name} (${path}): ${baselineHash ?? "missing"} -> ${candidateHash ?? "missing"}`);
+  }
+
+  return changes;
+}
+
+function formatCompatibilityLines(compatibility: ComparisonCompatibility): string[] {
+  return [
+    ...compatibility.blockingReasons.map((reason) => `Incompatible: ${reason}`),
+    ...compatibility.skillChanges.map((change) => `Skill change: ${change}`),
+    ...compatibility.warnings.map((warning) => `Warning: ${warning}`)
+  ];
 }
 
 async function resolveComparisonRunDirs(options: CompareRunsOptions): Promise<{

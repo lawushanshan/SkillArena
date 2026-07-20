@@ -168,17 +168,22 @@ program
   .argument("[baselineRunDir]", "Baseline run directory or run id")
   .argument("[candidateRunDir]", "Candidate run directory or run id")
   .option("--json", "Print the comparison as JSON.")
+  .option(
+    "--allow-incompatible",
+    "Allow diagnostic comparison of runs with different modes or benchmark definitions."
+  )
   .option("--fail-on-regression", "Exit with code 1 when the candidate has regressions.")
   .action(async (
     baselineRunDir: string | undefined,
     candidateRunDir: string | undefined,
-    options: { json?: boolean; failOnRegression?: boolean }
+    options: { json?: boolean; allowIncompatible?: boolean; failOnRegression?: boolean }
   ) => {
     try {
       const result = await runCompareCommand({
         cwd: process.cwd(),
         baselineRunDir,
-        candidateRunDir
+        candidateRunDir,
+        allowIncompatible: options.allowIncompatible
       });
 
       console.log(options.json ? JSON.stringify(result, null, 2) : renderCompareSummary(result));

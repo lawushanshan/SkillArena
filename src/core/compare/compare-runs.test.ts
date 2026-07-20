@@ -139,6 +139,59 @@ describe("compareReports", () => {
     expect(comparison.verdict).toBe("regressed");
     expect(comparison.hasRegression).toBe(true);
   });
+
+  it("treats skill changes as comparable but reports them", () => {
+    const baseline = createReport({
+      runId: "baseline",
+      durationMs: 100,
+      cases: [createCase("suite", "case-1", "fail", [])]
+    });
+    const candidate = createReport({
+      runId: "candidate",
+      durationMs: 100,
+      cases: [createCase("suite", "case-1", "pass", [])]
+    });
+    baseline.metadata.skills = [{ name: "code-audit", path: ".codex/skills/code-audit", exists: true, hash: "old" }];
+    candidate.metadata.skills = [{ name: "code-audit", path: ".codex/skills/code-audit", exists: true, hash: "new" }];
+
+    const comparison = compareReports(baseline, candidate);
+
+    expect(comparison.compatibility).toMatchObject({
+      compatible: true,
+      blockingReasons: [],
+      skillChanges: ["code-audit (.codex/skills/code-audit): old -> new"]
+    });
+    expect(renderCompareSummary(comparison)).toContain("Skill change: code-audit");
+  });
+
+  it("reports incompatible mode and benchmark definitions", () => {
+    const baseline = createReport({
+      runId: "baseline",
+      durationMs: 100,
+      cases: [createCase("suite", "case-1", "pass", [])]
+    });
+    const candidate = createReport({
+      runId: "candidate",
+      durationMs: 100,
+      cases: [createCase("suite", "case-2", "pass", [])]
+    });
+    candidate.mode = "dry-run";
+    candidate.metadata.configHash = "different-config";
+    candidate.metadata.evals = [{ path: "evals/suite.yaml", hash: "different-eval" }];
+    candidate.metadata.fixtures = [{ path: "fixtures/basic", hash: "different-fixture" }];
+
+    const comparison = compareReports(baseline, candidate);
+
+    expect(comparison.compatibility.compatible).toBe(false);
+    expect(comparison.compatibility.blockingReasons).toEqual([
+      "Run modes differ: run -> dry-run.",
+      "Project configuration hash differs.",
+      "Eval definitions differ.",
+      "Fixture definitions differ.",
+      "Selected suite/case set differs."
+    ]);
+    expect(renderCompareSummary(comparison)).toContain("Compatibility: incompatible");
+  });
 });
 
 describe("runCompareCommand", () => {
@@ -247,6 +300,41 @@ describe("runCompareCommand", () => {
     expect(comparison.baseline.runId).toBe("baseline");
     expect(comparison.candidate.runId).toBe("candidate");
     expect(comparison.cases.improved).toBe(1);
+  });
+
+  it("rejects incompatible comparisons unless explicitly allowed", async () => {
+    const baseline = createReport({
+      runId: "baseline",
+      durationMs: 100,
+      cases: [createCase("suite", "case-1", "pass", [])]
+    });
+    const candidate = createReport({
+      runId: "candidate",
+      durationMs: 100,
+      cases: [createCase("suite", "case-1", "pass", [])]
+    });
+    candidate.mode = "dry-run";
+    const root = await createProjectWithRuns([
+      { runId: "20260629T000000Z-baseln", report: baseline },
+      { runId: "20260629T010000Z-candid", report: candidate }
+    ]);
+
+    await expect(
+      runCompareCommand({
+        cwd: root,
+        baselineRunDir: "20260629T000000Z-baseln",
+        candidateRunDir: "20260629T010000Z-candid"
+      })
+    ).rejects.toThrow("Run modes differ: run -> dry-run.");
+
+    const comparison = await runCompareCommand({
+      cwd: root,
+      baselineRunDir: "20260629T000000Z-baseln",
+      candidateRunDir: "20260629T010000Z-candid",
+      allowIncompatible: true
+    });
+
+    expect(comparison.compatibility.compatible).toBe(false);
   });
 });
 

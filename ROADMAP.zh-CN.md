@@ -25,6 +25,12 @@
 - [x] 增加预期产物的 snapshot fixture
 - [x] 增加失败 trace 摘要
 
+## v0.3：评测可信度
+
+- [x] 默认阻止跨运行模式或变更后基准定义的比较
+- [x] 在比较中展示 Skill 源码变化和执行环境警告
+- [x] 记录兼容 baseline 与 candidate 的比较规则
+
 ## 后续
 
 - 面向其他编程 Agent 的 adapter interface

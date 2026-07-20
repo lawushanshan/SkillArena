@@ -212,6 +212,16 @@ skillarena compare --fail-on-regression
 
 若未提供目录，`compare` 取运行目录中最新两次报告。输出包括 `improved`、`regressed`、`mixed` 或 `unchanged` verdict、通过率、触发率、误触发率、case 状态变化和耗时。使用 `--fail-on-regression` 时，任何负向信号或 `mixed` 都使命令以退出码 1 结束。
 
+默认情况下，SkillArena 只比较运行模式、项目配置 hash、eval hash、fixture hash 和所选 suite/case 集合完全相同的两次运行。这样可避免将 dry-run、变更后的基准或部分 case 选择误报为 Skill 改进。Skill source hash 的变化是 A/B 评测的预期输入，会显示在结果中；Codex、Node 或平台变化会显示为警告，因为它们可能影响 Agent 行为。
+
+仅排查时，可显式比较不兼容报告：
+
+```powershell
+skillarena compare <baseline-run-id> <candidate-run-id> --allow-incompatible
+```
+
+不应将不兼容比较作为 CI 回归门禁。应先使用相同的 eval 与 fixture 版本创建 baseline，只修改 Skill 源码后再运行 candidate。
+
 ## 报告与排障
 
 每次运行会在 `.skillarena/runs/<run-id>/` 下写入：
