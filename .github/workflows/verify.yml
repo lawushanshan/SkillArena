@@ -1,0 +1,56 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      run_real_evals:
+        description: Run authenticated Codex evals on a self-hosted runner.
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - name: Validate example evals without Codex
+        working-directory: examples/basic-audit
+        run: node ../../dist/cli/index.js run --dry-run
+
+  real-codex-evals:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_real_evals }}
+    needs: verify
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Run authenticated Codex evals
+        working-directory: examples/basic-audit
+        run: node ../../dist/cli/index.js run --keep-workspace --codex-command "${{ vars.SKILLARENA_CODEX_COMMAND || 'codex' }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skillarena-runs
+          path: examples/basic-audit/.skillarena/runs
+          if-no-files-found: warn

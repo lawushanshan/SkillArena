@@ -21,7 +21,7 @@
 
 ## v0.2：更好的评分
 
-- [ ] 增加基于 rubric 的 LLM judge
+- [x] 增加基于 rubric 的 LLM judge
 - [x] 增加预期产物的 snapshot fixture
 - [x] 增加失败 trace 摘要
 

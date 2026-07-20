@@ -1,4 +1,5 @@
 import { writeFile } from "node:fs/promises";
+import { delimiter, dirname, isAbsolute } from "node:path";
 import spawn from "cross-spawn";
 
 export interface CodexExecOptions {
@@ -29,6 +30,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
   const startedAt = Date.now();
   const codexCommand = options.codexCommand ?? "codex";
   const codexCommandArgs = options.codexCommandArgs ?? [];
+  const env = createCodexEnvironment(codexCommand);
   const args = [
     ...codexCommandArgs,
     "exec",
@@ -50,6 +52,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
     let settled = false;
     const child = spawn(codexCommand, args, {
       cwd: options.cwd,
+      env,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true
     });
@@ -117,5 +120,19 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
     stderrPath: options.stderrPath,
     stdoutBytes: Buffer.byteLength(stdout, "utf8"),
     stderrBytes: Buffer.byteLength(stderr, "utf8")
+  };
+}
+
+function createCodexEnvironment(codexCommand: string): NodeJS.ProcessEnv {
+  if (!isAbsolute(codexCommand)) {
+    return process.env;
+  }
+
+  const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
+  const existingPath = process.env[pathKey];
+
+  return {
+    ...process.env,
+    [pathKey]: existingPath ? `${dirname(codexCommand)}${delimiter}${existingPath}` : dirname(codexCommand)
   };
 }

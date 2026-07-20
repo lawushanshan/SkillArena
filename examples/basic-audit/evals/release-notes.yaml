@@ -1,0 +1,19 @@
+name: release-notes
+agent: codex
+skill:
+  name: release-notes
+  path: .codex/skills/release-notes
+cases:
+  - id: writes-release-notes
+    prompt: "Prepare concise release notes from the repository change notes. Update README.md with a reference, and do not modify package.json."
+    workspace:
+      fixture: fixtures/release-notes
+    expect:
+      skill_used: release-notes
+      commands_succeeded: true
+      files_created:
+        - RELEASE_NOTES.md
+      files_changed:
+        - README.md
+      files_unchanged:
+        - package.json

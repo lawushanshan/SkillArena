@@ -129,4 +129,38 @@ describe("parseCodexJsonlTrace", () => {
       expect.objectContaining({ path: "audit-report.md" })
     ]);
   });
+
+  it("parses a sanitized Windows fixture captured from Codex 0.145", async () => {
+    const fixturePath = fileURLToPath(
+      new URL("./fixtures/codex-0.145-windows-item-events.jsonl", import.meta.url)
+    );
+
+    const parsed = await parseCodexJsonlTrace(fixturePath);
+
+    expect(parsed.stats).toMatchObject({
+      rawEvents: 10,
+      normalizedEvents: 12,
+      parseErrors: 0
+    });
+    expect(parsed.events.map((event) => event.type)).toEqual([
+      "unknown",
+      "unknown",
+      "assistant_message",
+      "command_started",
+      "skill_read",
+      "command_finished",
+      "command_started",
+      "command_finished",
+      "file_changed",
+      "file_changed",
+      "assistant_message",
+      "unknown"
+    ]);
+    expect(parsed.events[4]).toMatchObject({
+      skillName: "code-audit",
+      path: ".\\.codex\\skills\\code-audit\\SKILL.md"
+    });
+    expect(parsed.events[8]).toMatchObject({ path: "README.md" });
+    expect(parsed.events[9]).toMatchObject({ path: "audit-report.md" });
+  });
 });

@@ -178,7 +178,7 @@ skillarena run --case creates-table-of-contents --keep-workspace
 skillarena run --dry-run --keep-workspace
 ```
 
-可通过 `--timeout-ms <ms>` 设置单个 case 的超时，默认值为 `300000`；通过 `--codex-command <command>` 指定 Codex 可执行命令。
+可通过 `--timeout-ms <ms>` 设置单个 case 的超时，默认值为 `300000`；通过 `--codex-command <command>` 指定 Codex 可执行命令。传入 Codex 可执行文件的绝对路径时，SkillArena 会同时将其所在目录加入 Codex 子进程的 `PATH`，以便 Skill 使用同目录附带的工具。
 
 当前执行路径会评分进程超时/退出码、原始与解析 trace 可用性、Skill 正反触发、命令正反断言、命令成功状态，以及四类工作区文件断言。
 
@@ -241,5 +241,9 @@ skillarena report .skillarena/runs/<run-id>
 ## CI 与本地安全
 
 当没有失败或 blocked case 时，`run` 和 `report` 以退出码 0 结束；否则返回非零。`compare --fail-on-regression` 仅在检测到回归时失败。
+
+仓库中的 `Verify` 工作流会在每个 pull request 上执行类型检查、单元测试、构建和示例项目的 dry-run；它不会调用 Codex，也不需要凭据。
+
+真实 Codex eval 仅能在手动触发 `Verify` 并设置 `run_real_evals=true` 时运行，且只会在已完成 Codex 安装和认证的自托管 runner 上执行。若 `codex` 不在 runner 的 `PATH` 中，可设置仓库变量 `SKILLARENA_CODEX_COMMAND` 为 Codex 可执行文件的绝对路径。该工作流会保留运行产物供审阅。请勿在 pull request 工作流中配置长期 Codex 凭据；真实评测需要网络访问，并可能产生模型使用成本。
 
 v0 始终复制 fixture 到逐 case 运行目录，不会直接在源项目中运行。但它不是不受信任代码的安全沙箱：Codex 认证、网络与本地执行权限需由运行环境单独配置。原始 trace 可能包含 prompt、命令输出或敏感信息，分享前应先审阅。

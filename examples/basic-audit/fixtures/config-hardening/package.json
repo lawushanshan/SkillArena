@@ -1,0 +1,9 @@
+{
+  "name": "config-hardening-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "node --test"
+  }
+}

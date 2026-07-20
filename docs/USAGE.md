@@ -196,7 +196,10 @@ missing model configuration, an API error, timeout, invalid structured output, o
 
 ## Run Evals
 
-The implementation supports dry-run validation and Codex execution.
+The implementation supports dry-run validation and Codex execution. Use `--codex-command <command>`
+to select a Codex executable. When given an absolute executable path, SkillArena also adds that
+executable's directory to the Codex child process `PATH`, so companion tools shipped alongside it
+remain available to skills.
 
 Dry-run mode loads project config, validates eval YAML, prepares per-case workspaces, records run metadata, and writes reports without invoking Codex.
 
@@ -413,7 +416,15 @@ SkillArena exits with:
 - `0` when required evals pass
 - non-zero when required evals fail or cannot run
 
-Example GitHub Actions usage:
+The repository's `Verify` workflow runs type checks, tests, a build, and the example project's
+dry-run on every pull request. It deliberately does not invoke Codex or require credentials.
+
+For real Codex evals, manually dispatch `Verify` with `run_real_evals=true`. That job runs only
+on a self-hosted runner, where the maintainer must provision a working, authenticated Codex CLI.
+Set the optional repository variable `SKILLARENA_CODEX_COMMAND` to an absolute Codex executable
+path when `codex` is not on the runner's `PATH`. The workflow preserves run artifacts for review.
+
+Minimal GitHub Actions usage:
 
 ```yaml
 name: SkillArena
@@ -429,13 +440,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install SkillArena
-        run: npm install -g skillarena
-      - name: Run skill evals
-        run: skillarena run
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - working-directory: examples/basic-audit
+        run: node ../../dist/cli/index.js run --dry-run
 ```
 
-The exact installation command will be updated after the implementation language and package manager are finalized.
+Do not put long-lived Codex credentials into pull-request workflows. Real evals use network access
+and may incur model usage costs.
 
 ## Failure Debugging
 

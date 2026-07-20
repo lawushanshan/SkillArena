@@ -7,4 +7,7 @@ paths:
 skills:
   - name: code-audit
     path: .codex/skills/code-audit
-
+  - name: config-hardening
+    path: .codex/skills/config-hardening
+  - name: release-notes
+    path: .codex/skills/release-notes

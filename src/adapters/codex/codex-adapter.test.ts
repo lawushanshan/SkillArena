@@ -1,5 +1,5 @@
 import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -45,6 +45,40 @@ describe("runCodexExec", () => {
     expect(result.stdoutBytes).toBeGreaterThan(0);
     expect(result.stderrBytes).toBeGreaterThan(0);
     expect(result.command).toContain(scriptPath);
+  });
+
+  it("adds an absolute Codex command directory to the child PATH", async () => {
+    const dir = await makeTempDir();
+    const scriptPath = await createFakeCodex(
+      dir,
+      `console.log(process.env.PATH ?? process.env.Path ?? "");`
+    );
+    const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
+    const originalPath = process.env[pathKey];
+    process.env[pathKey] = "";
+
+    try {
+      const result = await runCodexExec({
+        prompt: "Do a task.",
+        cwd: dir,
+        rawOutputPath: join(dir, "raw.jsonl"),
+        stderrPath: join(dir, "stderr.txt"),
+        timeoutMs: 5000,
+        codexCommand: process.execPath,
+        codexCommandArgs: [scriptPath]
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect((await readFile(result.rawOutputPath, "utf8")).trim().split(delimiter)).toContain(
+        dirname(process.execPath)
+      );
+    } finally {
+      if (originalPath === undefined) {
+        delete process.env[pathKey];
+      } else {
+        process.env[pathKey] = originalPath;
+      }
+    }
   });
 
   it("marks timed out executions", async () => {

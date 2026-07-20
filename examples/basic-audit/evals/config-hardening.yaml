@@ -1,0 +1,22 @@
+name: config-hardening
+agent: codex
+skill:
+  name: config-hardening
+  path: .codex/skills/config-hardening
+cases:
+  - id: hardens-runtime-token-handling
+    prompt: "Harden this service's API token handling. Update the implementation and document the change without modifying package.json."
+    workspace:
+      fixture: fixtures/config-hardening
+    expect:
+      skill_used: config-hardening
+      commands:
+        - contains: "npm test"
+          exit_code: 0
+      files_created:
+        - configuration-notes.md
+      files_changed:
+        - README.md
+        - src/app.js
+      files_unchanged:
+        - package.json

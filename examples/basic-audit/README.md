@@ -1,6 +1,7 @@
 # Basic Audit Example
 
-This example shows the relationship between an eval file and a fixture.
+This example contains three independent suites that show the relationship between an eval file,
+a fixture, and a local Skill: security auditing, configuration hardening, and release notes.
 
 Run from this directory:
 
@@ -8,10 +9,11 @@ Run from this directory:
 skillarena run --dry-run
 ```
 
-The eval describes a task that should create `audit-report.md`, change `README.md`, and leave `package.json` unchanged.
+Each eval describes a task with observable artifacts. The suites create either an audit report,
+configuration notes, or release notes; all preserve `package.json`.
 
 The fixture provides the starting workspace copied for each case.
 
-The suite's local `code-audit` skill is copied into each case workspace before Codex runs.
+The suite's local Skill is copied into each case workspace before Codex runs.
 
 Real Codex execution may pass or fail depending on the available skills and model behavior. Dry-run mode validates the project shape without invoking Codex.
