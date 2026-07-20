@@ -46,7 +46,9 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
       lines.push("");
       lines.push(`- Status: ${testCase.status}`);
       if (testCase.workspace) {
-        lines.push(`- Workspace: ${testCase.workspace.path}`);
+        lines.push(
+          `- Workspace: ${testCase.workspace.preserved ? testCase.workspace.path : "cleaned after run"}`
+        );
         if (testCase.workspace.skill) {
           lines.push(`- Skill: ${testCase.workspace.skill.name}`);
           lines.push(`- Skill source: ${testCase.workspace.skill.sourcePath}`);
@@ -61,6 +63,31 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
         }
         if (testCase.artifacts.stderr) {
           lines.push(`- Stderr: ${testCase.artifacts.stderr}`);
+        }
+      }
+      if (testCase.judge) {
+        lines.push(`- Judge: ${testCase.judge.status}`);
+        lines.push(`- Judge model: ${testCase.judge.model ?? "not configured"}`);
+        lines.push(`- Judge prompt version: ${testCase.judge.promptVersion}`);
+        lines.push(`- Judge minimum score: ${testCase.judge.minimumScore}`);
+        if (testCase.judge.score !== undefined) {
+          lines.push(`- Judge score: ${testCase.judge.score}`);
+        }
+        if (testCase.judge.summary) {
+          lines.push(`- Judge summary: ${testCase.judge.summary}`);
+        }
+        if (testCase.judge.error) {
+          lines.push(`- Judge error: ${testCase.judge.error}`);
+        }
+        for (const criterion of testCase.judge.criteria ?? []) {
+          lines.push(`- Judge criterion ${criterion.criterion}: ${criterion.score} - ${criterion.reason}`);
+        }
+        if (testCase.judge.artifacts.length > 0) {
+          lines.push(
+            `- Judge artifacts: ${testCase.judge.artifacts
+              .map((artifact) => `${artifact.path} (${artifact.available ? artifact.characters : "unavailable"}${artifact.truncated ? ", truncated" : ""})`)
+              .join(", ")}`
+          );
         }
       }
       lines.push("");

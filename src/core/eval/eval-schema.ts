@@ -27,6 +27,37 @@ export const FileSnapshotExpectationSchema = z
   })
   .strict();
 
+export const RubricCriterionSchema = z
+  .object({
+    criterion: z.string().min(1),
+    description: z.string().min(1),
+    weight: z.number().positive().default(1)
+  })
+  .strict();
+
+export const RubricJudgeExpectationSchema = z
+  .object({
+    rubric: z.array(RubricCriterionSchema).min(1),
+    min_score: z.number().min(0).max(100),
+    files: z.array(z.string().min(1)).default([])
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const seen = new Set<string>();
+
+    for (const item of value.rubric) {
+      if (seen.has(item.criterion)) {
+        context.addIssue({
+          code: "custom",
+          path: ["rubric"],
+          message: `duplicate rubric criterion: ${item.criterion}`
+        });
+      }
+
+      seen.add(item.criterion);
+    }
+  });
+
 export const CaseExpectationSchema = z
   .object({
     skill_used: z.string().min(1).optional(),
@@ -39,6 +70,7 @@ export const CaseExpectationSchema = z
     files_deleted: PathListSchema,
     files_unchanged: PathListSchema,
     file_snapshots: z.array(FileSnapshotExpectationSchema).default([]),
+    judge: RubricJudgeExpectationSchema.optional(),
     exit_code: z.number().int().optional()
   })
   .strict()
@@ -99,6 +131,8 @@ export const EvalSuiteSchema = z
 
 export type CommandExpectation = z.infer<typeof CommandExpectationSchema>;
 export type FileSnapshotExpectation = z.infer<typeof FileSnapshotExpectationSchema>;
+export type RubricCriterion = z.infer<typeof RubricCriterionSchema>;
+export type RubricJudgeExpectation = z.infer<typeof RubricJudgeExpectationSchema>;
 export type CaseExpectation = z.infer<typeof CaseExpectationSchema>;
 export type EvalCase = z.infer<typeof EvalCaseSchema>;
 export type EvalSuite = z.infer<typeof EvalSuiteSchema>;

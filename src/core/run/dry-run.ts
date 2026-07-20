@@ -6,6 +6,7 @@ import { writeReport } from "../report/write-report.js";
 import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
 import { createRunPlan, type LoadedEvalSuite } from "./run-plan.js";
 import { createRunStore, type RunStore } from "./run-store.js";
+import { removeWorkspaces } from "./workspace-retention.js";
 
 export interface DryRunOptions {
   cwd: string;
@@ -16,6 +17,7 @@ export interface DryRunOptions {
   command?: string[];
   skillarenaVersion: string;
   detectCodexVersion?: boolean;
+  keepWorkspace?: boolean;
 }
 
 export interface DryRunResult {
@@ -51,10 +53,16 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     metadata,
     suites,
     workspaces,
+    capabilityBlocks: [],
+    keepWorkspace: options.keepWorkspace ?? false,
     warnings
   });
 
   await writeReport(runStore, report);
+
+  if (!options.keepWorkspace) {
+    await removeWorkspaces(runStore);
+  }
 
   return {
     project,

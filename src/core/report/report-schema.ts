@@ -40,6 +40,7 @@ export interface ReportCase {
   status: CaseStatus;
   workspace?: {
     path: string;
+    preserved: boolean;
     fixture?: string;
     skill?: {
       name: string;
@@ -51,6 +52,26 @@ export interface ReportCase {
     rawTrace?: string;
     stderr?: string;
     parsedTrace?: string;
+  };
+  judge?: {
+    status: "completed" | "error";
+    model?: string;
+    promptVersion: string;
+    minimumScore: number;
+    score?: number;
+    summary?: string;
+    criteria?: Array<{
+      criterion: string;
+      score: number;
+      reason: string;
+    }>;
+    artifacts: Array<{
+      path: string;
+      characters: number;
+      truncated: boolean;
+      available: boolean;
+    }>;
+    error?: string;
   };
   failureTraceSummary?: FailureTraceSummary;
   checks: ReportCheck[];

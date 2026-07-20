@@ -15,6 +15,8 @@
 - [x] Generate Markdown and JSON reports
 - [x] Support CI exit codes
 - [x] Add a minimal example eval project
+- [x] Add optional workspace retention for debugging
+- [x] Block cases whose adapter capabilities are unavailable
 
 ## v0.1: A/B Evaluation
 
@@ -24,7 +26,7 @@
 
 ## v0.2: Better Grading
 
-- [ ] Add rubric-based LLM judge support
+- [x] Add rubric-based OpenAI judge support with structured rubric results
 - [x] Add snapshot fixtures for expected artifacts
 - [x] Add failure trace summaries
 

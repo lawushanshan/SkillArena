@@ -55,6 +55,13 @@ program
   .option("--max-cases <count>", "Limit the number of selected eval cases to run")
   .option("--fail-fast", "Stop after the first failed eval case.")
   .option("--dry-run", "Load and validate evals without invoking Codex.")
+  .option("--keep-workspace", "Keep per-case workspaces after the report is written.")
+  .option("--judge-model <model>", "OpenAI model for cases that declare expect.judge.")
+  .option(
+    "--judge-timeout-ms <ms>",
+    "OpenAI rubric judge timeout in milliseconds.",
+    "60000"
+  )
   .option("--timeout-ms <ms>", "Per-case Codex execution timeout in milliseconds", "300000")
   .option("--codex-command <command>", "Codex command to execute", "codex")
   .action(async (
@@ -65,6 +72,9 @@ program
       maxCases?: string;
       failFast?: boolean;
       dryRun?: boolean;
+      keepWorkspace?: boolean;
+      judgeModel?: string;
+      judgeTimeoutMs: string;
       timeoutMs: string;
       codexCommand: string;
     }
@@ -75,6 +85,7 @@ program
         options.maxCases === undefined
           ? undefined
           : parsePositiveInteger(options.maxCases, "--max-cases");
+      const judgeTimeoutMs = parsePositiveInteger(options.judgeTimeoutMs, "--judge-timeout-ms");
 
       const result = options.dryRun
         ? await runDryRun({
@@ -84,7 +95,8 @@ program
             caseId: options.case,
             maxCases,
             command: process.argv.slice(2),
-            skillarenaVersion: VERSION
+            skillarenaVersion: VERSION,
+            keepWorkspace: options.keepWorkspace
           })
         : await runEvals({
             cwd: process.cwd(),
@@ -96,7 +108,10 @@ program
             skillarenaVersion: VERSION,
             timeoutMs,
             failFast: options.failFast,
-            codexCommand: options.codexCommand
+            codexCommand: options.codexCommand,
+            keepWorkspace: options.keepWorkspace,
+            judgeModel: options.judgeModel,
+            judgeTimeoutMs
           });
 
       console.log(options.dryRun ? "SkillArena dry run" : "SkillArena run");

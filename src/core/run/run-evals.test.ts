@@ -63,6 +63,7 @@ describe("runEvals", () => {
     expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
     expect(existsSync(result.executions[0]!.codex.rawOutputPath)).toBe(true);
     expect(result.executions[0]!.parsedTrace?.events).toHaveLength(3);
+    expect(existsSync(result.workspaces[0]!.path)).toBe(false);
 
     const reportJson = JSON.parse(await readFile(result.runStore.reportJsonPath, "utf8")) as {
       mode: string;
@@ -124,6 +125,103 @@ describe("runEvals", () => {
       runErrors: [],
       parseErrors: []
     });
+  });
+
+  it("records rubric judge results from an injected judge", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    await writeFile(
+      join(root, "evals", "sample-audit.yaml"),
+      `name: sample-audit\ncases:\n  - id: judged-case\n    prompt: "Create a report."\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      judge:\n        min_score: 80\n        files:\n          - audit-report.md\n        rubric:\n          - criterion: correctness\n            description: The report satisfies the task.\n`,
+      "utf8"
+    );
+    const fakeCodex = await createFakeCodex(root, {
+      exitCode: 0,
+      stdout: "",
+      script: "require('node:fs').writeFileSync('audit-report.md', 'complete report\\n');"
+    });
+
+    const result = await runEvals({
+      cwd: root,
+      command: ["run"],
+      skillarenaVersion: "0.0.0-test",
+      timeoutMs: 5000,
+      codexCommand: process.execPath,
+      codexCommandArgs: [fakeCodex],
+      detectCodexVersion: false,
+      rubricJudge: {
+        async judge(input) {
+          return {
+            status: "completed",
+            model: "mock-judge",
+            promptVersion: input.promptVersion,
+            score: 90,
+            summary: "The report satisfies the rubric.",
+            criteria: [
+              {
+                criterion: "correctness",
+                score: 90,
+                reason: "The report file was created."
+              }
+            ]
+          };
+        }
+      }
+    });
+
+    const reportCase = result.report.suites[0]?.cases[0];
+    expect(reportCase?.status).toBe("pass");
+    expect(reportCase?.checks).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: "expect.judge", status: "pass" })])
+    );
+    expect(reportCase?.judge).toMatchObject({
+      model: "mock-judge",
+      score: 90,
+      minimumScore: 80,
+      artifacts: [{ path: "audit-report.md", available: true }]
+    });
+  });
+
+  it("keeps workspaces when requested", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+    const fakeCodex = await createFakeCodex(root, { exitCode: 0, stdout: "" });
+
+    const result = await runEvals({
+      cwd: root,
+      command: ["run", "--keep-workspace"],
+      skillarenaVersion: "0.0.0-test",
+      timeoutMs: 5000,
+      codexCommand: process.execPath,
+      codexCommandArgs: [fakeCodex],
+      detectCodexVersion: false,
+      keepWorkspace: true
+    });
+
+    expect(existsSync(result.workspaces[0]!.path)).toBe(true);
+    expect(result.report.suites[0]?.cases[0]?.workspace?.preserved).toBe(true);
+  });
+
+  it("blocks cases whose required adapter capabilities are unavailable", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+
+    const result = await runEvals({
+      cwd: root,
+      command: ["run"],
+      skillarenaVersion: "0.0.0-test",
+      timeoutMs: 5000,
+      codexCommand: process.execPath,
+      detectCodexVersion: false,
+      adapterCapabilities: new Set()
+    });
+
+    expect(result.executions).toHaveLength(0);
+    expect(result.report.summary.blocked).toBe(1);
+    expect(result.report.suites[0]?.status).toBe("blocked");
+    expect(result.report.suites[0]?.cases[0]?.checks).toEqual([
+      expect.objectContaining({ name: "adapter-capabilities", status: "unsupported" })
+    ]);
   });
 
   it("stops after the first failed case when failFast is enabled", async () => {

@@ -22,7 +22,9 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 - Codex runner
 - Trace parser for JSONL output
 - Deterministic graders for skill usage, command execution, files, and exit status
-- Optional LLM judge support later
+- Workspace retention with `--keep-workspace`
+- Adapter capability checks that block unsupported cases before execution
+- Optional rubric-based OpenAI judge support
 - Markdown and JSON reports
 - CI-friendly exit codes
 
@@ -137,7 +139,9 @@ Use `skillarena compare` to compare the latest two saved run reports during A/B 
 
 ## Repository Status
 
-This repository has a TypeScript CLI with project initialization, eval schema dry-run validation, per-case workspaces, Codex execution, normalized trace parsing, deterministic graders, workspace diff checks, and JSON/Markdown reports.
+This repository has a TypeScript CLI with project initialization, eval schema dry-run validation,
+per-case workspaces, Codex execution, normalized trace parsing, deterministic graders, workspace
+diff checks, adapter capability checks, optional rubric judging, and JSON/Markdown reports.
 
 ## Development
 

@@ -95,6 +95,7 @@ cases:
 - `expect.commands_succeeded`、`expect.exit_code`
 - `expect.files_created`、`expect.files_changed`、`expect.files_deleted`、`expect.files_unchanged`
 - `expect.file_snapshots`
+- `expect.judge`
 
 `commands` 与 `commands_not_run` 中的每项必须包含 `contains` 或 `exact`；`commands` 可额外用 `exit_code` 限制命令退出码。
 
@@ -113,6 +114,41 @@ expect:
 ```
 
 运行开始前 snapshot 必须已存在；缺失属于配置错误，内容不一致会以 `artifact_mismatch` 使 case 失败。仅应对稳定产物使用该断言。
+
+## Rubric judge
+
+当确定性断言不足以评价产物质量时，可使用 `expect.judge`。judge 会对每个标准给出 0 到 100 的分数，并将加权总分与 `min_score` 比较：
+
+```yaml
+expect:
+  files_created:
+    - audit-report.md
+  judge:
+    min_score: 80
+    files:
+      - audit-report.md
+    rubric:
+      - criterion: actionable-findings
+        description: "报告给出具体风险与可执行的修复建议。"
+        weight: 2
+      - criterion: scope
+        description: "报告仅基于工作区中的证据。"
+        weight: 1
+```
+
+仅 `judge.files` 显式列出的相对 workspace 文件会作为证据发送；单个文件与全部证据都有长度上限。未声明 `expect.judge` 的 case 不会调用 OpenAI。
+
+执行 judged case 时，通过环境变量提供密钥，并通过命令行或环境变量明确指定模型：
+
+```powershell
+$env:OPENAI_API_KEY = "..."
+skillarena run --judge-model <model-id>
+
+$env:SKILLARENA_JUDGE_MODEL = "<model-id>"
+skillarena run
+```
+
+`--judge-timeout-ms <ms>` 控制每个 OpenAI 请求的超时，默认 `60000`。`--dry-run` 只校验 judge schema 和 artifact 路径，不调用 OpenAI。缺少密钥或模型、API 错误、超时、结构化输出无效，或总分低于 `min_score`，都会以 `judge_failed` 仅使对应 case 失败。
 
 ## 运行 eval
 
@@ -135,9 +171,18 @@ skillarena run --fail-fast
 skillarena run --dry-run
 ```
 
+默认情况下，报告写入后会清理逐 case workspace；原始 JSONL、stderr、归一化 trace 和报告会始终保留。需要检查工作区最终文件时，使用 `--keep-workspace`：
+
+```powershell
+skillarena run --case creates-table-of-contents --keep-workspace
+skillarena run --dry-run --keep-workspace
+```
+
 可通过 `--timeout-ms <ms>` 设置单个 case 的超时，默认值为 `300000`；通过 `--codex-command <command>` 指定 Codex 可执行命令。
 
 当前执行路径会评分进程超时/退出码、原始与解析 trace 可用性、Skill 正反触发、命令正反断言、命令成功状态，以及四类工作区文件断言。
+
+Codex adapter 当前声明 `skill_read_trace`、`command_trace` 和 `file_change_detection`。runner 会在执行前从 case 断言推导所需能力；若能力不可用，对应检查标记为 `unsupported`，case 与 suite 标记为 `blocked`，命令以非零退出码结束。
 
 ## 评测带脚本的 Skill
 
@@ -172,7 +217,7 @@ skillarena compare --fail-on-regression
 每次运行会在 `.skillarena/runs/<run-id>/` 下写入：
 
 ```text
-workspaces/<suite>/<case>/
+workspaces/<suite>/<case>/  # 仅在使用 --keep-workspace 时保留
 raw/<suite>__<case>.jsonl
 raw/<suite>__<case>.stderr.txt
 parsed/<suite>__<case>.json
@@ -189,7 +234,7 @@ skillarena report
 skillarena report .skillarena/runs/<run-id>
 ```
 
-调试失败时，依次查看控制台摘要、`report.md` 中 case 下的失败 trace 摘要、`parsed/` 下归一化 trace、`raw/` 下原始 JSONL 与 stderr，以及保存的 workspace。当前实现会保留每次运行的 workspace。
+调试失败时，依次查看控制台摘要、`report.md` 中 case 下的失败 trace 摘要、`parsed/` 下归一化 trace、`raw/` 下原始 JSONL 与 stderr。若运行时使用了 `--keep-workspace`，还可检查保存的 workspace。
 
 失败摘要会展示首要失败类别、已读取的 Skill、非零退出命令、运行错误和 JSONL 解析错误位置。它刻意不复制命令输出、assistant 消息或原始解析错误文本；需要这些细节时再查看保存的 artifact。
 

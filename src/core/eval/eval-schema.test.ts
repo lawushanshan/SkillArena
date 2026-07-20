@@ -54,4 +54,44 @@ describe("EvalSuiteSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("accepts rubric judge expectations and rejects duplicate criteria", () => {
+    const valid = EvalSuiteSchema.safeParse({
+      name: "example",
+      cases: [
+        {
+          id: "case-1",
+          prompt: "Do a task.",
+          expect: {
+            judge: {
+              min_score: 80,
+              files: ["report.md"],
+              rubric: [{ criterion: "correctness", description: "The result is correct." }]
+            }
+          }
+        }
+      ]
+    });
+    const duplicate = EvalSuiteSchema.safeParse({
+      name: "example",
+      cases: [
+        {
+          id: "case-1",
+          prompt: "Do a task.",
+          expect: {
+            judge: {
+              min_score: 80,
+              rubric: [
+                { criterion: "correctness", description: "One." },
+                { criterion: "correctness", description: "Two." }
+              ]
+            }
+          }
+        }
+      ]
+    });
+
+    expect(valid.success).toBe(true);
+    expect(duplicate.success).toBe(false);
+  });
 });

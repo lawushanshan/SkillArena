@@ -145,6 +145,14 @@ function validateReferences(
       }
     }
 
+    for (const path of testCase.expect.judge?.files ?? []) {
+      if (!isRelativeWorkspacePath(path)) {
+        throw new SkillArenaError(
+          `Judge artifact path must be relative to the workspace: ${path}`
+        );
+      }
+    }
+
     if (!testCase.workspace.fixture) {
       continue;
     }

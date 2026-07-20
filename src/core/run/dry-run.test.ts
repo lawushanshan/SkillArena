@@ -28,7 +28,8 @@ describe("runDryRun", () => {
       cwd: root,
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
+      keepWorkspace: true
     });
 
     expect(result.project.root).toBe(root);
@@ -64,6 +65,21 @@ describe("runDryRun", () => {
 
     expect(result.totalCases).toBe(1);
     expect(result.suites[0]?.selectedCaseCount).toBe(1);
+  });
+
+  it("removes dry-run workspaces unless requested", async () => {
+    const root = await makeTempDir();
+    await initProject(root);
+
+    const result = await runDryRun({
+      cwd: root,
+      command: ["run", "--dry-run"],
+      skillarenaVersion: "0.0.0-test",
+      detectCodexVersion: false
+    });
+
+    expect(existsSync(result.workspaces[0]!.path)).toBe(false);
+    expect(result.report.suites[0]?.cases[0]?.workspace?.preserved).toBe(false);
   });
 
   it("filters by suite name", async () => {

@@ -2,6 +2,7 @@ import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunMetadata } from "../metadata/metadata.js";
 import type { SkillArenaReport, ReportCase, ReportSuite } from "./report-schema.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";
+import type { CapabilityBlock } from "./create-run-report.js";
 
 export interface CreateDryRunReportInput {
   runId: string;
@@ -11,6 +12,8 @@ export interface CreateDryRunReportInput {
   metadata: RunMetadata;
   suites: LoadedEvalSuite[];
   workspaces: PreparedWorkspace[];
+  capabilityBlocks: CapabilityBlock[];
+  keepWorkspace: boolean;
   warnings: string[];
 }
 
@@ -21,10 +24,31 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
       workspace
     ])
   );
+  const capabilityBlockByCase = new Map(
+    input.capabilityBlocks.map((block) => [createWorkspaceKey(block.suiteName, block.caseId), block])
+  );
 
   const suites: ReportSuite[] = input.suites.map((loadedSuite) => {
     const cases: ReportCase[] = loadedSuite.selectedCases.map((testCase) => {
       const workspace = workspaceByCase.get(createWorkspaceKey(loadedSuite.suite.name, testCase.id));
+      const capabilityBlock = capabilityBlockByCase.get(
+        createWorkspaceKey(loadedSuite.suite.name, testCase.id)
+      );
+
+      if (capabilityBlock) {
+        return {
+          id: testCase.id,
+          prompt: testCase.prompt,
+          status: "blocked",
+          checks: [
+            {
+              name: "adapter-capabilities",
+              status: "unsupported",
+              message: `Missing adapter capabilities: ${capabilityBlock.missingCapabilities.join(", ")}`
+            }
+          ]
+        };
+      }
 
       return {
         id: testCase.id,
@@ -33,6 +57,7 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
         workspace: workspace
           ? {
               path: workspace.path,
+              preserved: input.keepWorkspace,
               fixture: workspace.fixture,
               skill: workspace.skill
             }
@@ -66,20 +91,33 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
                   message: `Skill provisioned: ${workspace.skill.name}`
                 }
               ]
+            : []),
+          ...(testCase.expect.judge
+            ? [
+                {
+                  name: "expect.judge",
+                  status: "warn" as const,
+                  message: "Rubric judge configuration is valid; dry-run does not invoke OpenAI."
+                }
+              ]
             : [])
         ]
       };
     });
 
+    const suiteBlocked = cases.some((testCase) => testCase.status === "blocked");
+
     return {
       name: loadedSuite.suite.name,
       path: loadedSuite.path,
-      status: "pass",
+      status: suiteBlocked ? "blocked" : "pass",
       cases
     };
   });
 
-  const totalCases = suites.reduce((sum, suite) => sum + suite.cases.length, 0);
+  const allCases = suites.flatMap((suite) => suite.cases);
+  const totalCases = allCases.length;
+  const blocked = allCases.filter((testCase) => testCase.status === "blocked").length;
 
   return {
     schemaVersion: "0.1",
@@ -96,9 +134,9 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
     summary: {
       suites: suites.length,
       cases: totalCases,
-      passed: totalCases,
+      passed: totalCases - blocked,
       failed: 0,
-      blocked: 0,
+      blocked,
       warnings: input.warnings.length
     },
     suites,

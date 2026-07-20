@@ -65,7 +65,7 @@ The v0 architecture is intentionally small. It should answer one question well:
 5. Raw JSONL output is stored without modification.
 6. The trace parser converts Codex events into SkillArena's internal event model.
 7. The workspace inspector records file changes, command results, and exit status.
-8. The grader engine evaluates deterministic assertions.
+8. The grader engine evaluates deterministic assertions and optional rubric judgments.
 9. Reporters generate human-readable and machine-readable results.
 10. CI exits non-zero when required checks fail.
 
@@ -75,15 +75,16 @@ The v0 architecture is intentionally small. It should answer one question well:
 
 Responsible for user-facing commands.
 
-Expected commands:
+Implemented commands:
 
 ```text
 skillarena init
 skillarena run
 skillarena report
+skillarena compare
 ```
 
-The CLI should stay thin. It should parse arguments, call application services, and print final results.
+The CLI stays thin: it parses arguments, calls application services, and prints final results.
 
 ### Eval Loader
 
@@ -140,19 +141,17 @@ the user's `CODEX_HOME`, authentication, or global configuration.
 
 ### Trace Store
 
-Responsible for preserving raw run data.
+Responsible for preserving raw run data and reports.
 
 Raw traces should be written before parsing so failures are debuggable even if SkillArena has a parser bug.
 
-Suggested output shape:
+Output shape:
 
 ```text
 .skillarena/
   runs/
     2026-06-29T120000Z/
-      workspaces/
-        suite-name/
-          case-id/
+      workspaces/              # retained only with --keep-workspace
       raw/
         case-id.jsonl
       parsed/
@@ -200,7 +199,7 @@ It should support assertions such as:
 
 Responsible for turning parsed run data into pass/fail results.
 
-v0 should prioritize deterministic checks:
+v0 prioritizes deterministic checks:
 
 - Did the run exit successfully?
 - Was the expected skill read or used?
@@ -210,17 +209,25 @@ v0 should prioritize deterministic checks:
 
 The first implemented deterministic checks use normalized trace events for `skill_used`, `skill_not_used`, `commands`, `commands_succeeded`, and `exit_code`. Workspace snapshots provide `files_created`, `files_changed`, and `files_unchanged` checks.
 
-LLM-based judging can be added later, but it should not be required for the first reliable version.
+Optional rubric judging runs after successful Codex execution. It uses an injected `RubricJudge`
+interface in the runner; the built-in OpenAI implementation calls the Responses API with a strict
+JSON schema. Only user-declared artifact files are supplied as evidence. The response is validated,
+scored against `min_score`, and recorded as an `expect.judge` check. Configuration, timeout, API,
+and response-validation failures are case-level `judge_failed` results, so they do not stop the rest
+of the suite.
 
 ### Reporters
 
 Responsible for producing output.
 
-v0 should support:
+v0 supports:
 
 - `report.json` for automation
 - `report.md` for humans
 - Console summary for local use
+
+Judged cases include model and prompt-version metadata, total and criterion scores, threshold, and
+artifact metadata. Secrets, complete prompts, and raw provider responses are excluded from reports.
 
 The JSON report is the compatibility contract for later UI or CI integrations.
 
@@ -251,7 +258,7 @@ This structure can evolve once the implementation language and package layout ar
 
 ## Internal Interfaces
 
-The exact language-level interfaces are not decided yet, but the boundaries should stay stable.
+The language-level interfaces are intentionally small; these boundaries stay stable.
 
 ```text
 EvalSuite -> Runner -> AgentAdapter -> RawTrace
@@ -327,9 +334,10 @@ Raw traces still remain available for debugging and adapter-specific reports.
 
 ## Capability Flags
 
-Not every agent exposes the same trace detail. Adapters should declare capabilities so eval cases can fail early when they require unsupported checks.
+Not every agent exposes the same trace detail. The current Codex adapter declares capabilities so
+eval cases fail early when they require unsupported checks.
 
-Possible capability flags:
+Current and planned capability flags:
 
 ```text
 skill_read_trace
@@ -341,7 +349,11 @@ cost_usage
 structured_final_output
 ```
 
-For example, an eval that asserts `skill_used` should require an adapter with `skill_read_trace`. If a future adapter cannot provide that signal directly, it should either mark the capability unsupported or provide a documented approximation.
+The Codex adapter currently provides `skill_read_trace`, `command_trace`, and
+`file_change_detection`. The runner derives required capabilities from a case's expectations before
+starting Codex. Missing capabilities produce an `unsupported` check and a `blocked` case and suite,
+rather than an unreliable result. Future adapters must either declare a capability, mark it
+unsupported, or document an approximation.
 
 ## Scripted Skills
 
@@ -364,7 +376,7 @@ Direct script contract tests may be added later as a debugging aid, but they sho
 - Hosted execution
 - Multi-user dashboards
 - Skill marketplace features
-- Complex LLM judge workflows
+- Complex multi-step LLM judge workflows
 - General observability or tracing platform features
 
 ## Design Principles

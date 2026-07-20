@@ -1,8 +1,9 @@
 # Usage
 
-This document describes the intended developer experience for SkillArena v0.
+This document describes the current developer experience for SkillArena v0.
 
-The implementation is not complete yet. Treat this as the product contract we are building toward.
+The implemented CLI provides `init`, `run`, `report`, `compare`, and optional rubric-based OpenAI
+judging. Additional agent adapters remain future work.
 
 ## Who Uses SkillArena
 
@@ -26,21 +27,19 @@ SkillArena is for developers who maintain Codex skills and want to answer:
 
 ## Installation
 
-SkillArena v0 is intended to be a standalone CLI package. The exact package ecosystem is not decided yet, but the target experience should be one command.
+SkillArena is a Node.js CLI and requires Node.js 20 or later. From a source checkout:
 
-Possible future install commands:
+```powershell
+npm install
+npm run build
+node dist/cli/index.js --help
+```
+
+When published, the package can be installed globally:
 
 ```powershell
 npm install -g skillarena
 ```
-
-or:
-
-```powershell
-uv tool install skillarena
-```
-
-The first implementation should choose one ecosystem and keep installation simple.
 
 ## Initialize a Project
 
@@ -119,7 +118,7 @@ cases:
       commands_succeeded: true
 ```
 
-The first eval format should support:
+The eval format supports:
 
 - `id`
 - `prompt`
@@ -152,11 +151,54 @@ expect:
 The snapshot must exist before the run starts. A missing snapshot is a configuration error; a
 content mismatch fails the case with `artifact_mismatch`. Use this only for stable artifacts.
 
+## Rubric Judging
+
+Use `expect.judge` when deterministic assertions cannot fully assess the quality of an artifact.
+The judge scores each criterion from 0 to 100 and compares the weighted overall score with
+`min_score`.
+
+```yaml
+expect:
+  files_created:
+    - audit-report.md
+  judge:
+    min_score: 80
+    files:
+      - audit-report.md
+    rubric:
+      - criterion: actionable-findings
+        description: "The report identifies concrete risks and gives a useful remediation."
+        weight: 2
+      - criterion: scope
+        description: "The report stays grounded in the supplied workspace evidence."
+        weight: 1
+```
+
+Only files declared in `judge.files` are sent as artifact evidence. They must be relative to the
+case workspace. Individual files and the combined evidence are truncated before the API request.
+
+The judge is opt-in. Cases without `expect.judge` never call OpenAI. Configure the API key and an
+explicit model only when running judged cases:
+
+```powershell
+$env:OPENAI_API_KEY = "..."
+skillarena run --judge-model <model-id>
+
+# Or set the model once for the shell/session.
+$env:SKILLARENA_JUDGE_MODEL = "<model-id>"
+skillarena run
+```
+
+`--judge-timeout-ms <ms>` controls the per-case OpenAI request timeout and defaults to `60000`.
+Dry-run validates the judge schema and artifact paths but never calls OpenAI. Missing credentials,
+missing model configuration, an API error, timeout, invalid structured output, or a score below
+`min_score` fails only that case with the `judge_failed` category.
+
 ## Run Evals
 
-The current implementation supports both dry-run validation and minimal Codex execution.
+The implementation supports dry-run validation and Codex execution.
 
-Dry-run mode loads project config, validates eval YAML, copies fixtures into per-case workspaces, records run metadata, and writes reports without invoking Codex.
+Dry-run mode loads project config, validates eval YAML, prepares per-case workspaces, records run metadata, and writes reports without invoking Codex.
 
 Run all evals:
 
@@ -194,6 +236,14 @@ Validate without invoking Codex:
 skillarena run --dry-run
 ```
 
+Keep per-case workspaces for debugging. By default, workspaces are removed after `report.json` and
+`report.md` are written; raw JSONL, stderr, parsed traces, and reports are always retained.
+
+```powershell
+skillarena run --case creates-table-of-contents --keep-workspace
+skillarena run --dry-run --keep-workspace
+```
+
 Expected console output:
 
 ```text
@@ -224,6 +274,12 @@ The current Codex execution path grades process-level results and the first dete
 - `expect.files_changed`
 - `expect.files_deleted`
 - `expect.files_unchanged`
+- `expect.judge`
+
+Codex declares support for `skill_read_trace`, `command_trace`, and `file_change_detection`.
+The runner maps each case's expectations to these capabilities before execution. A case requiring an
+unavailable capability is not run: its check is reported as `unsupported`, its case and suite are
+reported as `blocked`, and the command exits non-zero.
 
 ## Evaluate Scripted Skills
 
@@ -298,15 +354,13 @@ A regression means at least one negative comparison signal was observed: pass ra
 
 ## Reports
 
-Each run should produce a directory like:
+Each run produces a directory like:
 
 ```text
 .skillarena/
   runs/
     2026-06-29T120000Z/
-      workspaces/
-        markdown-skill/
-          creates-table-of-contents/
+      workspaces/              # present only with --keep-workspace
       raw/
         creates-table-of-contents.jsonl
       parsed/
@@ -331,7 +385,12 @@ The JSON report starts with:
 
 Reports also include reproducibility metadata such as SkillArena version, Node version, platform, config hash, eval file hashes, fixture hashes, and Codex version when detected.
 
-Each case report includes the prepared workspace path. Future Codex execution will use that path as the case working directory.
+Each case report includes the prepared workspace path and a `preserved` flag. A workspace path is
+usable only when that flag is `true`.
+
+For judged cases, the report also includes the judge status, model, prompt version, score,
+threshold, criterion scores, and artifact metadata. It excludes the API key, complete judge prompt,
+and raw API response.
 
 Render the latest report again:
 
@@ -349,7 +408,7 @@ The command reads `report.json`, rewrites `report.md`, and prints a concise summ
 
 ## CI Usage
 
-SkillArena should exit with:
+SkillArena exits with:
 
 - `0` when required evals pass
 - non-zero when required evals fail or cannot run
@@ -386,7 +445,7 @@ When an eval fails, developers should inspect:
 2. The failure trace summary in the case section of `report.md`
 3. The normalized trace in `parsed/*.json`
 4. The raw Codex JSONL trace in `raw/*.jsonl`
-5. The preserved workspace when `--keep-workspace` is enabled
+5. The workspace when the run used `--keep-workspace`
 
 Useful debug commands:
 
@@ -401,15 +460,15 @@ assistant messages, and raw parse-error text; use the preserved artifacts when t
 
 ## Local Safety Model
 
-SkillArena v0 should run each case in an isolated workspace copied from fixtures.
+SkillArena runs each case in an isolated workspace copied from fixtures.
 
-The v0 local sandbox should provide:
+The local execution model provides:
 
 - Per-case run directory
 - Fixture copy before execution
 - Timeout
 - Raw trace capture
 - File change inspection
-- Optional workspace preservation for failed cases
+- Optional workspace preservation for every selected case via `--keep-workspace`
 
 It is not a security sandbox for untrusted code. Container or VM isolation can be added later.

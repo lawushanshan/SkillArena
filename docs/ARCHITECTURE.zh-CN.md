@@ -25,7 +25,7 @@ Eval Suite (YAML)
 5. 原始 JSONL 和 stderr 不经修改保存。
 6. trace parser 将 Codex 事件归一化为内部事件模型。
 7. workspace inspector 对比执行前后文件状态。
-8. grader 根据断言生成确定性检查结果。
+8. grader 根据断言生成确定性检查结果，并执行可选 rubric judge。
 9. reporters 输出可读的 Markdown 和机器可读的 JSON。
 10. 失败或 blocked case 会使 CI 返回非零退出码。
 
@@ -55,7 +55,7 @@ eval suite 声明 `skill.name` 和 `skill.path` 时，`skill.path` 必须是含 
 
 ```text
 .skillarena/runs/<run-id>/
-  workspaces/<suite>/<case>/
+  workspaces/<suite>/<case>/  # 仅在使用 --keep-workspace 时保留
   raw/<suite>__<case>.jsonl
   raw/<suite>__<case>.stderr.txt
   parsed/<suite>__<case>.json
@@ -71,7 +71,7 @@ parser 使用小而稳定的归一化事件集；未知事件保留为 `unknown`
 
 ### Grader
 
-v0 优先使用确定性检查：进程退出、Skill 是否读到、命令是否执行或被禁止、命令是否成功，以及文件创建/修改/删除/不变。grader 面向归一化事件和 workspace diff，而非直接依赖 Codex 的原始字段。LLM judge 是后续能力，不是可靠 v0 的前提。
+v0 优先使用确定性检查：进程退出、Skill 是否读到、命令是否执行或被禁止、命令是否成功，以及文件创建/修改/删除/不变。grader 面向归一化事件和 workspace diff，而非直接依赖 Codex 的原始字段。`expect.judge` 是可选补充：仅在 Codex 成功后执行，使用明确声明的 artifact 文件、严格 JSON 输出和 `min_score` 阈值。配置、超时、API 或输出校验失败会以 `judge_failed` 仅使对应 case 失败，不中断其余 suite。
 
 ### Reporters
 
@@ -88,7 +88,7 @@ CaseResult[] -> Reporter -> Report
 
 v0 只支持 Codex，但核心不应依赖 Codex 特定字段。未来 adapter 应负责构造调用、环境准备、原始输出和进程元数据捕获、事件归一化或路由，以及能力报告；核心只依赖“是否读到 Skill、哪些命令开始/结束、文件变化、最终消息、超时或失败”等行为。
 
-未来 adapter 可声明 `skill_read_trace`、`command_trace`、`file_read_trace`、`file_change_detection`、`token_usage`、`cost_usage` 和 `structured_final_output` 等 capability。若 eval 需要某能力而 adapter 不支持，应及早标记为 blocked，而不是静默给出不可靠结果。
+Codex adapter 当前声明 `skill_read_trace`、`command_trace` 和 `file_change_detection`。runner 会在启动 Codex 前从 case 断言推导所需能力；若能力不可用，对应检查标记为 `unsupported`，case 与 suite 标记为 `blocked`，而不是静默给出不可靠结果。未来 adapter 可继续声明 `file_read_trace`、`token_usage`、`cost_usage` 和 `structured_final_output` 等 capability。
 
 ## 设计原则与非目标
 
