@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
+import { createRequire } from "node:module";
 import { Command } from "commander";
-
 import { renderCompareSummary, runCompareCommand } from "../core/compare/compare-runs.js";
 import { formatUnknownError } from "../core/errors.js";
 import { initProject } from "../core/init/init-project.js";
@@ -10,7 +10,9 @@ import type { SkillArenaReport } from "../core/report/report-schema.js";
 import { runDryRun } from "../core/run/dry-run.js";
 import { runEvals } from "../core/run/run-evals.js";
 
-const VERSION = "0.0.0";
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require("../../package.json") as { version: string };
+
 const program = new Command();
 
 program
