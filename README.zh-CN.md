@@ -4,7 +4,33 @@
 
 SkillArena 是一个用于评测 Codex Skill 的测试工具。
 
-首个目标刻意保持聚焦：帮助 Codex Skill 作者自动验证 Skill 是否在恰当场景被触发，以及它是否改善了任务结果。
+目标刻意保持聚焦：帮助 Codex Skill 作者自动验证 Skill 是否在恰当场景被触发，以及它是否改善了任务结果。
+
+## 安装
+
+```powershell
+npm install -g skillarena
+```
+
+需要 Node.js 20 或更高版本，以及 PATH 中的 `codex` CLI。
+
+## 快速开始
+
+初始化项目，编写 eval，然后运行：
+
+```powershell
+skillarena init
+skillarena run
+skillarena report
+```
+
+SkillArena 通过 `codex exec --json` 执行每个 eval case，捕获结构化 trace，对确定性预期进行评分，并在 `.skillarena/runs/` 下生成 Markdown 和 JSON 报告。
+
+使用 `skillarena compare` 对 Skill 变更进行 A/B 测试：
+
+```powershell
+skillarena compare --fail-on-regression
+```
 
 ## 范围
 
@@ -18,13 +44,15 @@ SkillArena v0 专注于：
 
 SkillArena v0 不试图成为通用 Agent 可观测性平台或通用基准测试套件。
 
-## MVP
+## 功能特性
 
 - 基于 YAML 的 eval 用例
 - Codex runner
 - JSONL trace parser
 - 对 Skill 使用、命令执行、文件与退出状态的确定性评分
-- 后续可选的 LLM judge
+- `--keep-workspace` 工作区保留
+- 适配器能力检查，在执行前阻止不支持的 case
+- 可选的基于 rubric 的 OpenAI judge
 - Markdown 与 JSON 报告
 - 适合 CI 的退出码
 
@@ -51,7 +79,7 @@ eval 是针对一个 Codex Skill 的可重复测试定义。它描述要交给 C
 
 ### 什么是 eval case？
 
-eval case 是一个 eval suite 中可执行的测试用例，可理解为“任务说明 + 验收条件”。
+eval case 是一个 eval suite 中可执行的测试用例，可理解为"任务说明 + 验收条件"。
 
 ```yaml
 cases:
@@ -85,23 +113,13 @@ fixture 模板
 
 运行工作区位于 `.skillarena/runs/<run-id>/workspaces/<suite>/<case>/`。即使多个 case 使用同一 fixture，它们也各自拥有独立副本。
 
-## 目标用法
+## A/B 比较
 
-```powershell
-skillarena init
-skillarena run
-skillarena compare
-```
-
-开发者以 YAML 编写 eval，用 `codex exec --json` 运行，并在 `.skillarena/runs/` 下查看 Markdown 或 JSON 报告。`skillarena compare --fail-on-regression` 可在 CI 中阻止候选版本引入回归。
+使用 `skillarena compare` 比较最近两次运行报告，用于 A/B Skill 迭代。也可以传入两个显式的 run id 或目录，并在 CI 中使用 `--fail-on-regression` 在候选版本引入回归时失败。
 
 ## 示例
 
 - [基础审计示例](examples/basic-audit/README.zh-CN.md)
-
-## 当前状态
-
-仓库已提供 TypeScript CLI、项目初始化、eval schema 校验与 dry-run、逐 case workspace、Codex 执行、trace 归一化、确定性评分、工作区 diff 检查，以及 JSON/Markdown 报告。
 
 ## 开发
 

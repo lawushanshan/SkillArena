@@ -2,7 +2,33 @@
 
 SkillArena is a Codex skill evaluation harness.
 
-The first goal is intentionally narrow: help Codex skill authors automatically verify whether a skill is triggered correctly and improves task outcomes.
+The goal is narrow and focused: help Codex skill authors automatically verify whether a skill is triggered correctly and improves task outcomes.
+
+## Installation
+
+```powershell
+npm install -g skillarena
+```
+
+Requires Node.js 20 or later and the `codex` CLI on your PATH.
+
+## Quick Start
+
+Initialize a project, write evals, and run them:
+
+```powershell
+skillarena init
+skillarena run
+skillarena report
+```
+
+SkillArena executes each eval case through `codex exec --json`, captures structured traces, grades deterministic expectations, and writes Markdown and JSON reports under `.skillarena/runs/`.
+
+Use `skillarena compare` to A/B test skill changes:
+
+```powershell
+skillarena compare --fail-on-regression
+```
 
 ## Scope
 
@@ -16,7 +42,7 @@ SkillArena v0 focuses on:
 
 SkillArena v0 does not aim to be a general agent observability platform or a universal benchmark suite.
 
-## MVP
+## Features
 
 - YAML-based eval cases
 - Codex runner
@@ -122,29 +148,13 @@ Run workspaces are created under:
 
 Each selected eval case gets its own workspace. Even when two cases use the same fixture, SkillArena copies that fixture separately so the cases do not affect each other.
 
-## Target Usage
-
-SkillArena v0 is designed as a standalone command-line tool:
-
-```powershell
-skillarena init
-skillarena run
-skillarena compare
-```
-
-Developers write eval cases in YAML, run them against Codex with `codex exec --json`, and inspect Markdown or JSON reports under `.skillarena/runs/`.
+## A/B Comparison
 
 Use `skillarena compare` to compare the latest two saved run reports during A/B skill iteration. You can also pass two explicit run ids or run directories, and use `--fail-on-regression` in CI to fail when the candidate run regresses.
 
 ## Examples
 
 - [Basic Audit Example](examples/basic-audit/README.md)
-
-## Repository Status
-
-This repository has a TypeScript CLI with project initialization, eval schema dry-run validation,
-per-case workspaces, Codex execution, normalized trace parsing, deterministic graders, workspace
-diff checks, adapter capability checks, optional rubric judging, and JSON/Markdown reports.
 
 ## Development
 
