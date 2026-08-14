@@ -1,9 +1,9 @@
 import { collectRunMetadata } from "../metadata/metadata.js";
-import { loadProject, type SkillArenaProject } from "../project/project.js";
+import type { SkillArenaProject } from "../project/project.js";
 import { createDryRunReport } from "../report/create-dry-run-report.js";
 import type { SkillArenaReport } from "../report/report-schema.js";
 import { writeReport } from "../report/write-report.js";
-import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
+import { type PreparedWorkspace, prepareWorkspaces } from "../workspace/prepare-workspaces.js";
 import { createRunPlan, type LoadedEvalSuite } from "./run-plan.js";
 import { createRunStore, type RunStore } from "./run-store.js";
 import { removeWorkspaces } from "./workspace-retention.js";
@@ -42,7 +42,7 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     startedAt,
     command: options.command ?? [],
     skillarenaVersion: options.skillarenaVersion,
-    detectCodexVersion: options.detectCodexVersion
+    detectCodexVersion: options.detectCodexVersion,
   });
   const finishedAt = new Date();
   const report = createDryRunReport({
@@ -55,7 +55,7 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     workspaces,
     capabilityBlocks: [],
     keepWorkspace: options.keepWorkspace ?? false,
-    warnings
+    warnings,
   });
 
   await writeReport(runStore, report);
@@ -71,6 +71,6 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     workspaces,
     suites,
     totalCases,
-    warnings
+    warnings,
   };
 }

@@ -2,7 +2,11 @@ import { isAbsolute, relative, resolve } from "node:path";
 
 import { SkillArenaError } from "../errors.js";
 
-export function resolveFixturePath(projectRoot: string, fixturesDir: string, fixture: string): string {
+export function resolveFixturePath(
+  projectRoot: string,
+  fixturesDir: string,
+  fixture: string,
+): string {
   if (isAbsolute(fixture)) {
     throw new SkillArenaError(`Fixture path must be relative to the project root: ${fixture}`);
   }
@@ -11,7 +15,7 @@ export function resolveFixturePath(projectRoot: string, fixturesDir: string, fix
 
   if (!isPathWithin(fixturesDir, resolved)) {
     throw new SkillArenaError(
-      `Fixture path must resolve inside the configured fixtures directory: ${fixture}`
+      `Fixture path must resolve inside the configured fixtures directory: ${fixture}`,
     );
   }
 
@@ -20,14 +24,16 @@ export function resolveFixturePath(projectRoot: string, fixturesDir: string, fix
 
 export function resolveSnapshotPath(snapshotsDir: string, snapshot: string): string {
   if (isAbsolute(snapshot)) {
-    throw new SkillArenaError(`Snapshot path must be relative to the configured snapshots directory: ${snapshot}`);
+    throw new SkillArenaError(
+      `Snapshot path must be relative to the configured snapshots directory: ${snapshot}`,
+    );
   }
 
   const resolved = resolve(snapshotsDir, snapshot);
 
   if (!isPathWithin(snapshotsDir, resolved)) {
     throw new SkillArenaError(
-      `Snapshot path must resolve inside the configured snapshots directory: ${snapshot}`
+      `Snapshot path must resolve inside the configured snapshots directory: ${snapshot}`,
     );
   }
 
@@ -42,7 +48,7 @@ export function resolveEvalFilePath(
   cwd: string,
   projectRoot: string,
   evalsDir: string,
-  evalFile: string
+  evalFile: string,
 ): string {
   const candidates = isAbsolute(evalFile)
     ? [resolve(evalFile)]
@@ -55,7 +61,7 @@ export function resolveEvalFilePath(
   }
 
   throw new SkillArenaError(
-    `Eval file must resolve inside the configured evals directory: ${evalFile}`
+    `Eval file must resolve inside the configured evals directory: ${evalFile}`,
   );
 }
 

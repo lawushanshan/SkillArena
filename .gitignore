@@ -32,3 +32,5 @@ venv/
 reports/
 traces/
 
+# Test temp directories
+.pytest_tmp/

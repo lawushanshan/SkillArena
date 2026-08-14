@@ -71,11 +71,11 @@ const JudgeResponseSchema = z
           .object({
             criterion: z.string().min(1),
             score: z.number().min(0).max(100),
-            reason: z.string().min(1)
+            reason: z.string().min(1),
           })
-          .strict()
+          .strict(),
       )
-      .min(1)
+      .min(1),
   })
   .strict();
 
@@ -94,7 +94,7 @@ export class OpenAiRubricJudge implements RubricJudge {
     if (!this.options.model) {
       return createError(
         undefined,
-        "No judge model is configured. Set --judge-model or SKILLARENA_JUDGE_MODEL."
+        "No judge model is configured. Set --judge-model or SKILLARENA_JUDGE_MODEL.",
       );
     }
 
@@ -106,7 +106,7 @@ export class OpenAiRubricJudge implements RubricJudge {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.options.apiKey}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: this.options.model,
@@ -114,12 +114,12 @@ export class OpenAiRubricJudge implements RubricJudge {
             {
               role: "system",
               content:
-                "You are an exacting software-evaluation judge. Score only the supplied evidence. Return the required JSON without adding unsupported claims."
+                "You are an exacting software-evaluation judge. Score only the supplied evidence. Return the required JSON without adding unsupported claims.",
             },
             {
               role: "user",
-              content: createJudgePrompt(input)
-            }
+              content: createJudgePrompt(input),
+            },
           ],
           text: {
             format: {
@@ -142,27 +142,33 @@ export class OpenAiRubricJudge implements RubricJudge {
                       properties: {
                         criterion: { type: "string" },
                         score: { type: "number", minimum: 0, maximum: 100 },
-                        reason: { type: "string" }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+                        reason: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         }),
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       if (!response.ok) {
-        return createError(this.options.model, `OpenAI judge request failed with status ${response.status}.`);
+        return createError(
+          this.options.model,
+          `OpenAI judge request failed with status ${response.status}.`,
+        );
       }
 
       const responseBody: unknown = await response.json();
       const outputText = extractOutputText(responseBody);
 
       if (!outputText) {
-        return createError(this.options.model, "OpenAI judge response did not contain structured output.");
+        return createError(
+          this.options.model,
+          "OpenAI judge response did not contain structured output.",
+        );
       }
 
       let rawResult: unknown;
@@ -181,14 +187,14 @@ export class OpenAiRubricJudge implements RubricJudge {
         status: "completed",
         model: this.options.model,
         promptVersion: input.promptVersion,
-        ...parsed.data
+        ...parsed.data,
       };
     } catch (error) {
       return createError(
         this.options.model,
         error instanceof Error && error.name === "AbortError"
           ? `OpenAI judge timed out after ${this.options.timeoutMs}ms.`
-          : "OpenAI judge request failed."
+          : "OpenAI judge request failed.",
       );
     } finally {
       clearTimeout(timeout);
@@ -200,7 +206,7 @@ export async function createRubricJudgeInput(
   prompt: string,
   expectation: RubricJudgeExpectation,
   workspacePath: string,
-  workspaceDiff: WorkspaceDiff
+  workspaceDiff: WorkspaceDiff,
 ): Promise<RubricJudgeInput> {
   let remainingCharacters = MAX_TOTAL_ARTIFACT_CHARS;
   const artifacts: JudgeArtifact[] = [];
@@ -223,7 +229,7 @@ export async function createRubricJudgeInput(
         characters: content.length,
         truncated,
         available: true,
-        content: visibleContent
+        content: visibleContent,
       });
     } catch {
       artifacts.push({ path, characters: 0, truncated: false, available: false, content: "" });
@@ -239,8 +245,8 @@ export async function createRubricJudgeInput(
       created: workspaceDiff.created,
       changed: workspaceDiff.changed,
       deleted: workspaceDiff.deleted,
-      unchanged: workspaceDiff.unchanged
-    }
+      unchanged: workspaceDiff.unchanged,
+    },
   };
 }
 
@@ -251,18 +257,18 @@ function createJudgePrompt(input: RubricJudgeInput): string {
       scoring: {
         instructions:
           "Score every rubric criterion from 0 to 100 using only the evidence. The overall score must be the weighted average of criterion scores, rounded to two decimals.",
-        rubric: input.rubric
+        rubric: input.rubric,
       },
       workspaceDiff: input.workspaceDiff,
       artifacts: input.artifacts.map(({ path, available, truncated, content }) => ({
         path,
         available,
         truncated,
-        content
-      }))
+        content,
+      })),
     },
     null,
-    2
+    2,
   );
 }
 
@@ -291,7 +297,11 @@ function extractOutputText(response: unknown): string | undefined {
     }
 
     for (const item of content) {
-      if (item && typeof item === "object" && typeof (item as { text?: unknown }).text === "string") {
+      if (
+        item &&
+        typeof item === "object" &&
+        typeof (item as { text?: unknown }).text === "string"
+      ) {
         return (item as { text: string }).text;
       }
     }
@@ -302,10 +312,12 @@ function extractOutputText(response: unknown): string | undefined {
 
 function hasExpectedCriteria(
   criteria: RubricCriterionScore[],
-  rubric: RubricJudgeExpectation["rubric"]
+  rubric: RubricJudgeExpectation["rubric"],
 ): boolean {
   const expected = new Set(rubric.map((item) => item.criterion));
-  return criteria.length === expected.size && criteria.every((item) => expected.has(item.criterion));
+  return (
+    criteria.length === expected.size && criteria.every((item) => expected.has(item.criterion))
+  );
 }
 
 function createError(model: string | undefined, message: string): RubricJudgeError {
@@ -313,11 +325,13 @@ function createError(model: string | undefined, message: string): RubricJudgeErr
     status: "error",
     model,
     promptVersion: PROMPT_VERSION,
-    message
+    message,
   };
 }
 
 function isWorkspacePath(workspacePath: string, candidatePath: string): boolean {
   const pathToCandidate = relative(workspacePath, candidatePath);
-  return pathToCandidate !== "" && !pathToCandidate.startsWith("..") && !pathToCandidate.includes("..\\");
+  return (
+    pathToCandidate !== "" && !pathToCandidate.startsWith("..") && !pathToCandidate.includes("..\\")
+  );
 }

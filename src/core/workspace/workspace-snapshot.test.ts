@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { diffWorkspaceSnapshots, snapshotWorkspace } from "./workspace-snapshot.js";
@@ -35,8 +35,7 @@ describe("workspace snapshots", () => {
       created: ["created.txt"],
       changed: ["README.md"],
       deleted: ["delete-me.txt"],
-      unchanged: ["src/app.js"]
+      unchanged: ["src/app.js"],
     });
   });
 });
-

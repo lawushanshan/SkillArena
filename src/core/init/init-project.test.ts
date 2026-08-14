@@ -1,7 +1,7 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { initProject } from "./init-project.js";
@@ -54,8 +54,8 @@ describe("initProject", () => {
         join(root, "fixtures", "sample-workspace", "README.md"),
         join(root, "fixtures", "sample-workspace", "package.json"),
         join(root, "fixtures", "sample-workspace", "src", "app.js"),
-        join(root, "fixtures", "sample-workspace", "TODO.tmp")
-      ])
+        join(root, "fixtures", "sample-workspace", "TODO.tmp"),
+      ]),
     );
   });
 });

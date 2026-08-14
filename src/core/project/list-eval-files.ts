@@ -24,4 +24,3 @@ export async function listEvalFiles(evalsDir: string): Promise<string[]> {
   await visit(evalsDir);
   return files.sort();
 }
-

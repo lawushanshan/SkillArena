@@ -12,4 +12,3 @@ export function formatUnknownError(error: unknown): string {
 
   return String(error);
 }
-

@@ -5,7 +5,7 @@ import { gradeRubricJudge } from "./grade-rubric-judge.js";
 const expectation = {
   min_score: 80,
   files: [],
-  rubric: [{ criterion: "correctness", description: "The result is correct.", weight: 1 }]
+  rubric: [{ criterion: "correctness", description: "The result is correct.", weight: 1 }],
 };
 
 describe("gradeRubricJudge", () => {
@@ -17,8 +17,8 @@ describe("gradeRubricJudge", () => {
         promptVersion: "test",
         score: 80,
         summary: "Meets the rubric.",
-        criteria: [{ criterion: "correctness", score: 80, reason: "Evidence is correct." }]
-      })
+        criteria: [{ criterion: "correctness", score: 80, reason: "Evidence is correct." }],
+      }),
     ).toEqual([expect.objectContaining({ status: "pass" })]);
   });
 
@@ -30,8 +30,8 @@ describe("gradeRubricJudge", () => {
         promptVersion: "test",
         score: 79,
         summary: "Does not meet the rubric.",
-        criteria: [{ criterion: "correctness", score: 79, reason: "Evidence is incomplete." }]
-      })
+        criteria: [{ criterion: "correctness", score: 79, reason: "Evidence is incomplete." }],
+      }),
     ).toEqual([expect.objectContaining({ status: "fail", category: "judge_failed" })]);
   });
 });

@@ -1,5 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 export interface InitProjectResult {
@@ -87,36 +87,41 @@ export async function initProject(rootDir: string): Promise<InitProjectResult> {
   await ensureDir(resolve(rootDir, ".skillarena", "runs"), created);
 
   await writeIfMissing(resolve(rootDir, "skillarena.yaml"), CONFIG_TEMPLATE, created, skipped);
-  await writeIfMissing(resolve(rootDir, "evals", "sample-audit.yaml"), EVAL_TEMPLATE, created, skipped);
+  await writeIfMissing(
+    resolve(rootDir, "evals", "sample-audit.yaml"),
+    EVAL_TEMPLATE,
+    created,
+    skipped,
+  );
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "README.md"),
     FIXTURE_README,
     created,
-    skipped
+    skipped,
   );
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "package.json"),
     FIXTURE_PACKAGE_JSON,
     created,
-    skipped
+    skipped,
   );
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "src", "app.js"),
     FIXTURE_APP_JS,
     created,
-    skipped
+    skipped,
   );
   await writeIfMissing(
     resolve(rootDir, "fixtures", "sample-workspace", "TODO.tmp"),
     FIXTURE_TODO,
     created,
-    skipped
+    skipped,
   );
   await writeIfMissing(
     resolve(rootDir, ".codex", "skills", "sample-audit", "SKILL.md"),
     SAMPLE_SKILL,
     created,
-    skipped
+    skipped,
   );
 
   return { created, skipped };
@@ -136,7 +141,7 @@ async function writeIfMissing(
   path: string,
   content: string,
   created: string[],
-  skipped: string[]
+  skipped: string[],
 ): Promise<void> {
   if (existsSync(path)) {
     skipped.push(path);

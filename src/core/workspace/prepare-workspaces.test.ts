@@ -1,31 +1,23 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { SkillReference } from "../config/config-schema.js";
-import type { SkillArenaProject } from "../project/project.js";
-import type { LoadedEvalSuite } from "../run/run-plan.js";
-import type { RunStore } from "../run/run-store.js";
+import type { SkillReference } from "../../core/config/config-schema.js";
+import type { SkillArenaProject } from "../../core/project/project.js";
+import type { LoadedEvalSuite } from "../../core/run/run-plan.js";
+import type { RunStore } from "../../core/run/run-store.js";
+import { makeTempDir } from "../../test-helpers/temp-dir.js";
 import { prepareWorkspaces } from "./prepare-workspaces.js";
 import { createStablePathSegment, sanitizePathSegment } from "./sanitize-path-segment.js";
 
-const tempDirs: string[] = [];
-
-async function makeTempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "skillarena-workspace-"));
-  tempDirs.push(dir);
-  return dir;
-}
-
 afterEach(async () => {
-  await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+  // cleanup handled per-test
 });
 
 describe("prepareWorkspaces", () => {
   it("copies fixture files into a per-case workspace", async () => {
-    const root = await makeTempDir();
+    const root = await makeTempDir("workspace");
     const fixtureDir = join(root, "fixtures", "basic");
     const workspacesDir = join(root, ".skillarena", "runs", "run-1", "workspaces");
     await mkdir(fixtureDir, { recursive: true });
@@ -39,9 +31,9 @@ describe("prepareWorkspaces", () => {
     const workspaces = await prepareWorkspaces(project, runStore, suites);
 
     expect(workspaces).toHaveLength(1);
-    expect(existsSync(join(workspaces[0]!.path, "README.md"))).toBe(true);
-    await expect(readFile(join(workspaces[0]!.path, "README.md"), "utf8")).resolves.toBe(
-      "# Fixture\n"
+    expect(existsSync(join(workspaces[0]?.path, "README.md"))).toBe(true);
+    await expect(readFile(join(workspaces[0]?.path, "README.md"), "utf8")).resolves.toBe(
+      "# Fixture\n",
     );
   });
 
@@ -54,8 +46,8 @@ describe("prepareWorkspaces", () => {
       prepareWorkspaces(
         createProject(root),
         createRunStore(root, workspacesDir),
-        createSuites("sample suite", "case-1", "../")
-      )
+        createSuites("sample suite", "case-1", "../"),
+      ),
     ).rejects.toThrow("Fixture path must resolve inside the configured fixtures directory");
   });
 
@@ -72,12 +64,12 @@ describe("prepareWorkspaces", () => {
       createRunStore(root, workspacesDir),
       [
         ...createSuites("suite/name", "case-1", "fixtures/basic"),
-        ...createSuites("suite-name", "case-1", "fixtures/basic")
-      ]
+        ...createSuites("suite-name", "case-1", "fixtures/basic"),
+      ],
     );
 
     expect(workspaces).toHaveLength(2);
-    expect(workspaces[0]!.path).not.toBe(workspaces[1]!.path);
+    expect(workspaces[0]?.path).not.toBe(workspaces[1]?.path);
   });
 
   it("provisions the suite skill into every case workspace", async () => {
@@ -95,16 +87,16 @@ describe("prepareWorkspaces", () => {
       createRunStore(root, workspacesDir),
       createSuites("sample suite", "case-1", "fixtures/basic", {
         name: "code-audit",
-        path: ".codex/skills/code-audit"
-      })
+        path: ".codex/skills/code-audit",
+      }),
     );
 
-    expect(workspaces[0]!.skill).toMatchObject({
+    expect(workspaces[0]?.skill).toMatchObject({
       name: "code-audit",
-      sourcePath: skillDir
+      sourcePath: skillDir,
     });
     await expect(
-      readFile(join(workspaces[0]!.path, ".codex", "skills", "code-audit", "SKILL.md"), "utf8")
+      readFile(join(workspaces[0]?.path, ".codex", "skills", "code-audit", "SKILL.md"), "utf8"),
     ).resolves.toBe("# Code Audit\n");
   });
 
@@ -123,9 +115,9 @@ describe("prepareWorkspaces", () => {
         createRunStore(root, workspacesDir),
         createSuites("sample suite", "case-1", "fixtures/basic", {
           name: "incomplete",
-          path: ".codex/skills/incomplete"
-        })
-      )
+          path: ".codex/skills/incomplete",
+        }),
+      ),
     ).rejects.toThrow("Skill directory must contain SKILL.md");
   });
 });
@@ -154,14 +146,14 @@ function createProject(root: string): SkillArenaProject {
         evals: "evals",
         fixtures: "fixtures",
         snapshots: "snapshots",
-        runs: ".skillarena/runs"
+        runs: ".skillarena/runs",
       },
-      skills: []
+      skills: [],
     },
     evalsDir: resolve(root, "evals"),
     fixturesDir: resolve(root, "fixtures"),
     snapshotsDir: resolve(root, "snapshots"),
-    runsDir: resolve(root, ".skillarena", "runs")
+    runsDir: resolve(root, ".skillarena", "runs"),
   };
 }
 
@@ -174,7 +166,7 @@ function createRunStore(root: string, workspacesDir: string): RunStore {
     parsedDir: resolve(runDir, "parsed"),
     workspacesDir,
     reportJsonPath: resolve(runDir, "report.json"),
-    reportMarkdownPath: resolve(runDir, "report.md")
+    reportMarkdownPath: resolve(runDir, "report.md"),
   };
 }
 
@@ -182,7 +174,7 @@ function createSuites(
   suiteName: string,
   caseId: string,
   fixture: string,
-  skill?: SkillReference
+  skill?: SkillReference,
 ): LoadedEvalSuite[] {
   return [
     {
@@ -200,16 +192,16 @@ function createSuites(
             files_changed: [],
             files_deleted: [],
             files_unchanged: [],
-            file_snapshots: []
-          }
-        }
+            file_snapshots: [],
+          },
+        },
       ],
       suite: {
         name: suiteName,
         agent: "codex",
         skill,
-        cases: []
-      }
-    }
+        cases: [],
+      },
+    },
   ];
 }

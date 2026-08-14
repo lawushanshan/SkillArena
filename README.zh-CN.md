@@ -37,6 +37,9 @@ SkillArena v0 不试图成为通用 Agent 可观测性平台或通用基准测�
 - [技术栈 ADR](docs/ADR-0002-implementation-stack.zh-CN.md)
 - [路线图](ROADMAP.zh-CN.md)
 - [贡献指南](CONTRIBUTING.zh-CN.md)
+- [行为准则](CODE_OF_CONDUCT.md)
+- [安全策略](SECURITY.md)
+- [更新日志](CHANGELOG.md)
 
 ## 核心概念
 

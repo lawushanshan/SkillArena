@@ -28,13 +28,16 @@ export async function snapshotWorkspace(root: string): Promise<WorkspaceSnapshot
     files: await Promise.all(
       files.map(async (filePath) => ({
         path: relative(root, filePath).replace(/\\/g, "/"),
-        hash: await hashFile(filePath)
-      }))
-    )
+        hash: await hashFile(filePath),
+      })),
+    ),
   };
 }
 
-export function diffWorkspaceSnapshots(before: WorkspaceSnapshot, after: WorkspaceSnapshot): WorkspaceDiff {
+export function diffWorkspaceSnapshots(
+  before: WorkspaceSnapshot,
+  after: WorkspaceSnapshot,
+): WorkspaceDiff {
   const beforeMap = new Map(before.files.map((file) => [file.path, file.hash]));
   const afterMap = new Map(after.files.map((file) => [file.path, file.hash]));
   const created: string[] = [];
@@ -68,7 +71,7 @@ export function diffWorkspaceSnapshots(before: WorkspaceSnapshot, after: Workspa
     created: created.sort(),
     changed: changed.sort(),
     deleted: deleted.sort(),
-    unchanged: unchanged.sort()
+    unchanged: unchanged.sort(),
   };
 }
 
@@ -104,4 +107,3 @@ async function hashFile(path: string): Promise<string> {
 
   return hash.digest("hex");
 }
-

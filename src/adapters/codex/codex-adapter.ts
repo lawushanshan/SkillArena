@@ -38,7 +38,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
     "--skip-git-repo-check",
     "--cd",
     options.cwd,
-    options.prompt
+    options.prompt,
   ];
   let stdout = "";
   let stderr = "";
@@ -54,7 +54,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
       cwd: options.cwd,
       env,
       stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true
+      windowsHide: true,
     });
 
     const timeout = setTimeout(() => {
@@ -68,7 +68,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
       resolve({
         exitCode: null,
         signal: null,
-        error: "Failed to capture Codex stdout or stderr."
+        error: "Failed to capture Codex stdout or stderr.",
       });
       return;
     }
@@ -92,7 +92,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
       resolve({
         exitCode: null,
         signal: null,
-        error: error.message
+        error: error.message,
       });
     });
     child.on("close", (exitCode, signal) => {
@@ -119,7 +119,7 @@ export async function runCodexExec(options: CodexExecOptions): Promise<CodexExec
     rawOutputPath: options.rawOutputPath,
     stderrPath: options.stderrPath,
     stdoutBytes: Buffer.byteLength(stdout, "utf8"),
-    stderrBytes: Buffer.byteLength(stderr, "utf8")
+    stderrBytes: Buffer.byteLength(stderr, "utf8"),
   };
 }
 
@@ -133,6 +133,8 @@ function createCodexEnvironment(codexCommand: string): NodeJS.ProcessEnv {
 
   return {
     ...process.env,
-    [pathKey]: existingPath ? `${dirname(codexCommand)}${delimiter}${existingPath}` : dirname(codexCommand)
+    [pathKey]: existingPath
+      ? `${dirname(codexCommand)}${delimiter}${existingPath}`
+      : dirname(codexCommand),
   };
 }

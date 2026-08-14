@@ -25,7 +25,7 @@ export async function parseCodexJsonlTrace(rawPath: string): Promise<ParsedTrace
       parseErrors.push({
         line,
         message: error instanceof Error ? error.message : String(error),
-        text: trimmed
+        text: trimmed,
       });
       continue;
     }
@@ -42,8 +42,8 @@ export async function parseCodexJsonlTrace(rawPath: string): Promise<ParsedTrace
     stats: {
       rawEvents,
       normalizedEvents: events.length,
-      parseErrors: parseErrors.length
-    }
+      parseErrors: parseErrors.length,
+    },
   };
 }
 
@@ -57,12 +57,13 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
   const base = {
     source: "codex" as const,
     line,
-    rawType
+    rawType,
   };
   const events: NormalizedEvent[] = [];
   const skillPath = isSkillPath(path) ? path : extractSkillPathFromCommand(command);
   const commandFinished = isCommandFinished(typeKey, itemType);
-  const skillReadCompleted = commandFinished && findNumberField(raw, ["exit_code", "exitCode"]) === 0;
+  const skillReadCompleted =
+    commandFinished && findNumberField(raw, ["exit_code", "exitCode"]) === 0;
 
   if ((skillPath && (!itemType || skillReadCompleted)) || typeKey.includes("skill")) {
     events.push({
@@ -71,7 +72,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
       skillName:
         findStringField(raw, ["skill", "skill_name", "skillName", "name"]) ??
         deriveSkillName(skillPath),
-      path: skillPath
+      path: skillPath,
     });
   }
 
@@ -79,7 +80,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
     events.push({
       ...base,
       type: "command_started",
-      command: command ?? stringifyCompact(raw)
+      command: command ?? stringifyCompact(raw),
     });
   }
 
@@ -88,7 +89,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
       ...base,
       type: "command_finished",
       command,
-      exitCode: findNumberField(raw, ["exit_code", "exitCode", "code", "status"])
+      exitCode: findNumberField(raw, ["exit_code", "exitCode", "code", "status"]),
     });
   }
 
@@ -98,7 +99,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
       events.push({
         ...base,
         type: "file_changed",
-        path: changedPath
+        path: changedPath,
       });
     }
   }
@@ -107,7 +108,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
     events.push({
       ...base,
       type: "file_read",
-      path
+      path,
     });
   }
 
@@ -115,7 +116,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
     events.push({
       ...base,
       type: "run_error",
-      message: message ?? stringifyCompact(raw)
+      message: message ?? stringifyCompact(raw),
     });
   }
 
@@ -123,7 +124,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
     events.push({
       ...base,
       type: "assistant_message",
-      text: message
+      text: message,
     });
   }
 
@@ -255,20 +256,20 @@ function extractSkillPathFromCommand(command: string | undefined): string | unde
 
 function findStringField(value: unknown, keys: string[]): string | undefined {
   return findField(value, keys, (candidate) =>
-    typeof candidate === "string" && candidate.trim().length > 0 ? candidate : undefined
+    typeof candidate === "string" && candidate.trim().length > 0 ? candidate : undefined,
   );
 }
 
 function findNumberField(value: unknown, keys: string[]): number | undefined {
   return findField(value, keys, (candidate) =>
-    typeof candidate === "number" && Number.isFinite(candidate) ? candidate : undefined
+    typeof candidate === "number" && Number.isFinite(candidate) ? candidate : undefined,
   );
 }
 
 function findField<T>(
   value: unknown,
   keys: string[],
-  convert: (candidate: unknown) => T | undefined
+  convert: (candidate: unknown) => T | undefined,
 ): T | undefined {
   if (!value || typeof value !== "object") {
     return undefined;

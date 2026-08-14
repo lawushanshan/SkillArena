@@ -15,10 +15,10 @@ describe("gradeDeterministicExpectations", () => {
         skill_used: "code-audit",
         commands: [{ contains: "scripts/audit.js", exit_code: 0 }],
         commands_succeeded: true,
-        exit_code: 0
+        exit_code: 0,
       }),
       codex: createCodexResult(0),
-      parsedTrace: createParsedTrace()
+      parsedTrace: createParsedTrace(),
     });
 
     expect(checks.every((check) => check.status === "pass")).toBe(true);
@@ -27,30 +27,30 @@ describe("gradeDeterministicExpectations", () => {
   it("fails missing expected skills", () => {
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
-        skill_used: "missing-skill"
+        skill_used: "missing-skill",
       }),
       codex: createCodexResult(0),
-      parsedTrace: createParsedTrace()
+      parsedTrace: createParsedTrace(),
     });
 
     expect(checks[0]).toMatchObject({
       status: "fail",
-      category: "skill_not_triggered"
+      category: "skill_not_triggered",
     });
   });
 
   it("fails unexpected skill usage", () => {
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
-        skill_not_used: "code-audit"
+        skill_not_used: "code-audit",
       }),
       codex: createCodexResult(0),
-      parsedTrace: createParsedTrace()
+      parsedTrace: createParsedTrace(),
     });
 
     expect(checks[0]).toMatchObject({
       status: "fail",
-      category: "skill_misfire"
+      category: "skill_misfire",
     });
   });
 
@@ -60,76 +60,75 @@ describe("gradeDeterministicExpectations", () => {
 
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
-        commands: [{ contains: "scripts/audit.js", exit_code: 0 }]
+        commands: [{ contains: "scripts/audit.js", exit_code: 0 }],
       }),
       codex: createCodexResult(0),
-      parsedTrace: trace
+      parsedTrace: trace,
     });
 
     expect(checks).toEqual([
       expect.objectContaining({
         name: "expect.commands[0]",
         status: "fail",
-        category: "command_failed"
-      })
+        category: "command_failed",
+      }),
     ]);
   });
 
   it("passes when disallowed commands are not observed", () => {
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
-        commands_not_run: [{ contains: "npm publish" }]
+        commands_not_run: [{ contains: "npm publish" }],
       }),
       codex: createCodexResult(0),
-      parsedTrace: createParsedTrace()
+      parsedTrace: createParsedTrace(),
     });
 
     expect(checks).toEqual([
       expect.objectContaining({
         name: "expect.commands_not_run[0]",
-        status: "pass"
-      })
+        status: "pass",
+      }),
     ]);
   });
 
   it("fails when disallowed commands are observed", () => {
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
-        commands_not_run: [{ contains: "scripts/audit.js" }]
+        commands_not_run: [{ contains: "scripts/audit.js" }],
       }),
       codex: createCodexResult(0),
-      parsedTrace: createParsedTrace()
+      parsedTrace: createParsedTrace(),
     });
 
     expect(checks).toEqual([
       expect.objectContaining({
         name: "expect.commands_not_run[0]",
         status: "fail",
-        category: "command_failed"
-      })
+        category: "command_failed",
+      }),
     ]);
   });
-
 
   it("passes deleted file expectations when workspace diff matches", () => {
     const checks = gradeDeterministicExpectations({
       testCase: createCase({
-        files_deleted: ["delete-me.txt"]
+        files_deleted: ["delete-me.txt"],
       }),
       codex: createCodexResult(0),
       workspaceDiff: {
         created: [],
         changed: [],
         deleted: ["delete-me.txt"],
-        unchanged: []
-      }
+        unchanged: [],
+      },
     });
 
     expect(checks).toEqual([
       expect.objectContaining({
         name: "expect.files_deleted",
-        status: "pass"
-      })
+        status: "pass",
+      }),
     ]);
   });
 
@@ -149,12 +148,12 @@ describe("gradeDeterministicExpectations", () => {
         testCase: createCase({
           file_snapshots: [
             { path: "audit-report.md", snapshot: "audit-report.md" },
-            { path: "different.md", snapshot: "different.md" }
-          ]
+            { path: "different.md", snapshot: "different.md" },
+          ],
         }),
         codex: createCodexResult(0),
         workspacePath,
-        snapshotsDir
+        snapshotsDir,
       });
 
       expect(checks).toEqual([
@@ -162,8 +161,8 @@ describe("gradeDeterministicExpectations", () => {
         expect.objectContaining({
           name: "expect.file_snapshots[1]",
           status: "fail",
-          category: "artifact_mismatch"
-        })
+          category: "artifact_mismatch",
+        }),
       ]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -184,8 +183,8 @@ function createCase(expect: Partial<CaseExpectation>): EvalCase {
       files_deleted: [],
       files_unchanged: [],
       file_snapshots: [],
-      ...expect
-    }
+      ...expect,
+    },
   };
 }
 
@@ -200,7 +199,7 @@ function createCodexResult(exitCode: number): CodexExecResult {
     rawOutputPath: "/tmp/raw.jsonl",
     stderrPath: "/tmp/stderr.txt",
     stdoutBytes: 1,
-    stderrBytes: 0
+    stderrBytes: 0,
   };
 }
 
@@ -213,7 +212,7 @@ function createParsedTrace(): ParsedTrace {
     stats: {
       rawEvents: 3,
       normalizedEvents: 3,
-      parseErrors: 0
+      parseErrors: 0,
     },
     events: [
       {
@@ -222,14 +221,14 @@ function createParsedTrace(): ParsedTrace {
         line: 1,
         rawType: "file_read",
         skillName: "code-audit",
-        path: ".codex/skills/code-audit/SKILL.md"
+        path: ".codex/skills/code-audit/SKILL.md",
       },
       {
         type: "command_started",
         source: "codex",
         line: 2,
         rawType: "exec_command_begin",
-        command: "node scripts/audit.js"
+        command: "node scripts/audit.js",
       },
       {
         type: "command_finished",
@@ -237,8 +236,8 @@ function createParsedTrace(): ParsedTrace {
         line: 3,
         rawType: "exec_command_end",
         command: "node scripts/audit.js",
-        exitCode: 0
-      }
-    ]
+        exitCode: 0,
+      },
+    ],
   };
 }

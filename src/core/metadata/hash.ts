@@ -54,4 +54,3 @@ async function listFiles(path: string): Promise<string[]> {
 
   return files.sort();
 }
-

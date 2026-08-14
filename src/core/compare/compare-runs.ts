@@ -97,8 +97,8 @@ export async function runCompareCommand(options: CompareRunsOptions): Promise<Ru
       [
         "Runs are not comparable for A/B evaluation:",
         ...comparison.compatibility.blockingReasons.map((reason) => `- ${reason}`),
-        "Use --allow-incompatible only for diagnostic comparisons."
-      ].join("\n")
+        "Use --allow-incompatible only for diagnostic comparisons.",
+      ].join("\n"),
     );
   }
 
@@ -107,7 +107,7 @@ export async function runCompareCommand(options: CompareRunsOptions): Promise<Ru
 
 export function compareReports(
   baseline: SkillArenaReport,
-  candidate: SkillArenaReport
+  candidate: SkillArenaReport,
 ): RunComparison {
   const baselineMetrics = createRunMetrics(baseline);
   const candidateMetrics = createRunMetrics(candidate);
@@ -116,8 +116,7 @@ export function compareReports(
   const delta = {
     passRatePoints: candidateMetrics.passRate - baselineMetrics.passRate,
     triggerRatePoints: candidateMetrics.triggerRate - baselineMetrics.triggerRate,
-    falsePositiveRatePoints:
-      candidateMetrics.falsePositiveRate - baselineMetrics.falsePositiveRate,
+    falsePositiveRatePoints: candidateMetrics.falsePositiveRate - baselineMetrics.falsePositiveRate,
     passed: candidateMetrics.passed - baselineMetrics.passed,
     failed: candidateMetrics.failed - baselineMetrics.failed,
     blocked: candidateMetrics.blocked - baselineMetrics.blocked,
@@ -129,7 +128,7 @@ export function compareReports(
     skillNotUsedPassed:
       candidateMetrics.skillNotUsedChecks.passed - baselineMetrics.skillNotUsedChecks.passed,
     skillNotUsedFailed:
-      candidateMetrics.skillNotUsedChecks.failed - baselineMetrics.skillNotUsedChecks.failed
+      candidateMetrics.skillNotUsedChecks.failed - baselineMetrics.skillNotUsedChecks.failed,
   };
   const verdict = determineVerdict(delta, caseComparison);
 
@@ -140,7 +139,7 @@ export function compareReports(
     baseline: baselineMetrics,
     candidate: candidateMetrics,
     delta,
-    cases: caseComparison
+    cases: caseComparison,
   };
 }
 
@@ -153,45 +152,45 @@ export function renderCompareSummary(comparison: RunComparison): string {
     `Compatibility: ${comparison.compatibility.compatible ? "compatible" : "incompatible"}`,
     ...formatCompatibilityLines(comparison.compatibility),
     `Pass rate: ${formatPercent(comparison.baseline.passRate)} -> ${formatPercent(
-      comparison.candidate.passRate
+      comparison.candidate.passRate,
     )} (${formatSignedPercentPoints(comparison.delta.passRatePoints)})`,
     `Trigger rate: ${formatPercent(comparison.baseline.triggerRate)} -> ${formatPercent(
-      comparison.candidate.triggerRate
+      comparison.candidate.triggerRate,
     )} (${formatSignedPercentPoints(comparison.delta.triggerRatePoints)})`,
     `False-positive rate: ${formatPercent(
-      comparison.baseline.falsePositiveRate
+      comparison.baseline.falsePositiveRate,
     )} -> ${formatPercent(comparison.candidate.falsePositiveRate)} (${formatSignedPercentPoints(
-      comparison.delta.falsePositiveRatePoints
+      comparison.delta.falsePositiveRatePoints,
     )})`,
     `Passed: ${comparison.baseline.passed} -> ${comparison.candidate.passed} (${formatSignedInteger(
-      comparison.delta.passed
+      comparison.delta.passed,
     )})`,
     `Failed: ${comparison.baseline.failed} -> ${comparison.candidate.failed} (${formatSignedInteger(
-      comparison.delta.failed
+      comparison.delta.failed,
     )})`,
     `Blocked: ${comparison.baseline.blocked} -> ${comparison.candidate.blocked} (${formatSignedInteger(
-      comparison.delta.blocked
+      comparison.delta.blocked,
     )})`,
     `Case changes: ${comparison.cases.improved} improved, ${comparison.cases.regressed} regressed, ${comparison.cases.unchanged} unchanged, ${comparison.cases.added} added, ${comparison.cases.removed} removed`,
     `Skill used checks passed: ${comparison.baseline.skillUsedChecks.passed}/${comparison.baseline.skillUsedChecks.total} -> ${comparison.candidate.skillUsedChecks.passed}/${comparison.candidate.skillUsedChecks.total} (${formatSignedInteger(
-      comparison.delta.skillUsedPassed
+      comparison.delta.skillUsedPassed,
     )})`,
     `Skill misfire checks passed: ${comparison.baseline.skillNotUsedChecks.passed}/${comparison.baseline.skillNotUsedChecks.total} -> ${comparison.candidate.skillNotUsedChecks.passed}/${comparison.candidate.skillNotUsedChecks.total} (${formatSignedInteger(
-      comparison.delta.skillNotUsedPassed
+      comparison.delta.skillNotUsedPassed,
     )})`,
     `Duration: ${comparison.baseline.durationMs}ms -> ${comparison.candidate.durationMs}ms (${formatSignedInteger(
-      comparison.delta.durationMs
+      comparison.delta.durationMs,
     )}ms)`,
     ...formatCaseChangeLines("Improved cases", comparison.cases.improvedCases),
     ...formatCaseChangeLines("Regressed cases", comparison.cases.regressedCases),
     ...formatCaseChangeLines("Added cases", comparison.cases.addedCases),
-    ...formatCaseChangeLines("Removed cases", comparison.cases.removedCases)
+    ...formatCaseChangeLines("Removed cases", comparison.cases.removedCases),
   ].join("\n");
 }
 
 function assessCompatibility(
   baseline: SkillArenaReport,
-  candidate: SkillArenaReport
+  candidate: SkillArenaReport,
 ): ComparisonCompatibility {
   const blockingReasons: string[] = [];
   const warnings: string[] = [];
@@ -220,7 +219,7 @@ function assessCompatibility(
 
   if (baseline.metadata.codexVersion !== candidate.metadata.codexVersion) {
     warnings.push(
-      `Codex version differs: ${baseline.metadata.codexVersion ?? "not detected"} -> ${candidate.metadata.codexVersion ?? "not detected"}.`
+      `Codex version differs: ${baseline.metadata.codexVersion ?? "not detected"} -> ${candidate.metadata.codexVersion ?? "not detected"}.`,
     );
   }
 
@@ -236,24 +235,24 @@ function assessCompatibility(
     compatible: blockingReasons.length === 0,
     blockingReasons,
     warnings,
-    skillChanges
+    skillChanges,
   };
 }
 
 function sameHashedEntries(
   baseline: Array<{ path: string; hash: string }>,
-  candidate: Array<{ path: string; hash: string }>
+  candidate: Array<{ path: string; hash: string }>,
 ): boolean {
   return sameEntries(
     baseline.map((entry) => `${entry.path}\0${entry.hash}`),
-    candidate.map((entry) => `${entry.path}\0${entry.hash}`)
+    candidate.map((entry) => `${entry.path}\0${entry.hash}`),
   );
 }
 
 function sameCaseSet(baseline: SkillArenaReport, candidate: SkillArenaReport): boolean {
   return sameEntries(
     [...createCaseStatusMap(baseline).keys()],
-    [...createCaseStatusMap(candidate).keys()]
+    [...createCaseStatusMap(candidate).keys()],
   );
 }
 
@@ -270,10 +269,16 @@ function sameEntries(baseline: string[], candidate: string[]): boolean {
 
 function describeSkillChanges(baseline: SkillArenaReport, candidate: SkillArenaReport): string[] {
   const baselineSkills = new Map(
-    baseline.metadata.skills.map((skill) => [`${skill.name}\0${skill.path}`, skill.hash ?? "missing"])
+    baseline.metadata.skills.map((skill) => [
+      `${skill.name}\0${skill.path}`,
+      skill.hash ?? "missing",
+    ]),
   );
   const candidateSkills = new Map(
-    candidate.metadata.skills.map((skill) => [`${skill.name}\0${skill.path}`, skill.hash ?? "missing"])
+    candidate.metadata.skills.map((skill) => [
+      `${skill.name}\0${skill.path}`,
+      skill.hash ?? "missing",
+    ]),
   );
   const keys = new Set([...baselineSkills.keys(), ...candidateSkills.keys()]);
   const changes: string[] = [];
@@ -287,7 +292,9 @@ function describeSkillChanges(baseline: SkillArenaReport, candidate: SkillArenaR
     }
 
     const [name, path] = key.split("\0");
-    changes.push(`${name} (${path}): ${baselineHash ?? "missing"} -> ${candidateHash ?? "missing"}`);
+    changes.push(
+      `${name} (${path}): ${baselineHash ?? "missing"} -> ${candidateHash ?? "missing"}`,
+    );
   }
 
   return changes;
@@ -297,7 +304,7 @@ function formatCompatibilityLines(compatibility: ComparisonCompatibility): strin
   return [
     ...compatibility.blockingReasons.map((reason) => `Incompatible: ${reason}`),
     ...compatibility.skillChanges.map((change) => `Skill change: ${change}`),
-    ...compatibility.warnings.map((warning) => `Warning: ${warning}`)
+    ...compatibility.warnings.map((warning) => `Warning: ${warning}`),
   ];
 }
 
@@ -308,13 +315,13 @@ async function resolveComparisonRunDirs(options: CompareRunsOptions): Promise<{
   if (options.baselineRunDir && options.candidateRunDir) {
     return {
       baselineRunDir: await resolveRunDir(options.cwd, options.baselineRunDir),
-      candidateRunDir: await resolveRunDir(options.cwd, options.candidateRunDir)
+      candidateRunDir: await resolveRunDir(options.cwd, options.candidateRunDir),
     };
   }
 
   if (options.baselineRunDir || options.candidateRunDir) {
     throw new SkillArenaError(
-      "Compare requires both baseline and candidate run directories, or neither to compare the latest two runs."
+      "Compare requires both baseline and candidate run directories, or neither to compare the latest two runs.",
     );
   }
 
@@ -357,14 +364,18 @@ async function resolveLatestTwoRunDirs(cwd: string): Promise<{
 
   if (runDirs.length < 2) {
     throw new SkillArenaError(
-      `Need at least two SkillArena runs to compare. Found ${runDirs.length} in ${project.runsDir}`
+      `Need at least two SkillArena runs to compare. Found ${runDirs.length} in ${project.runsDir}`,
     );
   }
 
-  return {
-    baselineRunDir: runDirs[runDirs.length - 2]!,
-    candidateRunDir: runDirs[runDirs.length - 1]!
-  };
+  const baselineRunDir = runDirs[runDirs.length - 2];
+  const candidateRunDir = runDirs[runDirs.length - 1];
+  if (!baselineRunDir || !candidateRunDir) {
+    throw new SkillArenaError(
+      `Need at least two SkillArena runs to compare. Found ${runDirs.length} in ${project.runsDir}`,
+    );
+  }
+  return { baselineRunDir, candidateRunDir };
 }
 
 async function loadRunReport(runDir: string): Promise<SkillArenaReport> {
@@ -379,7 +390,7 @@ async function loadRunReport(runDir: string): Promise<SkillArenaReport> {
 
 function createRunMetrics(report: SkillArenaReport): RunComparisonMetrics {
   const allChecks = report.suites.flatMap((suite) =>
-    suite.cases.flatMap((testCase) => testCase.checks)
+    suite.cases.flatMap((testCase) => testCase.checks),
   );
 
   const skillUsedChecks = createCheckMetrics(allChecks, "expect.skill_used");
@@ -398,13 +409,13 @@ function createRunMetrics(report: SkillArenaReport): RunComparisonMetrics {
       skillNotUsedChecks.total === 0 ? 0 : skillNotUsedChecks.failed / skillNotUsedChecks.total,
     durationMs: report.run.durationMs,
     skillUsedChecks,
-    skillNotUsedChecks
+    skillNotUsedChecks,
   };
 }
 
 function determineVerdict(
   delta: RunComparison["delta"],
-  cases: CaseStatusComparison
+  cases: CaseStatusComparison,
 ): ComparisonVerdict {
   const hasPositiveSignal =
     delta.passRatePoints > 0 ||
@@ -438,13 +449,13 @@ function createCheckMetrics(checks: ReportCheck[], name: string): CheckMetrics {
   return {
     total: matching.length,
     passed: matching.filter((check) => check.status === "pass").length,
-    failed: matching.filter((check) => check.status === "fail").length
+    failed: matching.filter((check) => check.status === "fail").length,
   };
 }
 
 function compareCaseStatuses(
   baseline: SkillArenaReport,
-  candidate: SkillArenaReport
+  candidate: SkillArenaReport,
 ): CaseStatusComparison {
   const baselineCases = createCaseStatusMap(baseline);
   const candidateCases = createCaseStatusMap(candidate);
@@ -495,7 +506,7 @@ function compareCaseStatuses(
     improvedCases,
     regressedCases,
     addedCases,
-    removedCases
+    removedCases,
   };
 }
 
@@ -511,7 +522,7 @@ function createCaseStatusMap(report: SkillArenaReport): Map<string, CaseRef> {
     for (const testCase of suite.cases) {
       cases.set(`${suite.name}\0${testCase.id}`, {
         suiteName: suite.name,
-        testCase
+        testCase,
       });
     }
   }
@@ -521,7 +532,7 @@ function createCaseStatusMap(report: SkillArenaReport): Map<string, CaseRef> {
 
 function createCaseStatusChange(
   baselineCaseRef: CaseRef | undefined,
-  candidateCaseRef: CaseRef | undefined
+  candidateCaseRef: CaseRef | undefined,
 ): CaseStatusChange {
   const caseRef = candidateCaseRef ?? baselineCaseRef;
 
@@ -533,7 +544,7 @@ function createCaseStatusChange(
     suiteName: caseRef.suiteName,
     caseId: caseRef.testCase.id,
     baselineStatus: baselineCaseRef?.testCase.status,
-    candidateStatus: candidateCaseRef?.testCase.status
+    candidateStatus: candidateCaseRef?.testCase.status,
   };
 }
 
@@ -576,6 +587,6 @@ function formatCaseChangeLines(label: string, changes: CaseStatusChange[]): stri
       const baselineStatus = change.baselineStatus ?? "none";
       const candidateStatus = change.candidateStatus ?? "none";
       return `  - ${change.suiteName}/${change.caseId}: ${baselineStatus} -> ${candidateStatus}`;
-    })
+    }),
   ];
 }

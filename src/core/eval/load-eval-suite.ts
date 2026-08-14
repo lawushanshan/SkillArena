@@ -3,7 +3,7 @@ import { parse } from "yaml";
 
 import { SkillArenaError } from "../errors.js";
 import { formatZodIssues } from "../schema/format-zod-error.js";
-import { EvalSuiteSchema, type EvalSuite } from "./eval-schema.js";
+import { type EvalSuite, EvalSuiteSchema } from "./eval-schema.js";
 
 export async function loadEvalSuite(evalPath: string): Promise<EvalSuite> {
   let rawText: string;
@@ -26,10 +26,9 @@ export async function loadEvalSuite(evalPath: string): Promise<EvalSuite> {
 
   if (!result.success) {
     throw new SkillArenaError(
-      `Invalid eval suite: ${evalPath}\n${formatZodIssues(result.error.issues)}`
+      `Invalid eval suite: ${evalPath}\n${formatZodIssues(result.error.issues)}`,
     );
   }
 
   return result.data;
 }
-

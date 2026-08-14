@@ -16,7 +16,7 @@ const ReportSchema = z
         dir: z.string(),
         startedAt: z.string(),
         finishedAt: z.string(),
-        durationMs: z.number()
+        durationMs: z.number(),
       })
       .passthrough(),
     metadata: z.object({}).passthrough(),
@@ -27,11 +27,11 @@ const ReportSchema = z
         passed: z.number(),
         failed: z.number(),
         blocked: z.number(),
-        warnings: z.number()
+        warnings: z.number(),
       })
       .passthrough(),
     suites: z.array(z.object({}).passthrough()),
-    warnings: z.array(z.string())
+    warnings: z.array(z.string()),
   })
   .passthrough();
 
@@ -56,7 +56,7 @@ export async function loadReport(reportPath: string): Promise<SkillArenaReport> 
 
   if (!result.success) {
     throw new SkillArenaError(
-      `Invalid SkillArena report: ${reportPath}\n${formatZodIssues(result.error.issues)}`
+      `Invalid SkillArena report: ${reportPath}\n${formatZodIssues(result.error.issues)}`,
     );
   }
 

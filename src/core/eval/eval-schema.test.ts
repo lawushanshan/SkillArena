@@ -9,9 +9,9 @@ describe("EvalSuiteSchema", () => {
       cases: [
         {
           id: "case-1",
-          prompt: "Do a task."
-        }
-      ]
+          prompt: "Do a task.",
+        },
+      ],
     });
 
     expect(result.agent).toBe("codex");
@@ -29,10 +29,10 @@ describe("EvalSuiteSchema", () => {
           id: "case-1",
           prompt: "Do a task.",
           expect: {
-            commands: [{ exit_code: 0 }]
-          }
-        }
-      ]
+            commands: [{ exit_code: 0 }],
+          },
+        },
+      ],
     });
 
     expect(result.success).toBe(false);
@@ -46,10 +46,10 @@ describe("EvalSuiteSchema", () => {
           id: "case-1",
           prompt: "Do a task.",
           expect: {
-            commands_not_run: [{ exit_code: 0 }]
-          }
-        }
-      ]
+            commands_not_run: [{ exit_code: 0 }],
+          },
+        },
+      ],
     });
 
     expect(result.success).toBe(false);
@@ -66,11 +66,11 @@ describe("EvalSuiteSchema", () => {
             judge: {
               min_score: 80,
               files: ["report.md"],
-              rubric: [{ criterion: "correctness", description: "The result is correct." }]
-            }
-          }
-        }
-      ]
+              rubric: [{ criterion: "correctness", description: "The result is correct." }],
+            },
+          },
+        },
+      ],
     });
     const duplicate = EvalSuiteSchema.safeParse({
       name: "example",
@@ -83,12 +83,12 @@ describe("EvalSuiteSchema", () => {
               min_score: 80,
               rubric: [
                 { criterion: "correctness", description: "One." },
-                { criterion: "correctness", description: "Two." }
-              ]
-            }
-          }
-        }
-      ]
+                { criterion: "correctness", description: "Two." },
+              ],
+            },
+          },
+        },
+      ],
     });
 
     expect(valid.success).toBe(true);

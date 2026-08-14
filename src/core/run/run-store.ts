@@ -32,7 +32,7 @@ export async function createRunStore(project: SkillArenaProject): Promise<RunSto
     parsedDir,
     workspacesDir,
     reportJsonPath: resolve(runDir, "report.json"),
-    reportMarkdownPath: resolve(runDir, "report.md")
+    reportMarkdownPath: resolve(runDir, "report.md"),
   };
 }
 

@@ -1,8 +1,8 @@
-import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { RunMetadata } from "../metadata/metadata.js";
-import type { SkillArenaReport, ReportCase, ReportSuite } from "./report-schema.js";
+import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";
 import type { CapabilityBlock } from "./create-run-report.js";
+import type { ReportCase, ReportSuite, SkillArenaReport } from "./report-schema.js";
 
 export interface CreateDryRunReportInput {
   runId: string;
@@ -21,18 +21,23 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
   const workspaceByCase = new Map(
     input.workspaces.map((workspace) => [
       createWorkspaceKey(workspace.suiteName, workspace.caseId),
-      workspace
-    ])
+      workspace,
+    ]),
   );
   const capabilityBlockByCase = new Map(
-    input.capabilityBlocks.map((block) => [createWorkspaceKey(block.suiteName, block.caseId), block])
+    input.capabilityBlocks.map((block) => [
+      createWorkspaceKey(block.suiteName, block.caseId),
+      block,
+    ]),
   );
 
   const suites: ReportSuite[] = input.suites.map((loadedSuite) => {
     const cases: ReportCase[] = loadedSuite.selectedCases.map((testCase) => {
-      const workspace = workspaceByCase.get(createWorkspaceKey(loadedSuite.suite.name, testCase.id));
+      const workspace = workspaceByCase.get(
+        createWorkspaceKey(loadedSuite.suite.name, testCase.id),
+      );
       const capabilityBlock = capabilityBlockByCase.get(
-        createWorkspaceKey(loadedSuite.suite.name, testCase.id)
+        createWorkspaceKey(loadedSuite.suite.name, testCase.id),
       );
 
       if (capabilityBlock) {
@@ -44,9 +49,9 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
             {
               name: "adapter-capabilities",
               status: "unsupported",
-              message: `Missing adapter capabilities: ${capabilityBlock.missingCapabilities.join(", ")}`
-            }
-          ]
+              message: `Missing adapter capabilities: ${capabilityBlock.missingCapabilities.join(", ")}`,
+            },
+          ],
         };
       }
 
@@ -59,14 +64,14 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
               path: workspace.path,
               preserved: input.keepWorkspace,
               fixture: workspace.fixture,
-              skill: workspace.skill
+              skill: workspace.skill,
             }
           : undefined,
         checks: [
           {
             name: "schema",
             status: "pass",
-            message: "Eval case schema is valid."
+            message: "Eval case schema is valid.",
           },
           {
             name: "workspace",
@@ -74,22 +79,22 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
             message: workspace
               ? `Workspace prepared: ${workspace.path}`
               : "Workspace was not prepared.",
-            category: workspace ? undefined : "setup_error"
+            category: workspace ? undefined : "setup_error",
           },
           {
             name: "fixture",
             status: "pass",
             message: testCase.workspace.fixture
               ? `Fixture copied: ${testCase.workspace.fixture}`
-              : "No fixture required."
+              : "No fixture required.",
           },
           ...(workspace?.skill
             ? [
                 {
                   name: "skill",
                   status: "pass" as const,
-                  message: `Skill provisioned: ${workspace.skill.name}`
-                }
+                  message: `Skill provisioned: ${workspace.skill.name}`,
+                },
               ]
             : []),
           ...(testCase.expect.judge
@@ -97,11 +102,11 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
                 {
                   name: "expect.judge",
                   status: "warn" as const,
-                  message: "Rubric judge configuration is valid; dry-run does not invoke OpenAI."
-                }
+                  message: "Rubric judge configuration is valid; dry-run does not invoke OpenAI.",
+                },
               ]
-            : [])
-        ]
+            : []),
+        ],
       };
     });
 
@@ -111,7 +116,7 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
       name: loadedSuite.suite.name,
       path: loadedSuite.path,
       status: suiteBlocked ? "blocked" : "pass",
-      cases
+      cases,
     };
   });
 
@@ -128,7 +133,7 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
       dir: input.runDir,
       startedAt: input.startedAt.toISOString(),
       finishedAt: input.finishedAt.toISOString(),
-      durationMs: input.finishedAt.getTime() - input.startedAt.getTime()
+      durationMs: input.finishedAt.getTime() - input.startedAt.getTime(),
     },
     metadata: input.metadata,
     summary: {
@@ -137,10 +142,10 @@ export function createDryRunReport(input: CreateDryRunReportInput): SkillArenaRe
       passed: totalCases - blocked,
       failed: 0,
       blocked,
-      warnings: input.warnings.length
+      warnings: input.warnings.length,
     },
     suites,
-    warnings: input.warnings
+    warnings: input.warnings,
   };
 }
 

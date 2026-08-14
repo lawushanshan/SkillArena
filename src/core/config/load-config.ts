@@ -3,7 +3,7 @@ import { parse } from "yaml";
 
 import { SkillArenaError } from "../errors.js";
 import { formatZodIssues } from "../schema/format-zod-error.js";
-import { SkillArenaConfigSchema, type SkillArenaConfig } from "./config-schema.js";
+import { type SkillArenaConfig, SkillArenaConfigSchema } from "./config-schema.js";
 
 export async function loadConfig(configPath: string): Promise<SkillArenaConfig> {
   let rawText: string;
@@ -26,10 +26,9 @@ export async function loadConfig(configPath: string): Promise<SkillArenaConfig> 
 
   if (!result.success) {
     throw new SkillArenaError(
-      `Invalid SkillArena config: ${configPath}\n${formatZodIssues(result.error.issues)}`
+      `Invalid SkillArena config: ${configPath}\n${formatZodIssues(result.error.issues)}`,
     );
   }
 
   return result.data;
 }
-

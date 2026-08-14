@@ -22,13 +22,13 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
       name: "expect.exit_code",
       status: input.codex.exitCode === expect.exit_code ? "pass" : "fail",
       message: `expected=${expect.exit_code}, actual=${input.codex.exitCode ?? "null"}`,
-      category: input.codex.exitCode === expect.exit_code ? undefined : "adapter_error"
+      category: input.codex.exitCode === expect.exit_code ? undefined : "adapter_error",
     });
   }
 
   if (expect.commands_succeeded !== undefined) {
     const commandFailures = getCommandFinishedEvents(input.parsedTrace).filter(
-      (event) => event.exitCode !== undefined && event.exitCode !== 0
+      (event) => event.exitCode !== undefined && event.exitCode !== 0,
     );
     checks.push({
       name: "expect.commands_succeeded",
@@ -39,14 +39,14 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
             ? "pass"
             : "fail",
       message: `failedCommands=${commandFailures.length}`,
-      category: commandFailures.length === 0 ? undefined : "command_failed"
+      category: commandFailures.length === 0 ? undefined : "command_failed",
     });
   }
 
   if (expect.skill_used) {
     const expectedSkill = expect.skill_used;
     const matched = getSkillReadEvents(input.parsedTrace).some((event) =>
-      matchesSkill(event.skillName, event.path, expectedSkill)
+      matchesSkill(event.skillName, event.path, expectedSkill),
     );
     checks.push({
       name: "expect.skill_used",
@@ -54,14 +54,14 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
       message: matched
         ? `Skill was observed: ${expect.skill_used}`
         : `Skill was not observed: ${expect.skill_used}`,
-      category: matched ? undefined : "skill_not_triggered"
+      category: matched ? undefined : "skill_not_triggered",
     });
   }
 
   if (expect.skill_not_used) {
     const expectedSkill = expect.skill_not_used;
     const matched = getSkillReadEvents(input.parsedTrace).some((event) =>
-      matchesSkill(event.skillName, event.path, expectedSkill)
+      matchesSkill(event.skillName, event.path, expectedSkill),
     );
     checks.push({
       name: "expect.skill_not_used",
@@ -69,51 +69,66 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
       message: matched
         ? `Skill was unexpectedly observed: ${expect.skill_not_used}`
         : `Skill was not observed: ${expect.skill_not_used}`,
-      category: matched ? "skill_misfire" : undefined
+      category: matched ? "skill_misfire" : undefined,
     });
   }
 
   for (const [index, commandExpectation] of (expect.commands ?? []).entries()) {
     const matched =
       commandExpectation.exit_code === undefined
-        ? [...getCommandStartedEvents(input.parsedTrace), ...getCommandFinishedEvents(input.parsedTrace)].some(
-            (event) => commandMatchesExpectation(event.command, commandExpectation)
-          )
+        ? [
+            ...getCommandStartedEvents(input.parsedTrace),
+            ...getCommandFinishedEvents(input.parsedTrace),
+          ].some((event) => commandMatchesExpectation(event.command, commandExpectation))
         : getCommandFinishedEvents(input.parsedTrace).some(
             (event) =>
               commandMatchesExpectation(event.command, commandExpectation) &&
-              event.exitCode === commandExpectation.exit_code
+              event.exitCode === commandExpectation.exit_code,
           );
 
     checks.push({
       name: `expect.commands[${index}]`,
       status: matched ? "pass" : "fail",
       message: matched ? "Command expectation matched." : "Command expectation did not match.",
-      category: matched ? undefined : "command_failed"
+      category: matched ? undefined : "command_failed",
     });
   }
 
   for (const [index, commandExpectation] of (expect.commands_not_run ?? []).entries()) {
     const matched = [
       ...getCommandStartedEvents(input.parsedTrace),
-      ...getCommandFinishedEvents(input.parsedTrace)
+      ...getCommandFinishedEvents(input.parsedTrace),
     ].some((event) => commandMatchesExpectation(event.command, commandExpectation));
 
     checks.push({
       name: `expect.commands_not_run[${index}]`,
       status: matched ? "fail" : "pass",
-      message: matched ? "Disallowed command was observed." : "Disallowed command was not observed.",
-      category: matched ? "command_failed" : undefined
+      message: matched
+        ? "Disallowed command was observed."
+        : "Disallowed command was not observed.",
+      category: matched ? "command_failed" : undefined,
     });
   }
 
-  checks.push(...gradeFileList("expect.files_created", expect.files_created, input.workspaceDiff?.created));
-  checks.push(...gradeFileList("expect.files_changed", expect.files_changed, input.workspaceDiff?.changed));
-  checks.push(...gradeFileList("expect.files_deleted", expect.files_deleted, input.workspaceDiff?.deleted));
   checks.push(
-    ...gradeFileList("expect.files_unchanged", expect.files_unchanged, input.workspaceDiff?.unchanged)
+    ...gradeFileList("expect.files_created", expect.files_created, input.workspaceDiff?.created),
   );
-  checks.push(...gradeFileSnapshots(expect.file_snapshots, input.workspacePath, input.snapshotsDir));
+  checks.push(
+    ...gradeFileList("expect.files_changed", expect.files_changed, input.workspaceDiff?.changed),
+  );
+  checks.push(
+    ...gradeFileList("expect.files_deleted", expect.files_deleted, input.workspaceDiff?.deleted),
+  );
+  checks.push(
+    ...gradeFileList(
+      "expect.files_unchanged",
+      expect.files_unchanged,
+      input.workspaceDiff?.unchanged,
+    ),
+  );
+  checks.push(
+    ...gradeFileSnapshots(expect.file_snapshots, input.workspacePath, input.snapshotsDir),
+  );
 
   return checks;
 }
@@ -121,7 +136,7 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
 function gradeFileSnapshots(
   expectations: Array<{ path: string; snapshot: string }>,
   workspacePath: string | undefined,
-  snapshotsDir: string | undefined
+  snapshotsDir: string | undefined,
 ): ReportCheck[] {
   if (expectations.length === 0) {
     return [];
@@ -133,8 +148,8 @@ function gradeFileSnapshots(
         name: "expect.file_snapshots",
         status: "fail",
         message: "Workspace or snapshots directory is not available.",
-        category: "artifact_mismatch"
-      }
+        category: "artifact_mismatch",
+      },
     ];
   }
 
@@ -152,12 +167,16 @@ function gradeFileSnapshots(
       message: matched
         ? `Snapshot matched: ${expectation.path}`
         : `Snapshot did not match: ${expectation.path}`,
-      category: matched ? undefined : "artifact_mismatch"
+      category: matched ? undefined : "artifact_mismatch",
     };
   });
 }
 
-function gradeFileList(name: string, expectedPaths: string[], actualPaths: string[] | undefined): ReportCheck[] {
+function gradeFileList(
+  name: string,
+  expectedPaths: string[],
+  actualPaths: string[] | undefined,
+): ReportCheck[] {
   if (expectedPaths.length === 0) {
     return [];
   }
@@ -168,8 +187,8 @@ function gradeFileList(name: string, expectedPaths: string[], actualPaths: strin
         name,
         status: "fail",
         message: "Workspace diff is not available.",
-        category: "artifact_mismatch"
-      }
+        category: "artifact_mismatch",
+      },
     ];
   }
 
@@ -184,8 +203,8 @@ function gradeFileList(name: string, expectedPaths: string[], actualPaths: strin
         missing.length === 0
           ? `Matched ${expectedPaths.length} expected path(s).`
           : `Missing expected path(s): ${missing.join(", ")}`,
-      category: missing.length === 0 ? undefined : "artifact_mismatch"
-    }
+      category: missing.length === 0 ? undefined : "artifact_mismatch",
+    },
   ];
 }
 
@@ -201,25 +220,32 @@ function getCommandFinishedEvents(parsedTrace: ParsedTrace | undefined) {
   return parsedTrace?.events.filter((event) => event.type === "command_finished") ?? [];
 }
 
-function matchesSkill(skillName: string | undefined, path: string | undefined, expected: string): boolean {
+function matchesSkill(
+  skillName: string | undefined,
+  path: string | undefined,
+  expected: string,
+): boolean {
   const normalizedExpected = expected.toLowerCase();
   return Boolean(
     skillName?.toLowerCase() === normalizedExpected ||
       path?.toLowerCase().includes(`/${normalizedExpected}/skill.md`) ||
-      path?.toLowerCase().includes(`\\${normalizedExpected}\\skill.md`)
+      path?.toLowerCase().includes(`\\${normalizedExpected}\\skill.md`),
   );
 }
 
 function commandMatchesExpectation(
   command: string | undefined,
-  expectation: { contains?: string; exact?: string }
+  expectation: { contains?: string; exact?: string },
 ): boolean {
   const value = command ?? "";
-  return expectation.exact ? value === expectation.exact : value.includes(expectation.contains ?? "");
+  return expectation.exact
+    ? value === expectation.exact
+    : value.includes(expectation.contains ?? "");
 }
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
 }
+
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";

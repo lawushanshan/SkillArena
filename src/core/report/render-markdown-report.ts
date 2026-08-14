@@ -47,7 +47,7 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
       lines.push(`- Status: ${testCase.status}`);
       if (testCase.workspace) {
         lines.push(
-          `- Workspace: ${testCase.workspace.preserved ? testCase.workspace.path : "cleaned after run"}`
+          `- Workspace: ${testCase.workspace.preserved ? testCase.workspace.path : "cleaned after run"}`,
         );
         if (testCase.workspace.skill) {
           lines.push(`- Skill: ${testCase.workspace.skill.name}`);
@@ -80,13 +80,18 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
           lines.push(`- Judge error: ${testCase.judge.error}`);
         }
         for (const criterion of testCase.judge.criteria ?? []) {
-          lines.push(`- Judge criterion ${criterion.criterion}: ${criterion.score} - ${criterion.reason}`);
+          lines.push(
+            `- Judge criterion ${criterion.criterion}: ${criterion.score} - ${criterion.reason}`,
+          );
         }
         if (testCase.judge.artifacts.length > 0) {
           lines.push(
             `- Judge artifacts: ${testCase.judge.artifacts
-              .map((artifact) => `${artifact.path} (${artifact.available ? artifact.characters : "unavailable"}${artifact.truncated ? ", truncated" : ""})`)
-              .join(", ")}`
+              .map(
+                (artifact) =>
+                  `${artifact.path} (${artifact.available ? artifact.characters : "unavailable"}${artifact.truncated ? ", truncated" : ""})`,
+              )
+              .join(", ")}`,
           );
         }
       }
@@ -102,7 +107,7 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
         lines.push("");
         lines.push(`- Category: ${testCase.failureTraceSummary.category ?? "unknown"}`);
         lines.push(
-          `- Skills read: ${testCase.failureTraceSummary.skillsRead.join(", ") || "none"}`
+          `- Skills read: ${testCase.failureTraceSummary.skillsRead.join(", ") || "none"}`,
         );
         lines.push(`- Failed commands: ${testCase.failureTraceSummary.failedCommands.length}`);
 

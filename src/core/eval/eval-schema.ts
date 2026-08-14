@@ -8,14 +8,14 @@ export const CommandExpectationSchema = z
   .object({
     contains: z.string().min(1).optional(),
     exact: z.string().min(1).optional(),
-    exit_code: z.number().int().optional()
+    exit_code: z.number().int().optional(),
   })
   .strict()
   .superRefine((value, context) => {
     if (!value.contains && !value.exact) {
       context.addIssue({
         code: "custom",
-        message: "command expectation must include either contains or exact"
+        message: "command expectation must include either contains or exact",
       });
     }
   });
@@ -23,7 +23,7 @@ export const CommandExpectationSchema = z
 export const FileSnapshotExpectationSchema = z
   .object({
     path: z.string().min(1),
-    snapshot: z.string().min(1)
+    snapshot: z.string().min(1),
   })
   .strict();
 
@@ -31,7 +31,7 @@ export const RubricCriterionSchema = z
   .object({
     criterion: z.string().min(1),
     description: z.string().min(1),
-    weight: z.number().positive().default(1)
+    weight: z.number().positive().default(1),
   })
   .strict();
 
@@ -39,7 +39,7 @@ export const RubricJudgeExpectationSchema = z
   .object({
     rubric: z.array(RubricCriterionSchema).min(1),
     min_score: z.number().min(0).max(100),
-    files: z.array(z.string().min(1)).default([])
+    files: z.array(z.string().min(1)).default([]),
   })
   .strict()
   .superRefine((value, context) => {
@@ -50,7 +50,7 @@ export const RubricJudgeExpectationSchema = z
         context.addIssue({
           code: "custom",
           path: ["rubric"],
-          message: `duplicate rubric criterion: ${item.criterion}`
+          message: `duplicate rubric criterion: ${item.criterion}`,
         });
       }
 
@@ -71,25 +71,28 @@ export const CaseExpectationSchema = z
     files_unchanged: PathListSchema,
     file_snapshots: z.array(FileSnapshotExpectationSchema).default([]),
     judge: RubricJudgeExpectationSchema.optional(),
-    exit_code: z.number().int().optional()
+    exit_code: z.number().int().optional(),
   })
   .strict()
   .superRefine((value, context) => {
     if (value.skill_used && value.skill_not_used && value.skill_used === value.skill_not_used) {
       context.addIssue({
         code: "custom",
-        message: "skill_used and skill_not_used cannot reference the same skill"
+        message: "skill_used and skill_not_used cannot reference the same skill",
       });
     }
   });
 
 export const EvalCaseSchema = z
   .object({
-    id: z.string().min(1).regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+    id: z
+      .string()
+      .min(1)
+      .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
     prompt: z.string().min(1),
     workspace: z
       .object({
-        fixture: z.string().min(1).optional()
+        fixture: z.string().min(1).optional(),
       })
       .strict()
       .default({}),
@@ -100,8 +103,8 @@ export const EvalCaseSchema = z
       files_changed: [],
       files_deleted: [],
       files_unchanged: [],
-      file_snapshots: []
-    })
+      file_snapshots: [],
+    }),
   })
   .strict();
 
@@ -110,7 +113,7 @@ export const EvalSuiteSchema = z
     name: z.string().min(1),
     agent: AgentSchema.default("codex"),
     skill: SkillReferenceSchema.optional(),
-    cases: z.array(EvalCaseSchema).min(1)
+    cases: z.array(EvalCaseSchema).min(1),
   })
   .strict()
   .superRefine((value, context) => {
@@ -121,7 +124,7 @@ export const EvalSuiteSchema = z
         context.addIssue({
           code: "custom",
           path: ["cases"],
-          message: `duplicate case id: ${testCase.id}`
+          message: `duplicate case id: ${testCase.id}`,
         });
       }
 

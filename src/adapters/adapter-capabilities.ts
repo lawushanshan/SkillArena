@@ -3,13 +3,13 @@ import type { EvalCase } from "../core/eval/eval-schema.js";
 export const ADAPTER_CAPABILITIES = [
   "skill_read_trace",
   "command_trace",
-  "file_change_detection"
+  "file_change_detection",
 ] as const;
 
 export type AdapterCapability = (typeof ADAPTER_CAPABILITIES)[number];
 
 export const CODEX_ADAPTER_CAPABILITIES: ReadonlySet<AdapterCapability> = new Set(
-  ADAPTER_CAPABILITIES
+  ADAPTER_CAPABILITIES,
 );
 
 export function requiredCapabilities(testCase: EvalCase): AdapterCapability[] {
@@ -44,9 +44,9 @@ export function requiredCapabilities(testCase: EvalCase): AdapterCapability[] {
 
 export function missingCapabilities(
   testCase: EvalCase,
-  availableCapabilities: ReadonlySet<AdapterCapability>
+  availableCapabilities: ReadonlySet<AdapterCapability>,
 ): AdapterCapability[] {
   return requiredCapabilities(testCase).filter(
-    (capability) => !availableCapabilities.has(capability)
+    (capability) => !availableCapabilities.has(capability),
   );
 }

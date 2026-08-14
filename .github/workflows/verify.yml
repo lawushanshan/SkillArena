@@ -18,6 +18,30 @@ permissions:
 
 jobs:
   verify:
+    name: Check, Lint, Test, Build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Validate example evals without Codex
+        working-directory: examples/basic-audit
+        run: node ../../dist/cli/index.js run --dry-run
+
+  coverage:
+    name: Code Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,12 +50,15 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run check
-      - run: npm test
       - run: npm run build
-      - name: Validate example evals without Codex
-        working-directory: examples/basic-audit
-        run: node ../../dist/cli/index.js run --dry-run
+      - run: npm run test:coverage
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: warn
 
   real-codex-evals:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_real_evals }}

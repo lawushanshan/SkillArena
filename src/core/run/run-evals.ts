@@ -1,29 +1,29 @@
 import {
+  type AdapterCapability,
   CODEX_ADAPTER_CAPABILITIES,
   missingCapabilities,
-  type AdapterCapability
 } from "../../adapters/adapter-capabilities.js";
 import { runCodexExec } from "../../adapters/codex/codex-adapter.js";
+import type { EvalCase } from "../eval/eval-schema.js";
 import { gradeDeterministicExpectations } from "../grader/deterministic-grader.js";
 import { gradeRubricJudge } from "../judge/grade-rubric-judge.js";
 import {
   createRubricJudgeInput,
   OpenAiRubricJudge,
   type RubricJudge,
-  type RubricJudgeResult
+  type RubricJudgeResult,
 } from "../judge/rubric-judge.js";
 import { collectRunMetadata } from "../metadata/metadata.js";
 import {
-  createRunReport,
   type CapabilityBlock,
-  type CaseExecutionResult
+  type CaseExecutionResult,
+  createRunReport,
 } from "../report/create-run-report.js";
 import type { SkillArenaReport } from "../report/report-schema.js";
-import type { EvalCase } from "../eval/eval-schema.js";
 import { writeReport } from "../report/write-report.js";
 import { parseCodexJsonlTrace } from "../trace/codex-jsonl-parser.js";
 import { writeParsedTrace } from "../trace/write-parsed-trace.js";
-import { prepareWorkspaces, type PreparedWorkspace } from "../workspace/prepare-workspaces.js";
+import { type PreparedWorkspace, prepareWorkspaces } from "../workspace/prepare-workspaces.js";
 import { diffWorkspaceSnapshots, snapshotWorkspace } from "../workspace/workspace-snapshot.js";
 import { createParsedTracePath, createRawTracePath, createStderrPath } from "./case-artifacts.js";
 import { createRunPlan, type LoadedEvalSuite } from "./run-plan.js";
@@ -62,22 +62,22 @@ export interface RunEvalsResult {
 
 export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult> {
   const startedAt = new Date();
-  const { project, suites, totalCases, warnings } = await createRunPlan(options);
+  const { project, suites, warnings } = await createRunPlan(options);
   const runStore = await createRunStore(project);
   const rubricJudge = hasJudgeExpectations(suites)
-    ? options.rubricJudge ??
+    ? (options.rubricJudge ??
       new OpenAiRubricJudge({
         apiKey: process.env.OPENAI_API_KEY,
         model: options.judgeModel ?? process.env.SKILLARENA_JUDGE_MODEL,
-        timeoutMs: options.judgeTimeoutMs ?? 60_000
-      })
+        timeoutMs: options.judgeTimeoutMs ?? 60_000,
+      }))
     : undefined;
   const capabilityBlocks = collectCapabilityBlocks(
     suites,
-    options.adapterCapabilities ?? CODEX_ADAPTER_CAPABILITIES
+    options.adapterCapabilities ?? CODEX_ADAPTER_CAPABILITIES,
   );
   const blockedCaseKeys = new Set(
-    capabilityBlocks.map((block) => createCaseKey(block.suiteName, block.caseId))
+    capabilityBlocks.map((block) => createCaseKey(block.suiteName, block.caseId)),
   );
   const runnableSuites = withoutBlockedCases(suites, blockedCaseKeys);
   const workspaces = await prepareWorkspaces(project, runStore, runnableSuites);
@@ -97,7 +97,9 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         warnings.push(`Skipped ${testCase.id}: required adapter capability is unavailable.`);
 
         if (options.failFast) {
-          warnings.push(`Stopped after blocked case because --fail-fast is enabled: ${testCase.id}`);
+          warnings.push(
+            `Stopped after blocked case because --fail-fast is enabled: ${testCase.id}`,
+          );
           shouldStop = true;
           break;
         }
@@ -107,7 +109,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
 
       const workspace = workspaces.find(
         (candidate) =>
-          candidate.suiteName === loadedSuite.suite.name && candidate.caseId === testCase.id
+          candidate.suiteName === loadedSuite.suite.name && candidate.caseId === testCase.id,
       );
 
       if (!workspace) {
@@ -122,7 +124,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         stderrPath: createStderrPath(runStore, loadedSuite.suite.name, testCase.id),
         timeoutMs: options.timeoutMs,
         codexCommand: options.codexCommand,
-        codexCommandArgs: options.codexCommandArgs
+        codexCommandArgs: options.codexCommandArgs,
       });
       const afterSnapshot = await snapshotWorkspace(workspace.path);
       const workspaceDiff = diffWorkspaceSnapshots(beforeSnapshot, afterSnapshot);
@@ -130,7 +132,11 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
       const parsedTracePath = createParsedTracePath(runStore, loadedSuite.suite.name, testCase.id);
       await writeParsedTrace(parsedTracePath, parsedTrace);
       const judge =
-        testCase.expect.judge && codex.exitCode === 0 && !codex.timedOut && !codex.error && rubricJudge
+        testCase.expect.judge &&
+        codex.exitCode === 0 &&
+        !codex.timedOut &&
+        !codex.error &&
+        rubricJudge
           ? await runRubricJudge(rubricJudge, testCase, workspace, workspaceDiff)
           : undefined;
 
@@ -141,7 +147,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
         parsedTracePath,
         parsedTrace,
         workspaceDiff,
-        judge
+        judge,
       };
 
       executions.push(execution);
@@ -163,7 +169,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
     startedAt,
     command: options.command ?? [],
     skillarenaVersion: options.skillarenaVersion,
-    detectCodexVersion: options.detectCodexVersion
+    detectCodexVersion: options.detectCodexVersion,
   });
   const report = createRunReport({
     runId: runStore.runId,
@@ -176,7 +182,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
     executions,
     capabilityBlocks,
     keepWorkspace: options.keepWorkspace ?? false,
-    warnings
+    warnings,
   });
 
   await writeReport(runStore, report);
@@ -192,13 +198,13 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
     suites: reportSuites,
     executions,
     totalCases: report.summary.cases,
-    warnings
+    warnings,
   };
 }
 
 function collectCapabilityBlocks(
   suites: LoadedEvalSuite[],
-  adapterCapabilities: ReadonlySet<AdapterCapability>
+  adapterCapabilities: ReadonlySet<AdapterCapability>,
 ): CapabilityBlock[] {
   return suites.flatMap((loadedSuite) =>
     loadedSuite.selectedCases.flatMap((testCase) => {
@@ -210,26 +216,26 @@ function collectCapabilityBlocks(
             {
               suiteName: loadedSuite.suite.name,
               caseId: testCase.id,
-              missingCapabilities: missing
-            }
+              missingCapabilities: missing,
+            },
           ];
-    })
+    }),
   );
 }
 
 function withoutBlockedCases(
   suites: LoadedEvalSuite[],
-  blockedCaseKeys: ReadonlySet<string>
+  blockedCaseKeys: ReadonlySet<string>,
 ): LoadedEvalSuite[] {
   return suites.map((loadedSuite) => {
     const selectedCases = loadedSuite.selectedCases.filter(
-      (testCase) => !blockedCaseKeys.has(createCaseKey(loadedSuite.suite.name, testCase.id))
+      (testCase) => !blockedCaseKeys.has(createCaseKey(loadedSuite.suite.name, testCase.id)),
     );
 
     return {
       ...loadedSuite,
       selectedCases,
-      selectedCaseCount: selectedCases.length
+      selectedCaseCount: selectedCases.length,
     };
   });
 }
@@ -237,7 +243,7 @@ function withoutBlockedCases(
 function addExecutedCase(
   executedSuites: LoadedEvalSuite[],
   loadedSuite: LoadedEvalSuite,
-  testCase: EvalCase
+  testCase: EvalCase,
 ): void {
   let executedSuite = executedSuites.find((candidate) => candidate.path === loadedSuite.path);
 
@@ -245,7 +251,7 @@ function addExecutedCase(
     executedSuite = {
       ...loadedSuite,
       selectedCases: [],
-      selectedCaseCount: 0
+      selectedCaseCount: 0,
     };
     executedSuites.push(executedSuite);
   }
@@ -257,7 +263,7 @@ function addExecutedCase(
 function caseExecutionFailed(
   testCase: EvalCase,
   execution: CaseExecutionResult,
-  workspace: PreparedWorkspace
+  workspace: PreparedWorkspace,
 ): boolean {
   const adapterFailed =
     execution.codex.exitCode !== 0 || execution.codex.timedOut || Boolean(execution.codex.error);
@@ -272,14 +278,14 @@ function caseExecutionFailed(
     parsedTrace: execution.parsedTrace,
     workspaceDiff: execution.workspaceDiff,
     workspacePath: workspace.path,
-    snapshotsDir: workspace.snapshotsDir
+    snapshotsDir: workspace.snapshotsDir,
   }).some((check) => check.status === "fail");
 
   return (
     deterministicFailed ||
     (testCase.expect.judge
       ? gradeRubricJudge(testCase.expect.judge, execution.judge?.result).some(
-          (check) => check.status === "fail"
+          (check) => check.status === "fail",
         )
       : false)
   );
@@ -289,37 +295,44 @@ async function runRubricJudge(
   judge: RubricJudge,
   testCase: EvalCase,
   workspace: PreparedWorkspace,
-  workspaceDiff: NonNullable<CaseExecutionResult["workspaceDiff"]>
+  workspaceDiff: NonNullable<CaseExecutionResult["workspaceDiff"]>,
 ): Promise<NonNullable<CaseExecutionResult["judge"]>> {
+  const judgeExpectation = testCase.expect.judge;
   try {
     const input = await createRubricJudgeInput(
       testCase.prompt,
-      testCase.expect.judge!,
+      judgeExpectation ?? {
+        rubric: [],
+        min_score: 0,
+        files: [],
+      },
       workspace.path,
-      workspaceDiff
+      workspaceDiff,
     );
     return { input, result: await judge.judge(input) };
   } catch {
     const result: RubricJudgeResult = {
       status: "error",
       promptVersion: "skillarena-rubric-v1",
-      message: "SkillArena could not prepare the rubric judge input."
+      message: "SkillArena could not prepare the rubric judge input.",
     };
     return {
       input: {
         promptVersion: "skillarena-rubric-v1",
         prompt: testCase.prompt,
-        rubric: testCase.expect.judge!.rubric,
+        rubric: testCase.expect.judge?.rubric ?? [],
         artifacts: [],
-        workspaceDiff
+        workspaceDiff,
       },
-      result
+      result,
     };
   }
 }
 
 function hasJudgeExpectations(suites: LoadedEvalSuite[]): boolean {
-  return suites.some((suite) => suite.selectedCases.some((testCase) => Boolean(testCase.expect.judge)));
+  return suites.some((suite) =>
+    suite.selectedCases.some((testCase) => Boolean(testCase.expect.judge)),
+  );
 }
 
 function createCaseKey(suiteName: string, caseId: string): string {

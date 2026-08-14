@@ -1,10 +1,10 @@
-import { cp, mkdir, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { cp, mkdir, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 import type { SkillReference } from "../config/config-schema.js";
-import type { EvalCase } from "../eval/eval-schema.js";
 import { SkillArenaError } from "../errors.js";
+import type { EvalCase } from "../eval/eval-schema.js";
 import { resolveFixturePath } from "../project/path-safety.js";
 import type { SkillArenaProject } from "../project/project.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
@@ -29,7 +29,7 @@ export interface PreparedSkill {
 export async function prepareWorkspaces(
   project: SkillArenaProject,
   runStore: RunStore,
-  suites: LoadedEvalSuite[]
+  suites: LoadedEvalSuite[],
 ): Promise<PreparedWorkspace[]> {
   const workspaces: PreparedWorkspace[] = [];
 
@@ -46,30 +46,34 @@ async function prepareCaseWorkspace(
   project: SkillArenaProject,
   runStore: RunStore,
   loadedSuite: LoadedEvalSuite,
-  testCase: EvalCase
+  testCase: EvalCase,
 ): Promise<PreparedWorkspace> {
   const suiteName = loadedSuite.suite.name;
   const workspacePath = resolve(
     runStore.workspacesDir,
     createStablePathSegment(suiteName),
-    createStablePathSegment(testCase.id)
+    createStablePathSegment(testCase.id),
   );
 
   await mkdir(workspacePath, { recursive: true });
 
   if (testCase.workspace.fixture) {
-    const fixturePath = resolveFixturePath(project.root, project.fixturesDir, testCase.workspace.fixture);
+    const fixturePath = resolveFixturePath(
+      project.root,
+      project.fixturesDir,
+      testCase.workspace.fixture,
+    );
 
     if (!existsSync(fixturePath)) {
       throw new SkillArenaError(
-        `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`
+        `Fixture does not exist for case ${testCase.id}: ${testCase.workspace.fixture}`,
       );
     }
 
     await cp(fixturePath, workspacePath, {
       recursive: true,
       force: false,
-      errorOnExist: false
+      errorOnExist: false,
     });
   }
 
@@ -83,14 +87,14 @@ async function prepareCaseWorkspace(
     path: workspacePath,
     fixture: testCase.workspace.fixture,
     snapshotsDir: project.snapshotsDir,
-    skill
+    skill,
   };
 }
 
 async function provisionSkill(
   projectRoot: string,
   workspacePath: string,
-  skill: SkillReference
+  skill: SkillReference,
 ): Promise<PreparedSkill> {
   const sourcePath = resolve(projectRoot, skill.path);
 
@@ -111,12 +115,12 @@ async function provisionSkill(
   await cp(sourcePath, workspaceSkillPath, {
     recursive: true,
     force: false,
-    errorOnExist: true
+    errorOnExist: true,
   });
 
   return {
     name: skill.name,
     sourcePath,
-    workspacePath: workspaceSkillPath
+    workspacePath: workspaceSkillPath,
   };
 }

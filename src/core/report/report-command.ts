@@ -22,7 +22,9 @@ export interface ReportCommandResult {
   markdownWritten: boolean;
 }
 
-export async function runReportCommand(options: ReportCommandOptions): Promise<ReportCommandResult> {
+export async function runReportCommand(
+  options: ReportCommandOptions,
+): Promise<ReportCommandResult> {
   const runDir = options.runDir
     ? resolve(options.cwd, options.runDir)
     : await findLatestRunDir(options.cwd);
@@ -45,7 +47,7 @@ export async function runReportCommand(options: ReportCommandOptions): Promise<R
     runDir,
     reportJsonPath,
     reportMarkdownPath,
-    markdownWritten: shouldWriteMarkdown
+    markdownWritten: shouldWriteMarkdown,
   };
 }
 
@@ -61,7 +63,7 @@ export function renderConsoleReportSummary(result: ReportCommandResult): string 
     `Failed: ${report.summary.failed}`,
     `Blocked: ${report.summary.blocked}`,
     `Warnings: ${report.summary.warnings}`,
-    `Report: ${result.reportMarkdownPath}`
+    `Report: ${result.reportMarkdownPath}`,
   ].join("\n");
 }
 
@@ -83,6 +85,9 @@ async function findLatestRunDir(cwd: string): Promise<string> {
     throw new SkillArenaError(`No SkillArena runs found in ${project.runsDir}`);
   }
 
-  return runDirs[0]!;
+  const latestRunDir = runDirs[0];
+  if (!latestRunDir) {
+    throw new SkillArenaError(`No SkillArena runs found in ${project.runsDir}`);
+  }
+  return latestRunDir;
 }
-

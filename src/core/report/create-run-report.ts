@@ -1,13 +1,13 @@
+import type { AdapterCapability } from "../../adapters/adapter-capabilities.js";
 import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
 import { gradeDeterministicExpectations } from "../grader/deterministic-grader.js";
+import { gradeRubricJudge } from "../judge/grade-rubric-judge.js";
+import type { RubricJudgeInput, RubricJudgeResult } from "../judge/rubric-judge.js";
 import type { RunMetadata } from "../metadata/metadata.js";
 import type { LoadedEvalSuite } from "../run/run-plan.js";
 import type { ParsedTrace } from "../trace/normalized-events.js";
 import type { PreparedWorkspace } from "../workspace/prepare-workspaces.js";
 import type { WorkspaceDiff } from "../workspace/workspace-snapshot.js";
-import type { AdapterCapability } from "../../adapters/adapter-capabilities.js";
-import { gradeRubricJudge } from "../judge/grade-rubric-judge.js";
-import type { RubricJudgeInput, RubricJudgeResult } from "../judge/rubric-judge.js";
 import { createFailureTraceSummary } from "./create-failure-trace-summary.js";
 import type { ReportCase, ReportCheck, ReportSuite, SkillArenaReport } from "./report-schema.js";
 
@@ -48,17 +48,17 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
   const workspaceByCase = new Map(
     input.workspaces.map((workspace) => [
       createCaseKey(workspace.suiteName, workspace.caseId),
-      workspace
-    ])
+      workspace,
+    ]),
   );
   const executionByCase = new Map(
     input.executions.map((execution) => [
       createCaseKey(execution.suiteName, execution.caseId),
-      execution
-    ])
+      execution,
+    ]),
   );
   const capabilityBlockByCase = new Map(
-    input.capabilityBlocks.map((block) => [createCaseKey(block.suiteName, block.caseId), block])
+    input.capabilityBlocks.map((block) => [createCaseKey(block.suiteName, block.caseId), block]),
   );
 
   const suites: ReportSuite[] = input.suites.map((loadedSuite) => {
@@ -76,9 +76,9 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
             {
               name: "adapter-capabilities",
               status: "unsupported",
-              message: `Missing adapter capabilities: ${capabilityBlock.missingCapabilities.join(", ")}`
-            }
-          ]
+              message: `Missing adapter capabilities: ${capabilityBlock.missingCapabilities.join(", ")}`,
+            },
+          ],
         };
       }
       const checks = [
@@ -90,12 +90,12 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
               parsedTrace: execution.parsedTrace,
               workspaceDiff: execution.workspaceDiff,
               workspacePath: workspace?.path,
-              snapshotsDir: workspace?.snapshotsDir
+              snapshotsDir: workspace?.snapshotsDir,
             })
           : []),
         ...(testCase.expect.judge
           ? gradeRubricJudge(testCase.expect.judge, execution?.judge?.result)
-          : [])
+          : []),
       ];
       const failed = checks.some((check) => check.status === "fail");
 
@@ -108,15 +108,15 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
               path: workspace.path,
               preserved: input.keepWorkspace,
               fixture: workspace.fixture,
-              skill: workspace.skill
+              skill: workspace.skill,
             }
           : undefined,
         artifacts: execution
           ? {
               rawTrace: execution.codex.rawOutputPath,
               stderr: execution.codex.stderrPath,
-              parsedTrace: execution.parsedTracePath
-          }
+              parsedTrace: execution.parsedTracePath,
+            }
           : undefined,
         judge:
           execution?.judge && testCase.expect.judge
@@ -125,7 +125,7 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
         failureTraceSummary: failed
           ? createFailureTraceSummary(checks, execution?.parsedTrace)
           : undefined,
-        checks
+        checks,
       };
     });
     const suiteBlocked = cases.some((testCase) => testCase.status === "blocked");
@@ -135,7 +135,7 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
       name: loadedSuite.suite.name,
       path: loadedSuite.path,
       status: suiteBlocked ? "blocked" : suiteFailed ? "fail" : "pass",
-      cases
+      cases,
     };
   });
 
@@ -153,7 +153,7 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
       dir: input.runDir,
       startedAt: input.startedAt.toISOString(),
       finishedAt: input.finishedAt.toISOString(),
-      durationMs: input.finishedAt.getTime() - input.startedAt.getTime()
+      durationMs: input.finishedAt.getTime() - input.startedAt.getTime(),
     },
     metadata: input.metadata,
     summary: {
@@ -162,22 +162,22 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
       passed,
       failed,
       blocked,
-      warnings: input.warnings.length
+      warnings: input.warnings.length,
     },
     suites,
-    warnings: input.warnings
+    warnings: input.warnings,
   };
 }
 
 function createJudgeReport(
   minimumScore: number,
-  judge: NonNullable<CaseExecutionResult["judge"]>
+  judge: NonNullable<CaseExecutionResult["judge"]>,
 ): NonNullable<ReportCase["judge"]> {
   const artifacts = judge.input.artifacts.map(({ path, characters, truncated, available }) => ({
     path,
     characters,
     truncated,
-    available
+    available,
   }));
 
   if (judge.result.status === "error") {
@@ -187,7 +187,7 @@ function createJudgeReport(
       promptVersion: judge.result.promptVersion,
       minimumScore,
       artifacts,
-      error: judge.result.message
+      error: judge.result.message,
     };
   }
 
@@ -199,7 +199,7 @@ function createJudgeReport(
     score: judge.result.score,
     summary: judge.result.summary,
     criteria: judge.result.criteria,
-    artifacts
+    artifacts,
   };
 }
 
@@ -210,8 +210,8 @@ function createExecutionChecks(execution: CaseExecutionResult | undefined): Repo
         name: "codex-exec",
         status: "fail",
         message: "Codex execution did not run.",
-        category: "adapter_error"
-      }
+        category: "adapter_error",
+      },
     ];
   }
 
@@ -230,27 +230,28 @@ function createExecutionChecks(execution: CaseExecutionResult | undefined): Repo
           ? undefined
           : execution.codex.timedOut
             ? "timeout"
-            : "adapter_error"
+            : "adapter_error",
     },
     {
       name: "raw-trace",
       status: execution.codex.stdoutBytes > 0 ? "pass" : "warn",
-      message: `Raw JSONL bytes: ${execution.codex.stdoutBytes}`
+      message: `Raw JSONL bytes: ${execution.codex.stdoutBytes}`,
     },
     {
       name: "parsed-trace",
-      status: execution.parsedTrace && execution.parsedTrace.stats.parseErrors === 0 ? "pass" : "warn",
+      status:
+        execution.parsedTrace && execution.parsedTrace.stats.parseErrors === 0 ? "pass" : "warn",
       message: execution.parsedTrace
         ? `events=${execution.parsedTrace.stats.normalizedEvents}, parseErrors=${execution.parsedTrace.stats.parseErrors}`
-        : "Parsed trace is not available."
-    }
+        : "Parsed trace is not available.",
+    },
   ];
 
   if (execution.codex.stderrBytes > 0) {
     checks.push({
       name: "stderr",
       status: "warn",
-      message: `stderr bytes: ${execution.codex.stderrBytes}`
+      message: `stderr bytes: ${execution.codex.stderrBytes}`,
     });
   }
 

@@ -4,8 +4,11 @@ export const AgentSchema = z.enum(["codex"]);
 
 export const SkillReferenceSchema = z
   .object({
-    name: z.string().min(1).regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
-    path: z.string().min(1)
+    name: z
+      .string()
+      .min(1)
+      .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+    path: z.string().min(1),
   })
   .strict();
 
@@ -14,7 +17,7 @@ export const PathConfigSchema = z
     evals: z.string().min(1).default("evals"),
     fixtures: z.string().min(1).default("fixtures"),
     snapshots: z.string().min(1).default("snapshots"),
-    runs: z.string().min(1).default(".skillarena/runs")
+    runs: z.string().min(1).default(".skillarena/runs"),
   })
   .strict();
 
@@ -26,9 +29,9 @@ export const SkillArenaConfigSchema = z
       evals: "evals",
       fixtures: "fixtures",
       snapshots: "snapshots",
-      runs: ".skillarena/runs"
+      runs: ".skillarena/runs",
     }),
-    skills: z.array(SkillReferenceSchema).default([])
+    skills: z.array(SkillReferenceSchema).default([]),
   })
   .strict();
 

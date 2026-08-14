@@ -1,7 +1,7 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { initProject } from "../init/init-project.js";
@@ -29,7 +29,7 @@ describe("runDryRun", () => {
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
       detectCodexVersion: false,
-      keepWorkspace: true
+      keepWorkspace: true,
     });
 
     expect(result.project.root).toBe(root);
@@ -37,7 +37,7 @@ describe("runDryRun", () => {
     expect(result.totalCases).toBe(1);
     expect(result.suites[0]?.suite.name).toBe("sample-audit");
     expect(result.workspaces).toHaveLength(1);
-    expect(existsSync(join(result.workspaces[0]!.path, "README.md"))).toBe(true);
+    expect(existsSync(join(result.workspaces[0]?.path, "README.md"))).toBe(true);
     expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
     expect(existsSync(result.runStore.reportMarkdownPath)).toBe(true);
 
@@ -60,7 +60,7 @@ describe("runDryRun", () => {
       caseId: "creates-audit-report",
       command: ["run", "--dry-run", "--case", "creates-audit-report"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -75,10 +75,10 @@ describe("runDryRun", () => {
       cwd: root,
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
-    expect(existsSync(result.workspaces[0]!.path)).toBe(false);
+    expect(existsSync(result.workspaces[0]?.path)).toBe(false);
     expect(result.report.suites[0]?.cases[0]?.workspace?.preserved).toBe(false);
   });
 
@@ -88,7 +88,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "other-suite.yaml"),
       `name: other-suite\ncases:\n  - id: other-case\n    prompt: other\n    workspace:\n      fixture: fixtures/sample-workspace\n`,
-      "utf8"
+      "utf8",
     );
 
     const result = await runDryRun({
@@ -96,7 +96,7 @@ describe("runDryRun", () => {
       suiteName: "other-suite",
       command: ["run", "--dry-run", "--suite", "other-suite"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -115,8 +115,8 @@ describe("runDryRun", () => {
         suiteName: "missing-suite",
         command: ["run", "--dry-run", "--suite", "missing-suite"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("No eval suite found with name: missing-suite");
   });
 
@@ -126,7 +126,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "sample-audit.yaml"),
       `name: sample-audit\ncases:\n  - id: selected-case\n    prompt: selected\n    workspace:\n      fixture: fixtures/sample-workspace\n  - id: unselected-case\n    prompt: unselected\n    workspace:\n      fixture: fixtures/does-not-exist\n`,
-      "utf8"
+      "utf8",
     );
 
     const result = await runDryRun({
@@ -134,7 +134,7 @@ describe("runDryRun", () => {
       caseId: "selected-case",
       command: ["run", "--dry-run", "--case", "selected-case"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -147,7 +147,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "sample-audit.yaml"),
       `name: sample-audit\ncases:\n  - id: first-case\n    prompt: first\n    workspace:\n      fixture: fixtures/sample-workspace\n  - id: second-case\n    prompt: second\n    workspace:\n      fixture: fixtures/sample-workspace\n`,
-      "utf8"
+      "utf8",
     );
 
     const result = await runDryRun({
@@ -155,7 +155,7 @@ describe("runDryRun", () => {
       maxCases: 1,
       command: ["run", "--dry-run", "--max-cases", "1"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -174,8 +174,8 @@ describe("runDryRun", () => {
         caseId: "missing-case",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("No eval case found with id: missing-case");
   });
 
@@ -183,15 +183,11 @@ describe("runDryRun", () => {
     const root = await makeTempDir();
     await mkdir(join(root, "evals"), { recursive: true });
     await mkdir(join(root, "fixtures", "sample-workspace"), { recursive: true });
-    await writeFile(
-      join(root, "skillarena.yaml"),
-      `schemaVersion: "0.1"\nagent: codex\n`,
-      "utf8"
-    );
+    await writeFile(join(root, "skillarena.yaml"), `schemaVersion: "0.1"\nagent: codex\n`, "utf8");
     await writeFile(
       join(root, "evals", "broken.yaml"),
       `name: broken\ncases:\n  - id: duplicate\n    prompt: one\n  - id: duplicate\n    prompt: two\n`,
-      "utf8"
+      "utf8",
     );
 
     await expect(
@@ -199,8 +195,8 @@ describe("runDryRun", () => {
         cwd: root,
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("duplicate case id: duplicate");
   });
 
@@ -210,7 +206,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "missing-fixture.yaml"),
       `name: missing-fixture\ncases:\n  - id: missing-fixture\n    prompt: test\n    workspace:\n      fixture: fixtures/does-not-exist\n`,
-      "utf8"
+      "utf8",
     );
 
     await expect(
@@ -219,8 +215,8 @@ describe("runDryRun", () => {
         evalFile: "evals/missing-fixture.yaml",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("Fixture does not exist for case missing-fixture");
   });
 
@@ -231,7 +227,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "snapshot.yaml"),
       `name: snapshot\ncases:\n  - id: snapshot-case\n    prompt: test\n    workspace:\n      fixture: fixtures/sample-workspace\n    expect:\n      file_snapshots:\n        - path: audit-report.md\n          snapshot: audit-report.md\n`,
-      "utf8"
+      "utf8",
     );
 
     const result = await runDryRun({
@@ -239,7 +235,7 @@ describe("runDryRun", () => {
       evalFile: "evals/snapshot.yaml",
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -252,7 +248,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "outside-snapshot.yaml"),
       `name: outside-snapshot\ncases:\n  - id: outside-snapshot\n    prompt: test\n    expect:\n      file_snapshots:\n        - path: report.md\n          snapshot: ../outside.md\n`,
-      "utf8"
+      "utf8",
     );
 
     await expect(
@@ -261,8 +257,8 @@ describe("runDryRun", () => {
         evalFile: "evals/outside-snapshot.yaml",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("Snapshot path must resolve inside the configured snapshots directory");
   });
 
@@ -276,7 +272,7 @@ describe("runDryRun", () => {
       evalFile: "evals/sample-audit.yaml",
       command: ["run", "--dry-run", "evals/sample-audit.yaml"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false
+      detectCodexVersion: false,
     });
 
     expect(result.project.root).toBe(root);
@@ -290,7 +286,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "outside.yaml"),
       `name: outside\ncases:\n  - id: outside\n    prompt: test\n`,
-      "utf8"
+      "utf8",
     );
 
     await expect(
@@ -299,8 +295,8 @@ describe("runDryRun", () => {
         evalFile: "outside.yaml",
         command: ["run", "--dry-run", "outside.yaml"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("Eval file must resolve inside the configured evals directory");
   });
 
@@ -310,7 +306,7 @@ describe("runDryRun", () => {
     await writeFile(
       join(root, "evals", "outside-fixture.yaml"),
       `name: outside-fixture\ncases:\n  - id: outside-fixture\n    prompt: test\n    workspace:\n      fixture: ../\n`,
-      "utf8"
+      "utf8",
     );
 
     await expect(
@@ -319,8 +315,8 @@ describe("runDryRun", () => {
         evalFile: "evals/outside-fixture.yaml",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false
-      })
+        detectCodexVersion: false,
+      }),
     ).rejects.toThrow("Fixture path must resolve inside the configured fixtures directory");
   });
 });

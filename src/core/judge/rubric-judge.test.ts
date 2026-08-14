@@ -7,7 +7,7 @@ const input: RubricJudgeInput = {
   prompt: "Create a report.",
   rubric: [{ criterion: "correctness", description: "The report is correct.", weight: 1 }],
   artifacts: [],
-  workspaceDiff: { created: ["report.md"], changed: [], deleted: [], unchanged: [] }
+  workspaceDiff: { created: ["report.md"], changed: [], deleted: [], unchanged: [] },
 };
 
 describe("OpenAiRubricJudge", () => {
@@ -25,23 +25,23 @@ describe("OpenAiRubricJudge", () => {
               score: 90,
               summary: "The report is correct.",
               criteria: [
-                { criterion: "correctness", score: 90, reason: "The evidence supports it." }
-              ]
-            })
+                { criterion: "correctness", score: 90, reason: "The evidence supports it." },
+              ],
+            }),
           }),
-          { status: 200 }
+          { status: 200 },
         );
-      }
+      },
     });
 
     await expect(judge.judge(input)).resolves.toMatchObject({
       status: "completed",
       model: "test-model",
-      score: 90
+      score: 90,
     });
     expect(JSON.parse(String(request?.body))).toMatchObject({
       model: "test-model",
-      text: { format: { type: "json_schema", strict: true } }
+      text: { format: { type: "json_schema", strict: true } },
     });
   });
 
@@ -50,7 +50,7 @@ describe("OpenAiRubricJudge", () => {
 
     await expect(judge.judge(input)).resolves.toMatchObject({
       status: "error",
-      message: "OPENAI_API_KEY is not configured."
+      message: "OPENAI_API_KEY is not configured.",
     });
   });
 });

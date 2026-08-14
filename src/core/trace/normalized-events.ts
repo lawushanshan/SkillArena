@@ -74,4 +74,3 @@ export interface ParsedTrace {
     parseErrors: number;
   };
 }
-

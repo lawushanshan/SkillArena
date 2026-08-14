@@ -1,6 +1,6 @@
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 import type { SkillArenaProject } from "../project/project.js";
@@ -70,8 +70,8 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
     evals: await Promise.all(
       input.suites.map(async (loadedSuite) => ({
         path: loadedSuite.path,
-        hash: await hashFile(loadedSuite.path)
-      }))
+        hash: await hashFile(loadedSuite.path),
+      })),
     ),
     skills: await Promise.all(
       input.project.config.skills.map(async (skill) => {
@@ -82,16 +82,16 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
           name: skill.name,
           path: skill.path,
           exists,
-          hash: exists ? await hashDirectory(skillPath) : undefined
+          hash: exists ? await hashDirectory(skillPath) : undefined,
         };
-      })
+      }),
     ),
     fixtures: await Promise.all(
       [...fixturePaths].sort().map(async (fixturePath) => ({
         path: fixturePath,
-        hash: await hashDirectory(resolve(input.project.root, fixturePath))
-      }))
-    )
+        hash: await hashDirectory(resolve(input.project.root, fixturePath)),
+      })),
+    ),
   };
 }
 

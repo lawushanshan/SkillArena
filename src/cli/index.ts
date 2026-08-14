@@ -57,88 +57,87 @@ program
   .option("--dry-run", "Load and validate evals without invoking Codex.")
   .option("--keep-workspace", "Keep per-case workspaces after the report is written.")
   .option("--judge-model <model>", "OpenAI model for cases that declare expect.judge.")
-  .option(
-    "--judge-timeout-ms <ms>",
-    "OpenAI rubric judge timeout in milliseconds.",
-    "60000"
-  )
+  .option("--judge-timeout-ms <ms>", "OpenAI rubric judge timeout in milliseconds.", "60000")
   .option("--timeout-ms <ms>", "Per-case Codex execution timeout in milliseconds", "300000")
   .option("--codex-command <command>", "Codex command to execute", "codex")
-  .action(async (
-    evalFile: string | undefined,
-    options: {
-      suite?: string;
-      case?: string;
-      maxCases?: string;
-      failFast?: boolean;
-      dryRun?: boolean;
-      keepWorkspace?: boolean;
-      judgeModel?: string;
-      judgeTimeoutMs: string;
-      timeoutMs: string;
-      codexCommand: string;
-    }
-  ) => {
-    try {
-      const timeoutMs = parsePositiveInteger(options.timeoutMs, "--timeout-ms");
-      const maxCases =
-        options.maxCases === undefined
-          ? undefined
-          : parsePositiveInteger(options.maxCases, "--max-cases");
-      const judgeTimeoutMs = parsePositiveInteger(options.judgeTimeoutMs, "--judge-timeout-ms");
+  .action(
+    async (
+      evalFile: string | undefined,
+      options: {
+        suite?: string;
+        case?: string;
+        maxCases?: string;
+        failFast?: boolean;
+        dryRun?: boolean;
+        keepWorkspace?: boolean;
+        judgeModel?: string;
+        judgeTimeoutMs: string;
+        timeoutMs: string;
+        codexCommand: string;
+      },
+    ) => {
+      try {
+        const timeoutMs = parsePositiveInteger(options.timeoutMs, "--timeout-ms");
+        const maxCases =
+          options.maxCases === undefined
+            ? undefined
+            : parsePositiveInteger(options.maxCases, "--max-cases");
+        const judgeTimeoutMs = parsePositiveInteger(options.judgeTimeoutMs, "--judge-timeout-ms");
 
-      const result = options.dryRun
-        ? await runDryRun({
-            cwd: process.cwd(),
-            evalFile,
-            suiteName: options.suite,
-            caseId: options.case,
-            maxCases,
-            command: process.argv.slice(2),
-            skillarenaVersion: VERSION,
-            keepWorkspace: options.keepWorkspace
-          })
-        : await runEvals({
-            cwd: process.cwd(),
-            evalFile,
-            suiteName: options.suite,
-            caseId: options.case,
-            maxCases,
-            command: process.argv.slice(2),
-            skillarenaVersion: VERSION,
-            timeoutMs,
-            failFast: options.failFast,
-            codexCommand: options.codexCommand,
-            keepWorkspace: options.keepWorkspace,
-            judgeModel: options.judgeModel,
-            judgeTimeoutMs
-          });
+        const result = options.dryRun
+          ? await runDryRun({
+              cwd: process.cwd(),
+              evalFile,
+              suiteName: options.suite,
+              caseId: options.case,
+              maxCases,
+              command: process.argv.slice(2),
+              skillarenaVersion: VERSION,
+              keepWorkspace: options.keepWorkspace,
+            })
+          : await runEvals({
+              cwd: process.cwd(),
+              evalFile,
+              suiteName: options.suite,
+              caseId: options.case,
+              maxCases,
+              command: process.argv.slice(2),
+              skillarenaVersion: VERSION,
+              timeoutMs,
+              failFast: options.failFast,
+              codexCommand: options.codexCommand,
+              keepWorkspace: options.keepWorkspace,
+              judgeModel: options.judgeModel,
+              judgeTimeoutMs,
+            });
 
-      console.log(options.dryRun ? "SkillArena dry run" : "SkillArena run");
-      console.log(`Suites: ${result.suites.length}`);
-      console.log(`Cases: ${result.totalCases}`);
-      console.log(`Run: ${result.runStore.runDir}`);
+        console.log(options.dryRun ? "SkillArena dry run" : "SkillArena run");
+        console.log(`Suites: ${result.suites.length}`);
+        console.log(`Cases: ${result.totalCases}`);
+        console.log(`Run: ${result.runStore.runDir}`);
 
-      for (const suite of result.report.suites) {
-        console.log(`\n${formatStatus(suite.status)} ${suite.name}`);
-        console.log(`  File: ${suite.path}`);
-        console.log(`  Cases: ${suite.cases.length}`);
-      }
-
-      if (result.warnings.length > 0) {
-        console.log("\nWarnings:");
-        for (const warning of result.warnings) {
-          console.log(`  - ${warning}`);
+        for (const suite of result.report.suites) {
+          console.log(`\n${formatStatus(suite.status)} ${suite.name}`);
+          console.log(`  File: ${suite.path}`);
+          console.log(`  Cases: ${suite.cases.length}`);
         }
-      }
 
-      console.log(`\nReport: ${result.runStore.reportMarkdownPath}`);
-      process.exitCode = result.report.summary.failed > 0 || result.report.summary.blocked > 0 ? 1 : 0;
-    } catch (error) {
-      console.error(formatUnknownError(error));
-      process.exitCode = 1;
-    }
-  });
+        if (result.warnings.length > 0) {
+          console.log("\nWarnings:");
+          for (const warning of result.warnings) {
+            console.log(`  - ${warning}`);
+          }
+        }
+
+        console.log(`\nReport: ${result.runStore.reportMarkdownPath}`);
+        process.exitCode =
+          result.report.summary.failed > 0 || result.report.summary.blocked > 0 ? 1 : 0;
+      } catch (error) {
+        console.error(formatUnknownError(error));
+        process.exitCode = 1;
+      }
+    },
+  );
 
 program
   .command("report")
@@ -150,7 +149,7 @@ program
       const result = await runReportCommand({
         cwd: process.cwd(),
         runDir,
-        writeMarkdown: options.writeMarkdown
+        writeMarkdown: options.writeMarkdown,
       });
 
       console.log(renderConsoleReportSummary(result));
@@ -170,32 +169,34 @@ program
   .option("--json", "Print the comparison as JSON.")
   .option(
     "--allow-incompatible",
-    "Allow diagnostic comparison of runs with different modes or benchmark definitions."
+    "Allow diagnostic comparison of runs with different modes or benchmark definitions.",
   )
   .option("--fail-on-regression", "Exit with code 1 when the candidate has regressions.")
-  .action(async (
-    baselineRunDir: string | undefined,
-    candidateRunDir: string | undefined,
-    options: { json?: boolean; allowIncompatible?: boolean; failOnRegression?: boolean }
-  ) => {
-    try {
-      const result = await runCompareCommand({
-        cwd: process.cwd(),
-        baselineRunDir,
-        candidateRunDir,
-        allowIncompatible: options.allowIncompatible
-      });
+  .action(
+    async (
+      baselineRunDir: string | undefined,
+      candidateRunDir: string | undefined,
+      options: { json?: boolean; allowIncompatible?: boolean; failOnRegression?: boolean },
+    ) => {
+      try {
+        const result = await runCompareCommand({
+          cwd: process.cwd(),
+          baselineRunDir,
+          candidateRunDir,
+          allowIncompatible: options.allowIncompatible,
+        });
 
-      console.log(options.json ? JSON.stringify(result, null, 2) : renderCompareSummary(result));
+        console.log(options.json ? JSON.stringify(result, null, 2) : renderCompareSummary(result));
 
-      if (options.failOnRegression && result.hasRegression) {
+        if (options.failOnRegression && result.hasRegression) {
+          process.exitCode = 1;
+        }
+      } catch (error) {
+        console.error(formatUnknownError(error));
         process.exitCode = 1;
       }
-    } catch (error) {
-      console.error(formatUnknownError(error));
-      process.exitCode = 1;
-    }
-  });
+    },
+  );
 
 program.parse();
 

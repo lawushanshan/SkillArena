@@ -1,10 +1,10 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { runReportCommand, renderConsoleReportSummary } from "./report-command.js";
+import { renderConsoleReportSummary, runReportCommand } from "./report-command.js";
 import type { SkillArenaReport } from "./report-schema.js";
 
 const tempDirs: string[] = [];
@@ -30,7 +30,7 @@ describe("runReportCommand", () => {
     expect(result.markdownWritten).toBe(true);
     expect(existsSync(result.reportMarkdownPath)).toBe(true);
     await expect(readFile(result.reportMarkdownPath, "utf8")).resolves.toContain(
-      "# SkillArena Report"
+      "# SkillArena Report",
     );
   });
 
@@ -56,18 +56,14 @@ describe("runReportCommand", () => {
     await writeFile(join(runDir, "report.json"), `{"tool":"not-skillarena"}`, "utf8");
 
     await expect(runReportCommand({ cwd: root, runDir })).rejects.toThrow(
-      "Invalid SkillArena report"
+      "Invalid SkillArena report",
     );
   });
 });
 
 async function createProjectWithRun(runId: string): Promise<string> {
   const root = await makeTempDir();
-  await writeFile(
-    join(root, "skillarena.yaml"),
-    `schemaVersion: "0.1"\nagent: codex\n`,
-    "utf8"
-  );
+  await writeFile(join(root, "skillarena.yaml"), `schemaVersion: "0.1"\nagent: codex\n`, "utf8");
   await createRun(root, runId);
   return root;
 }
@@ -75,7 +71,10 @@ async function createProjectWithRun(runId: string): Promise<string> {
 async function createRun(root: string, runId: string): Promise<void> {
   const runDir = join(root, ".skillarena", "runs", runId);
   await mkdir(runDir, { recursive: true });
-  await writeFile(join(runDir, "report.json"), `${JSON.stringify(createReport(root, runId), null, 2)}\n`);
+  await writeFile(
+    join(runDir, "report.json"),
+    `${JSON.stringify(createReport(root, runId), null, 2)}\n`,
+  );
 }
 
 function createReport(root: string, runId: string): SkillArenaReport {
@@ -89,7 +88,7 @@ function createReport(root: string, runId: string): SkillArenaReport {
       dir: runDir,
       startedAt: "2026-06-29T00:00:00.000Z",
       finishedAt: "2026-06-29T00:00:01.000Z",
-      durationMs: 1000
+      durationMs: 1000,
     },
     metadata: {
       skillarenaVersion: "0.0.0-test",
@@ -103,7 +102,7 @@ function createReport(root: string, runId: string): SkillArenaReport {
       configHash: "hash",
       evals: [],
       skills: [],
-      fixtures: []
+      fixtures: [],
     },
     summary: {
       suites: 1,
@@ -111,10 +110,9 @@ function createReport(root: string, runId: string): SkillArenaReport {
       passed: 1,
       failed: 0,
       blocked: 0,
-      warnings: 0
+      warnings: 0,
     },
     suites: [],
-    warnings: []
+    warnings: [],
   };
 }
-

@@ -1,9 +1,8 @@
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-
-import { SkillArenaError } from "../errors.js";
-import { loadConfig } from "../config/load-config.js";
 import type { SkillArenaConfig } from "../config/config-schema.js";
+import { loadConfig } from "../config/load-config.js";
+import { SkillArenaError } from "../errors.js";
 
 export interface SkillArenaProject {
   root: string;
@@ -38,7 +37,7 @@ export async function loadProject(startDir: string): Promise<SkillArenaProject> 
 
   if (!root) {
     throw new SkillArenaError(
-      "Could not find skillarena.yaml. Run `skillarena init` from your project root first."
+      "Could not find skillarena.yaml. Run `skillarena init` from your project root first.",
     );
   }
 
@@ -52,6 +51,6 @@ export async function loadProject(startDir: string): Promise<SkillArenaProject> 
     evalsDir: resolve(root, config.paths.evals),
     fixturesDir: resolve(root, config.paths.fixtures),
     snapshotsDir: resolve(root, config.paths.snapshots),
-    runsDir: resolve(root, config.paths.runs)
+    runsDir: resolve(root, config.paths.runs),
   };
 }

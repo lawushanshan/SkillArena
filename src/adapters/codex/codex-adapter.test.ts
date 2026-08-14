@@ -1,6 +1,6 @@
 import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { delimiter, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { delimiter, dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { runCodexExec } from "./codex-adapter.js";
@@ -22,7 +22,7 @@ describe("runCodexExec", () => {
     const dir = await makeTempDir();
     const scriptPath = await createFakeCodex(
       dir,
-      `console.log(JSON.stringify({ type: "message", text: "ok" })); console.error("warn");`
+      `console.log(JSON.stringify({ type: "message", text: "ok" })); console.error("warn");`,
     );
     const rawOutputPath = join(dir, "raw.jsonl");
     const stderrPath = join(dir, "stderr.txt");
@@ -34,7 +34,7 @@ describe("runCodexExec", () => {
       stderrPath,
       timeoutMs: 5000,
       codexCommand: process.execPath,
-      codexCommandArgs: [scriptPath]
+      codexCommandArgs: [scriptPath],
     });
 
     expect(result.command[0]).toBe(process.execPath);
@@ -51,7 +51,7 @@ describe("runCodexExec", () => {
     const dir = await makeTempDir();
     const scriptPath = await createFakeCodex(
       dir,
-      `console.log(process.env.PATH ?? process.env.Path ?? "");`
+      `console.log(process.env.PATH ?? process.env.Path ?? "");`,
     );
     const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
     const originalPath = process.env[pathKey];
@@ -65,12 +65,12 @@ describe("runCodexExec", () => {
         stderrPath: join(dir, "stderr.txt"),
         timeoutMs: 5000,
         codexCommand: process.execPath,
-        codexCommandArgs: [scriptPath]
+        codexCommandArgs: [scriptPath],
       });
 
       expect(result.exitCode).toBe(0);
       expect((await readFile(result.rawOutputPath, "utf8")).trim().split(delimiter)).toContain(
-        dirname(process.execPath)
+        dirname(process.execPath),
       );
     } finally {
       if (originalPath === undefined) {
@@ -92,7 +92,7 @@ describe("runCodexExec", () => {
       stderrPath: join(dir, "stderr.txt"),
       timeoutMs: 50,
       codexCommand: process.execPath,
-      codexCommandArgs: [join(dir, "fake-codex.js")]
+      codexCommandArgs: [join(dir, "fake-codex.js")],
     });
 
     expect(result.timedOut).toBe(true);
@@ -107,7 +107,7 @@ describe("runCodexExec", () => {
       rawOutputPath: join(dir, "raw.jsonl"),
       stderrPath: join(dir, "stderr.txt"),
       timeoutMs: 5000,
-      codexCommand: "definitely-missing-codex-command"
+      codexCommand: "definitely-missing-codex-command",
     });
 
     expect(result.exitCode).toBeNull();
@@ -121,7 +121,7 @@ async function createFakeCodex(dir: string, body: string): Promise<string> {
   await writeFile(
     scriptPath,
     `const args = process.argv.slice(2);\nif (args[0] !== "exec") process.exit(2);\n${body}\n`,
-    "utf8"
+    "utf8",
   );
   await chmod(scriptPath, 0o755);
   return scriptPath;

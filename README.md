@@ -36,6 +36,9 @@ SkillArena v0 does not aim to be a general agent observability platform or a uni
 - [Product Shape Decision](docs/ADR-0001-product-shape.md)
 - [Roadmap](ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
 ## Core Concepts FAQ
 
