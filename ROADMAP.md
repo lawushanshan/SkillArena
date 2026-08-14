@@ -41,8 +41,9 @@
 - Adapter interface for other coding agents
   - [x] Define `AgentAdapter` contract (name, capabilities, execute, parseTrace)
   - [x] Implement `createCodexAdapter()` reference factory
-  - [ ] Wire runner to use adapter interface instead of direct Codex calls
-  - [ ] Generalize `source` field in normalized events beyond `"codex"`
+ - [ ] Wire runner to use adapter interface instead of direct Codex calls
+  - [x] Wire runner to use adapter interface instead of direct Codex calls
+  - [x] Generalize `source` field in normalized events beyond `"codex"`
   - [ ] Add second adapter (Claude Code or Gemini CLI) to validate the interface
 - Web report viewer
 - Shared benchmark packs

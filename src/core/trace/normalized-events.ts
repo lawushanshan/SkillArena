@@ -10,7 +10,7 @@ export type NormalizedEvent =
 
 export interface NormalizedEventBase {
   type: NormalizedEvent["type"];
-  source: "codex";
+  source: string;
   line: number;
   rawType?: string;
 }
@@ -64,7 +64,7 @@ export interface TraceParseError {
 
 export interface ParsedTrace {
   schemaVersion: "0.1";
-  source: "codex";
+  source: string;
   rawPath: string;
   events: NormalizedEvent[];
   parseErrors: TraceParseError[];

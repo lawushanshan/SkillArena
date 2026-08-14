@@ -1,5 +1,5 @@
 import type { AdapterCapability } from "../../adapters/adapter-capabilities.js";
-import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
+import type { AgentExecResult } from "../../adapters/agent-adapter.js";
 import { gradeDeterministicExpectations } from "../grader/deterministic-grader.js";
 import { gradeRubricJudge } from "../judge/grade-rubric-judge.js";
 import type { RubricJudgeInput, RubricJudgeResult } from "../judge/rubric-judge.js";
@@ -14,7 +14,7 @@ import type { ReportCase, ReportCheck, ReportSuite, SkillArenaReport } from "./r
 export interface CaseExecutionResult {
   suiteName: string;
   caseId: string;
-  codex: CodexExecResult;
+  agent: AgentExecResult;
   parsedTracePath?: string;
   parsedTrace?: ParsedTrace;
   workspaceDiff?: WorkspaceDiff;
@@ -86,7 +86,7 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
         ...(execution
           ? gradeDeterministicExpectations({
               testCase,
-              codex: execution.codex,
+              agent: execution.agent,
               parsedTrace: execution.parsedTrace,
               workspaceDiff: execution.workspaceDiff,
               workspacePath: workspace?.path,
@@ -113,8 +113,8 @@ export function createRunReport(input: CreateRunReportInput): SkillArenaReport {
           : undefined,
         artifacts: execution
           ? {
-              rawTrace: execution.codex.rawOutputPath,
-              stderr: execution.codex.stderrPath,
+              rawTrace: execution.agent.rawOutputPath,
+              stderr: execution.agent.stderrPath,
               parsedTrace: execution.parsedTracePath,
             }
           : undefined,
@@ -207,9 +207,9 @@ function createExecutionChecks(execution: CaseExecutionResult | undefined): Repo
   if (!execution) {
     return [
       {
-        name: "codex-exec",
+        name: "agent-exec",
         status: "fail",
-        message: "Codex execution did not run.",
+        message: "Agent execution did not run.",
         category: "adapter_error",
       },
     ];
@@ -217,25 +217,25 @@ function createExecutionChecks(execution: CaseExecutionResult | undefined): Repo
 
   const checks: ReportCheck[] = [
     {
-      name: "codex-exec",
+      name: "agent-exec",
       status:
-        execution.codex.exitCode === 0 && !execution.codex.timedOut && !execution.codex.error
+        execution.agent.exitCode === 0 && !execution.agent.timedOut && !execution.agent.error
           ? "pass"
           : "fail",
-      message: execution.codex.error
-        ? `error=${execution.codex.error}`
-        : `exitCode=${execution.codex.exitCode ?? "null"}, timedOut=${execution.codex.timedOut}`,
+      message: execution.agent.error
+        ? `error=${execution.agent.error}`
+        : `exitCode=${execution.agent.exitCode ?? "null"}, timedOut=${execution.agent.timedOut}`,
       category:
-        execution.codex.exitCode === 0 && !execution.codex.timedOut && !execution.codex.error
+        execution.agent.exitCode === 0 && !execution.agent.timedOut && !execution.agent.error
           ? undefined
-          : execution.codex.timedOut
+          : execution.agent.timedOut
             ? "timeout"
             : "adapter_error",
     },
     {
       name: "raw-trace",
-      status: execution.codex.stdoutBytes > 0 ? "pass" : "warn",
-      message: `Raw JSONL bytes: ${execution.codex.stdoutBytes}`,
+      status: execution.agent.stdoutBytes > 0 ? "pass" : "warn",
+      message: `Raw JSONL bytes: ${execution.agent.stdoutBytes}`,
     },
     {
       name: "parsed-trace",
@@ -247,11 +247,11 @@ function createExecutionChecks(execution: CaseExecutionResult | undefined): Repo
     },
   ];
 
-  if (execution.codex.stderrBytes > 0) {
+  if (execution.agent.stderrBytes > 0) {
     checks.push({
       name: "stderr",
       status: "warn",
-      message: `stderr bytes: ${execution.codex.stderrBytes}`,
+      message: `stderr bytes: ${execution.agent.stderrBytes}`,
     });
   }
 

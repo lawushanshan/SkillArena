@@ -65,7 +65,7 @@ describe("runEvals", () => {
     expect(result.report.summary.passed).toBe(1);
     expect(result.report.summary.failed).toBe(0);
     expect(existsSync(result.runStore.reportJsonPath)).toBe(true);
-    expect(existsSync(result.executions[0]?.codex.rawOutputPath)).toBe(true);
+    expect(existsSync(result.executions[0]?.agent.rawOutputPath)).toBe(true);
     expect(result.executions[0]?.parsedTrace?.events).toHaveLength(3);
     expect(existsSync(result.workspaces[0]?.path)).toBe(false);
 
@@ -83,8 +83,8 @@ describe("runEvals", () => {
     expect(reportJson.summary.passed).toBe(1);
     const reportCase = reportJson.suites[0]?.cases[0];
     expect(reportCase?.artifacts).toEqual({
-      rawTrace: result.executions[0]?.codex.rawOutputPath,
-      stderr: result.executions[0]?.codex.stderrPath,
+      rawTrace: result.executions[0]?.agent.rawOutputPath,
+      stderr: result.executions[0]?.agent.stderrPath,
       parsedTrace: result.executions[0]?.parsedTracePath,
     });
     expect(existsSync(reportCase?.artifacts?.rawTrace ?? "")).toBe(true);

@@ -1,9 +1,8 @@
 import {
   type AdapterCapability,
-  CODEX_ADAPTER_CAPABILITIES,
   missingCapabilities,
 } from "../../adapters/adapter-capabilities.js";
-import { runCodexExec } from "../../adapters/codex/codex-adapter.js";
+import { type AgentAdapter, createCodexAdapter } from "../../adapters/agent-adapter.js";
 import type { EvalCase } from "../eval/eval-schema.js";
 import { gradeDeterministicExpectations } from "../grader/deterministic-grader.js";
 import { gradeRubricJudge } from "../judge/grade-rubric-judge.js";
@@ -21,7 +20,6 @@ import {
 } from "../report/create-run-report.js";
 import type { SkillArenaReport } from "../report/report-schema.js";
 import { writeReport } from "../report/write-report.js";
-import { parseCodexJsonlTrace } from "../trace/codex-jsonl-parser.js";
 import { writeParsedTrace } from "../trace/write-parsed-trace.js";
 import { type PreparedWorkspace, prepareWorkspaces } from "../workspace/prepare-workspaces.js";
 import { diffWorkspaceSnapshots, snapshotWorkspace } from "../workspace/workspace-snapshot.js";
@@ -45,6 +43,7 @@ export interface RunEvalsOptions {
   detectCodexVersion?: boolean;
   keepWorkspace?: boolean;
   adapterCapabilities?: ReadonlySet<AdapterCapability>;
+  adapter?: AgentAdapter;
   rubricJudge?: RubricJudge;
   judgeModel?: string;
   judgeTimeoutMs?: number;
@@ -62,6 +61,12 @@ export interface RunEvalsResult {
 
 export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult> {
   const startedAt = new Date();
+  const adapter =
+    options.adapter ??
+    createCodexAdapter({
+      codexCommand: options.codexCommand,
+      codexCommandArgs: options.codexCommandArgs,
+    });
   const { project, suites, warnings } = await createRunPlan(options);
   const runStore = await createRunStore(project);
   const rubricJudge = hasJudgeExpectations(suites)
@@ -74,7 +79,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
     : undefined;
   const capabilityBlocks = collectCapabilityBlocks(
     suites,
-    options.adapterCapabilities ?? CODEX_ADAPTER_CAPABILITIES,
+    options.adapterCapabilities ?? adapter.capabilities,
   );
   const blockedCaseKeys = new Set(
     capabilityBlocks.map((block) => createCaseKey(block.suiteName, block.caseId)),
@@ -117,25 +122,23 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
       }
 
       const beforeSnapshot = await snapshotWorkspace(workspace.path);
-      const codex = await runCodexExec({
+      const agent = await adapter.execute({
         prompt: testCase.prompt,
         cwd: workspace.path,
         rawOutputPath: createRawTracePath(runStore, loadedSuite.suite.name, testCase.id),
         stderrPath: createStderrPath(runStore, loadedSuite.suite.name, testCase.id),
         timeoutMs: options.timeoutMs,
-        codexCommand: options.codexCommand,
-        codexCommandArgs: options.codexCommandArgs,
       });
       const afterSnapshot = await snapshotWorkspace(workspace.path);
       const workspaceDiff = diffWorkspaceSnapshots(beforeSnapshot, afterSnapshot);
-      const parsedTrace = await parseCodexJsonlTrace(codex.rawOutputPath);
+      const parsedTrace = await adapter.parseTrace(agent.rawOutputPath);
       const parsedTracePath = createParsedTracePath(runStore, loadedSuite.suite.name, testCase.id);
       await writeParsedTrace(parsedTracePath, parsedTrace);
       const judge =
         testCase.expect.judge &&
-        codex.exitCode === 0 &&
-        !codex.timedOut &&
-        !codex.error &&
+        agent.exitCode === 0 &&
+        !agent.timedOut &&
+        !agent.error &&
         rubricJudge
           ? await runRubricJudge(rubricJudge, testCase, workspace, workspaceDiff)
           : undefined;
@@ -143,7 +146,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
       const execution = {
         suiteName: loadedSuite.suite.name,
         caseId: testCase.id,
-        codex,
+        agent,
         parsedTracePath,
         parsedTrace,
         workspaceDiff,
@@ -266,7 +269,7 @@ function caseExecutionFailed(
   workspace: PreparedWorkspace,
 ): boolean {
   const adapterFailed =
-    execution.codex.exitCode !== 0 || execution.codex.timedOut || Boolean(execution.codex.error);
+    execution.agent.exitCode !== 0 || execution.agent.timedOut || Boolean(execution.agent.error);
 
   if (adapterFailed) {
     return true;
@@ -274,7 +277,7 @@ function caseExecutionFailed(
 
   const deterministicFailed = gradeDeterministicExpectations({
     testCase,
-    codex: execution.codex,
+    agent: execution.agent,
     parsedTrace: execution.parsedTrace,
     workspaceDiff: execution.workspaceDiff,
     workspacePath: workspace.path,

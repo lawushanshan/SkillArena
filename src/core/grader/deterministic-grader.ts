@@ -1,4 +1,4 @@
-import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
+import type { AgentExecResult } from "../../adapters/agent-adapter.js";
 import type { EvalCase } from "../eval/eval-schema.js";
 import type { ReportCheck } from "../report/report-schema.js";
 import type { ParsedTrace } from "../trace/normalized-events.js";
@@ -6,7 +6,7 @@ import type { WorkspaceDiff } from "../workspace/workspace-snapshot.js";
 
 export interface GradeCaseInput {
   testCase: EvalCase;
-  codex: CodexExecResult;
+  agent: AgentExecResult;
   parsedTrace?: ParsedTrace;
   workspaceDiff?: WorkspaceDiff;
   workspacePath?: string;
@@ -20,9 +20,9 @@ export function gradeDeterministicExpectations(input: GradeCaseInput): ReportChe
   if (expect.exit_code !== undefined) {
     checks.push({
       name: "expect.exit_code",
-      status: input.codex.exitCode === expect.exit_code ? "pass" : "fail",
-      message: `expected=${expect.exit_code}, actual=${input.codex.exitCode ?? "null"}`,
-      category: input.codex.exitCode === expect.exit_code ? undefined : "adapter_error",
+      status: input.agent.exitCode === expect.exit_code ? "pass" : "fail",
+      message: `expected=${expect.exit_code}, actual=${input.agent.exitCode ?? "null"}`,
+      category: input.agent.exitCode === expect.exit_code ? undefined : "adapter_error",
     });
   }
 

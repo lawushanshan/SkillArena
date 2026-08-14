@@ -2,7 +2,10 @@ import { readFile } from "node:fs/promises";
 
 import type { NormalizedEvent, ParsedTrace } from "./normalized-events.js";
 
-export async function parseCodexJsonlTrace(rawPath: string): Promise<ParsedTrace> {
+export async function parseCodexJsonlTrace(
+  rawPath: string,
+  source = "codex",
+): Promise<ParsedTrace> {
   const text = await readFile(rawPath, "utf8");
   const events: NormalizedEvent[] = [];
   const parseErrors: ParsedTrace["parseErrors"] = [];
@@ -30,12 +33,12 @@ export async function parseCodexJsonlTrace(rawPath: string): Promise<ParsedTrace
       continue;
     }
 
-    events.push(...normalizeCodexEvent(raw, line));
+    events.push(...normalizeCodexEvent(raw, line, source));
   }
 
   return {
     schemaVersion: "0.1",
-    source: "codex",
+    source,
     rawPath,
     events,
     parseErrors,
@@ -47,7 +50,7 @@ export async function parseCodexJsonlTrace(rawPath: string): Promise<ParsedTrace
   };
 }
 
-function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
+function normalizeCodexEvent(raw: unknown, line: number, source: string): NormalizedEvent[] {
   const rawType = findStringField(raw, ["type", "event", "event_type", "kind"]);
   const typeKey = rawType?.toLowerCase() ?? "";
   const itemType = findItemType(raw);
@@ -55,7 +58,7 @@ function normalizeCodexEvent(raw: unknown, line: number): NormalizedEvent[] {
   const command = findStringField(raw, ["command", "cmd", "shell_command"]);
   const message = findStringField(raw, ["message", "text", "content", "error"]);
   const base = {
-    source: "codex" as const,
+    source,
     line,
     rawType,
   };

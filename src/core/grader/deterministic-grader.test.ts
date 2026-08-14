@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import type { CodexExecResult } from "../../adapters/codex/codex-adapter.js";
+import type { AgentExecResult } from "../../adapters/agent-adapter.js";
 import type { CaseExpectation, EvalCase } from "../eval/eval-schema.js";
 import type { ParsedTrace } from "../trace/normalized-events.js";
 import { gradeDeterministicExpectations } from "./deterministic-grader.js";
@@ -17,7 +17,7 @@ describe("gradeDeterministicExpectations", () => {
         commands_succeeded: true,
         exit_code: 0,
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       parsedTrace: createParsedTrace(),
     });
 
@@ -29,7 +29,7 @@ describe("gradeDeterministicExpectations", () => {
       testCase: createCase({
         skill_used: "missing-skill",
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       parsedTrace: createParsedTrace(),
     });
 
@@ -44,7 +44,7 @@ describe("gradeDeterministicExpectations", () => {
       testCase: createCase({
         skill_not_used: "code-audit",
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       parsedTrace: createParsedTrace(),
     });
 
@@ -62,7 +62,7 @@ describe("gradeDeterministicExpectations", () => {
       testCase: createCase({
         commands: [{ contains: "scripts/audit.js", exit_code: 0 }],
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       parsedTrace: trace,
     });
 
@@ -80,7 +80,7 @@ describe("gradeDeterministicExpectations", () => {
       testCase: createCase({
         commands_not_run: [{ contains: "npm publish" }],
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       parsedTrace: createParsedTrace(),
     });
 
@@ -97,7 +97,7 @@ describe("gradeDeterministicExpectations", () => {
       testCase: createCase({
         commands_not_run: [{ contains: "scripts/audit.js" }],
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       parsedTrace: createParsedTrace(),
     });
 
@@ -115,7 +115,7 @@ describe("gradeDeterministicExpectations", () => {
       testCase: createCase({
         files_deleted: ["delete-me.txt"],
       }),
-      codex: createCodexResult(0),
+      agent: createAgentResult(0),
       workspaceDiff: {
         created: [],
         changed: [],
@@ -151,7 +151,7 @@ describe("gradeDeterministicExpectations", () => {
             { path: "different.md", snapshot: "different.md" },
           ],
         }),
-        codex: createCodexResult(0),
+        agent: createAgentResult(0),
         workspacePath,
         snapshotsDir,
       });
@@ -188,7 +188,7 @@ function createCase(expect: Partial<CaseExpectation>): EvalCase {
   };
 }
 
-function createCodexResult(exitCode: number): CodexExecResult {
+function createAgentResult(exitCode: number): AgentExecResult {
   return {
     command: ["codex", "exec"],
     cwd: "/tmp/workspace",
