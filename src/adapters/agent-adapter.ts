@@ -30,6 +30,11 @@ export interface AgentAdapter {
    * Parse the raw agent output into SkillArena's normalized trace model.
    */
   parseTrace(rawPath: string): Promise<ParsedTrace>;
+
+  /**
+   * Detect the agent version string, or undefined if unavailable.
+   */
+  detectVersion?(): Promise<string | undefined>;
 }
 
 /** Agent-agnostic execution options. */
@@ -97,6 +102,11 @@ export function createCodexAdapter(extras?: {
     async parseTrace(rawPath: string): Promise<ParsedTrace> {
       const { parseCodexJsonlTrace } = await import("../core/trace/codex-jsonl-parser.js");
       return parseCodexJsonlTrace(rawPath);
+    },
+
+    async detectVersion(): Promise<string | undefined> {
+      const { getCodexVersion } = await import("./codex/codex-adapter.js");
+      return getCodexVersion();
     },
   };
 }

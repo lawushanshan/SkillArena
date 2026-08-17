@@ -1,19 +1,16 @@
 import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { resolve } from "node:path";
-
 import { SkillArenaError } from "../errors.js";
 import { loadProject } from "../project/project.js";
 import { loadReport } from "../report/load-report.js";
 import type { ReportCase, ReportCheck, SkillArenaReport } from "../report/report-schema.js";
-
 export interface CompareRunsOptions {
   cwd: string;
   baselineRunDir?: string;
   candidateRunDir?: string;
   allowIncompatible?: boolean;
 }
-
 export interface RunComparisonMetrics {
   runId: string;
   runDir: string;
@@ -28,13 +25,11 @@ export interface RunComparisonMetrics {
   skillUsedChecks: CheckMetrics;
   skillNotUsedChecks: CheckMetrics;
 }
-
 export interface CheckMetrics {
   total: number;
   passed: number;
   failed: number;
 }
-
 export interface CaseStatusComparison {
   common: number;
   improved: number;
@@ -47,14 +42,12 @@ export interface CaseStatusComparison {
   addedCases: CaseStatusChange[];
   removedCases: CaseStatusChange[];
 }
-
 export interface CaseStatusChange {
   suiteName: string;
   caseId: string;
   baselineStatus?: ReportCase["status"];
   candidateStatus?: ReportCase["status"];
 }
-
 export interface RunComparison {
   verdict: ComparisonVerdict;
   hasRegression: boolean;
@@ -76,22 +69,18 @@ export interface RunComparison {
   };
   cases: CaseStatusComparison;
 }
-
 export type ComparisonVerdict = "improved" | "regressed" | "mixed" | "unchanged";
-
 export interface ComparisonCompatibility {
   compatible: boolean;
   blockingReasons: string[];
   warnings: string[];
   skillChanges: string[];
 }
-
 export async function runCompareCommand(options: CompareRunsOptions): Promise<RunComparison> {
   const runDirs = await resolveComparisonRunDirs(options);
   const baseline = await loadRunReport(runDirs.baselineRunDir);
   const candidate = await loadRunReport(runDirs.candidateRunDir);
   const comparison = compareReports(baseline, candidate);
-
   if (!comparison.compatibility.compatible && !options.allowIncompatible) {
     throw new SkillArenaError(
       [
@@ -101,10 +90,8 @@ export async function runCompareCommand(options: CompareRunsOptions): Promise<Ru
       ].join("\n"),
     );
   }
-
   return comparison;
 }
-
 export function compareReports(
   baseline: SkillArenaReport,
   candidate: SkillArenaReport,
@@ -131,7 +118,6 @@ export function compareReports(
       candidateMetrics.skillNotUsedChecks.failed - baselineMetrics.skillNotUsedChecks.failed,
   };
   const verdict = determineVerdict(delta, caseComparison);
-
   return {
     verdict,
     hasRegression: verdict === "regressed" || verdict === "mixed",
@@ -142,7 +128,6 @@ export function compareReports(
     cases: caseComparison,
   };
 }
-
 export function renderCompareSummary(comparison: RunComparison): string {
   return [
     "SkillArena compare",
@@ -187,42 +172,33 @@ export function renderCompareSummary(comparison: RunComparison): string {
     ...formatCaseChangeLines("Removed cases", comparison.cases.removedCases),
   ].join("\n");
 }
-
 function assessCompatibility(
   baseline: SkillArenaReport,
   candidate: SkillArenaReport,
 ): ComparisonCompatibility {
   const blockingReasons: string[] = [];
   const warnings: string[] = [];
-
   if (baseline.mode !== candidate.mode) {
     blockingReasons.push(`Run modes differ: ${baseline.mode} -> ${candidate.mode}.`);
   }
-
   if (baseline.metadata.configHash !== candidate.metadata.configHash) {
     blockingReasons.push("Project configuration hash differs.");
   }
-
   if (!sameHashedEntries(baseline.metadata.evals, candidate.metadata.evals)) {
     blockingReasons.push("Eval definitions differ.");
   }
-
   if (!sameHashedEntries(baseline.metadata.fixtures, candidate.metadata.fixtures)) {
     blockingReasons.push("Fixture definitions differ.");
   }
-
   if (!sameCaseSet(baseline, candidate)) {
     blockingReasons.push("Selected suite/case set differs.");
   }
-
   const skillChanges = describeSkillChanges(baseline, candidate);
-
-  if (baseline.metadata.codexVersion !== candidate.metadata.codexVersion) {
+  if (baseline.metadata.agentVersion !== candidate.metadata.agentVersion) {
     warnings.push(
-      `Codex version differs: ${baseline.metadata.codexVersion ?? "not detected"} -> ${candidate.metadata.codexVersion ?? "not detected"}.`,
+      `Agent version differs: ${baseline.metadata.agentVersion ?? "not detected"} -> ${candidate.metadata.agentVersion ?? "not detected"}.`,
     );
   }
-
   if (
     baseline.metadata.nodeVersion !== candidate.metadata.nodeVersion ||
     baseline.metadata.platform !== candidate.metadata.platform ||
@@ -230,7 +206,6 @@ function assessCompatibility(
   ) {
     warnings.push("Node or platform metadata differs between runs.");
   }
-
   return {
     compatible: blockingReasons.length === 0,
     blockingReasons,
@@ -238,7 +213,6 @@ function assessCompatibility(
     skillChanges,
   };
 }
-
 function sameHashedEntries(
   baseline: Array<{ path: string; hash: string }>,
   candidate: Array<{ path: string; hash: string }>,
@@ -248,25 +222,20 @@ function sameHashedEntries(
     candidate.map((entry) => `${entry.path}\0${entry.hash}`),
   );
 }
-
 function sameCaseSet(baseline: SkillArenaReport, candidate: SkillArenaReport): boolean {
   return sameEntries(
     [...createCaseStatusMap(baseline).keys()],
     [...createCaseStatusMap(candidate).keys()],
   );
 }
-
 function sameEntries(baseline: string[], candidate: string[]): boolean {
   if (baseline.length !== candidate.length) {
     return false;
   }
-
   const baselineEntries = [...baseline].sort();
   const candidateEntries = [...candidate].sort();
-
   return baselineEntries.every((entry, index) => entry === candidateEntries[index]);
 }
-
 function describeSkillChanges(baseline: SkillArenaReport, candidate: SkillArenaReport): string[] {
   const baselineSkills = new Map(
     baseline.metadata.skills.map((skill) => [
@@ -282,24 +251,19 @@ function describeSkillChanges(baseline: SkillArenaReport, candidate: SkillArenaR
   );
   const keys = new Set([...baselineSkills.keys(), ...candidateSkills.keys()]);
   const changes: string[] = [];
-
   for (const key of [...keys].sort()) {
     const baselineHash = baselineSkills.get(key);
     const candidateHash = candidateSkills.get(key);
-
     if (baselineHash === candidateHash) {
       continue;
     }
-
     const [name, path] = key.split("\0");
     changes.push(
       `${name} (${path}): ${baselineHash ?? "missing"} -> ${candidateHash ?? "missing"}`,
     );
   }
-
   return changes;
 }
-
 function formatCompatibilityLines(compatibility: ComparisonCompatibility): string[] {
   return [
     ...compatibility.blockingReasons.map((reason) => `Incompatible: ${reason}`),
@@ -307,7 +271,6 @@ function formatCompatibilityLines(compatibility: ComparisonCompatibility): strin
     ...compatibility.warnings.map((warning) => `Warning: ${warning}`),
   ];
 }
-
 async function resolveComparisonRunDirs(options: CompareRunsOptions): Promise<{
   baselineRunDir: string;
   candidateRunDir: string;
@@ -318,56 +281,44 @@ async function resolveComparisonRunDirs(options: CompareRunsOptions): Promise<{
       candidateRunDir: await resolveRunDir(options.cwd, options.candidateRunDir),
     };
   }
-
   if (options.baselineRunDir || options.candidateRunDir) {
     throw new SkillArenaError(
       "Compare requires both baseline and candidate run directories, or neither to compare the latest two runs.",
     );
   }
-
   return resolveLatestTwoRunDirs(options.cwd);
 }
-
 async function resolveRunDir(cwd: string, runDirOrId: string): Promise<string> {
   const cwdCandidate = resolve(cwd, runDirOrId);
-
   if (existsSync(resolve(cwdCandidate, "report.json"))) {
     return cwdCandidate;
   }
-
   const project = await loadProject(cwd);
   const projectRunCandidate = resolve(project.runsDir, runDirOrId);
-
   if (existsSync(resolve(projectRunCandidate, "report.json"))) {
     return projectRunCandidate;
   }
-
   return cwdCandidate;
 }
-
 async function resolveLatestTwoRunDirs(cwd: string): Promise<{
   baselineRunDir: string;
   candidateRunDir: string;
 }> {
   const project = await loadProject(cwd);
-
   if (!existsSync(project.runsDir)) {
     throw new SkillArenaError(`Run directory does not exist: ${project.runsDir}`);
   }
-
   const entries = await readdir(project.runsDir, { withFileTypes: true });
   const runDirs = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => resolve(project.runsDir, entry.name))
     .filter((runDir) => existsSync(resolve(runDir, "report.json")))
     .sort();
-
   if (runDirs.length < 2) {
     throw new SkillArenaError(
       `Need at least two SkillArena runs to compare. Found ${runDirs.length} in ${project.runsDir}`,
     );
   }
-
   const baselineRunDir = runDirs[runDirs.length - 2];
   const candidateRunDir = runDirs[runDirs.length - 1];
   if (!baselineRunDir || !candidateRunDir) {
@@ -377,25 +328,19 @@ async function resolveLatestTwoRunDirs(cwd: string): Promise<{
   }
   return { baselineRunDir, candidateRunDir };
 }
-
 async function loadRunReport(runDir: string): Promise<SkillArenaReport> {
   const reportPath = resolve(runDir, "report.json");
-
   if (!existsSync(reportPath)) {
     throw new SkillArenaError(`report.json does not exist: ${reportPath}`);
   }
-
   return loadReport(reportPath);
 }
-
 function createRunMetrics(report: SkillArenaReport): RunComparisonMetrics {
   const allChecks = report.suites.flatMap((suite) =>
     suite.cases.flatMap((testCase) => testCase.checks),
   );
-
   const skillUsedChecks = createCheckMetrics(allChecks, "expect.skill_used");
   const skillNotUsedChecks = createCheckMetrics(allChecks, "expect.skill_not_used");
-
   return {
     runId: report.run.id,
     runDir: report.run.dir,
@@ -412,7 +357,6 @@ function createRunMetrics(report: SkillArenaReport): RunComparisonMetrics {
     skillNotUsedChecks,
   };
 }
-
 function determineVerdict(
   delta: RunComparison["delta"],
   cases: CaseStatusComparison,
@@ -427,32 +371,25 @@ function determineVerdict(
     delta.triggerRatePoints < 0 ||
     delta.falsePositiveRatePoints > 0 ||
     cases.regressed > 0;
-
   if (hasPositiveSignal && hasNegativeSignal) {
     return "mixed";
   }
-
   if (hasNegativeSignal) {
     return "regressed";
   }
-
   if (hasPositiveSignal) {
     return "improved";
   }
-
   return "unchanged";
 }
-
 function createCheckMetrics(checks: ReportCheck[], name: string): CheckMetrics {
   const matching = checks.filter((check) => check.name === name);
-
   return {
     total: matching.length,
     passed: matching.filter((check) => check.status === "pass").length,
     failed: matching.filter((check) => check.status === "fail").length,
   };
 }
-
 function compareCaseStatuses(
   baseline: SkillArenaReport,
   candidate: SkillArenaReport,
@@ -465,19 +402,14 @@ function compareCaseStatuses(
   let unchanged = 0;
   const improvedCases: CaseStatusChange[] = [];
   const regressedCases: CaseStatusChange[] = [];
-
   for (const [key, baselineCaseRef] of baselineCases) {
     const candidateCaseRef = candidateCases.get(key);
-
     if (!candidateCaseRef) {
       continue;
     }
-
     common += 1;
-
     const baselineScore = statusScore(baselineCaseRef.testCase.status);
     const candidateScore = statusScore(candidateCaseRef.testCase.status);
-
     if (candidateScore > baselineScore) {
       improved += 1;
       improvedCases.push(createCaseStatusChange(baselineCaseRef, candidateCaseRef));
@@ -488,14 +420,12 @@ function compareCaseStatuses(
       unchanged += 1;
     }
   }
-
   const addedCases = [...candidateCases.entries()]
     .filter(([key]) => !baselineCases.has(key))
     .map(([, candidateCaseRef]) => createCaseStatusChange(undefined, candidateCaseRef));
   const removedCases = [...baselineCases.entries()]
     .filter(([key]) => !candidateCases.has(key))
     .map(([, baselineCaseRef]) => createCaseStatusChange(baselineCaseRef, undefined));
-
   return {
     common,
     improved,
@@ -509,15 +439,12 @@ function compareCaseStatuses(
     removedCases,
   };
 }
-
 interface CaseRef {
   suiteName: string;
   testCase: ReportCase;
 }
-
 function createCaseStatusMap(report: SkillArenaReport): Map<string, CaseRef> {
   const cases = new Map<string, CaseRef>();
-
   for (const suite of report.suites) {
     for (const testCase of suite.cases) {
       cases.set(`${suite.name}\0${testCase.id}`, {
@@ -526,20 +453,16 @@ function createCaseStatusMap(report: SkillArenaReport): Map<string, CaseRef> {
       });
     }
   }
-
   return cases;
 }
-
 function createCaseStatusChange(
   baselineCaseRef: CaseRef | undefined,
   candidateCaseRef: CaseRef | undefined,
 ): CaseStatusChange {
   const caseRef = candidateCaseRef ?? baselineCaseRef;
-
   if (!caseRef) {
     throw new SkillArenaError("Cannot create a case status change without a case.");
   }
-
   return {
     suiteName: caseRef.suiteName,
     caseId: caseRef.testCase.id,
@@ -547,40 +470,31 @@ function createCaseStatusChange(
     candidateStatus: candidateCaseRef?.testCase.status,
   };
 }
-
 function statusScore(status: ReportCase["status"]): number {
   if (status === "pass") {
     return 2;
   }
-
   if (status === "fail") {
     return 1;
   }
-
   return 0;
 }
-
 function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
-
 function formatSignedPercentPoints(value: number): string {
   return `${formatSignedNumber(value * 100)} pp`;
 }
-
 function formatSignedInteger(value: number): string {
   return formatSignedNumber(value);
 }
-
 function formatSignedNumber(value: number): string {
   return value > 0 ? `+${value}` : `${value}`;
 }
-
 function formatCaseChangeLines(label: string, changes: CaseStatusChange[]): string[] {
   if (changes.length === 0) {
     return [];
   }
-
   return [
     `${label}:`,
     ...changes.map((change) => {

@@ -1,6 +1,10 @@
+import { execFile } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { delimiter, dirname, isAbsolute } from "node:path";
+import { promisify } from "node:util";
 import spawn from "cross-spawn";
+
+const execFileAsync = promisify(execFile);
 
 export interface CodexExecOptions {
   prompt: string;
@@ -137,4 +141,13 @@ function createCodexEnvironment(codexCommand: string): NodeJS.ProcessEnv {
       ? `${dirname(codexCommand)}${delimiter}${existingPath}`
       : dirname(codexCommand),
   };
+}
+
+export async function getCodexVersion(): Promise<string | undefined> {
+  try {
+    const result = await execFileAsync("codex", ["--version"], { timeout: 1000 });
+    return result.stdout.trim() || result.stderr.trim() || undefined;
+  } catch {
+    return undefined;
+  }
 }

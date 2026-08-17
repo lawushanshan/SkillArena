@@ -56,7 +56,7 @@ describe("runEvals", () => {
       timeoutMs: 5000,
       codexCommand: process.execPath,
       codexCommandArgs: [fakeCodex],
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -117,7 +117,7 @@ describe("runEvals", () => {
       timeoutMs: 5000,
       codexCommand: process.execPath,
       codexCommandArgs: [fakeCodex],
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.report.summary.failed).toBe(1);
@@ -152,7 +152,7 @@ describe("runEvals", () => {
       timeoutMs: 5000,
       codexCommand: process.execPath,
       codexCommandArgs: [fakeCodex],
-      detectCodexVersion: false,
+      detectAgentVersion: false,
       rubricJudge: {
         async judge(input) {
           return {
@@ -198,7 +198,7 @@ describe("runEvals", () => {
       timeoutMs: 5000,
       codexCommand: process.execPath,
       codexCommandArgs: [fakeCodex],
-      detectCodexVersion: false,
+      detectAgentVersion: false,
       keepWorkspace: true,
     });
 
@@ -216,7 +216,7 @@ describe("runEvals", () => {
       skillarenaVersion: "0.0.0-test",
       timeoutMs: 5000,
       codexCommand: process.execPath,
-      detectCodexVersion: false,
+      detectAgentVersion: false,
       adapterCapabilities: new Set(),
     });
 
@@ -250,7 +250,7 @@ describe("runEvals", () => {
       failFast: true,
       codexCommand: process.execPath,
       codexCommandArgs: [fakeCodex],
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.executions).toHaveLength(1);

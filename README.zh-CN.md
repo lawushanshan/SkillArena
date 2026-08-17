@@ -2,6 +2,10 @@
 
 > [English](README.md) | 简体中文
 
+[![Verify](https://github.com/lawushanshan/SkillArena/actions/workflows/verify.yml/badge.svg)](https://github.com/lawushanshan/SkillArena/actions/workflows/verify.yml)
+[![npm version](https://img.shields.io/npm/v/skillarena)](https://www.npmjs.com/package/skillarena)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 SkillArena 是一个用于评测 Codex Skill 的测试工具。
 
 目标刻意保持聚焦：帮助 Codex Skill 作者自动验证 Skill 是否在恰当场景被触发，以及它是否改善了任务结果。

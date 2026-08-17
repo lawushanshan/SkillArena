@@ -16,7 +16,7 @@ export interface DryRunOptions {
   maxCases?: number;
   command?: string[];
   skillarenaVersion: string;
-  detectCodexVersion?: boolean;
+  detectAgentVersion?: boolean;
   keepWorkspace?: boolean;
 }
 
@@ -42,7 +42,7 @@ export async function runDryRun(options: DryRunOptions): Promise<DryRunResult> {
     startedAt,
     command: options.command ?? [],
     skillarenaVersion: options.skillarenaVersion,
-    detectCodexVersion: options.detectCodexVersion,
+    detectAgentVersion: options.detectAgentVersion,
   });
   const finishedAt = new Date();
   const report = createDryRunReport({

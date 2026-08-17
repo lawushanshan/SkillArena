@@ -40,7 +40,7 @@ export interface RunEvalsOptions {
   failFast?: boolean;
   codexCommand?: string;
   codexCommandArgs?: string[];
-  detectCodexVersion?: boolean;
+  detectAgentVersion?: boolean;
   keepWorkspace?: boolean;
   adapterCapabilities?: ReadonlySet<AdapterCapability>;
   adapter?: AgentAdapter;
@@ -172,7 +172,8 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
     startedAt,
     command: options.command ?? [],
     skillarenaVersion: options.skillarenaVersion,
-    detectCodexVersion: options.detectCodexVersion,
+    detectAgentVersion: options.detectAgentVersion,
+    adapter,
   });
   const report = createRunReport({
     runId: runStore.runId,

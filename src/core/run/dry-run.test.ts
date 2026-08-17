@@ -28,7 +28,7 @@ describe("runDryRun", () => {
       cwd: root,
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
       keepWorkspace: true,
     });
 
@@ -60,7 +60,7 @@ describe("runDryRun", () => {
       caseId: "creates-audit-report",
       command: ["run", "--dry-run", "--case", "creates-audit-report"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -75,7 +75,7 @@ describe("runDryRun", () => {
       cwd: root,
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(existsSync(result.workspaces[0]?.path)).toBe(false);
@@ -96,7 +96,7 @@ describe("runDryRun", () => {
       suiteName: "other-suite",
       command: ["run", "--dry-run", "--suite", "other-suite"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -115,7 +115,7 @@ describe("runDryRun", () => {
         suiteName: "missing-suite",
         command: ["run", "--dry-run", "--suite", "missing-suite"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("No eval suite found with name: missing-suite");
   });
@@ -134,7 +134,7 @@ describe("runDryRun", () => {
       caseId: "selected-case",
       command: ["run", "--dry-run", "--case", "selected-case"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -155,7 +155,7 @@ describe("runDryRun", () => {
       maxCases: 1,
       command: ["run", "--dry-run", "--max-cases", "1"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -174,7 +174,7 @@ describe("runDryRun", () => {
         caseId: "missing-case",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("No eval case found with id: missing-case");
   });
@@ -195,7 +195,7 @@ describe("runDryRun", () => {
         cwd: root,
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("duplicate case id: duplicate");
   });
@@ -215,7 +215,7 @@ describe("runDryRun", () => {
         evalFile: "evals/missing-fixture.yaml",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("Fixture does not exist for case missing-fixture");
   });
@@ -235,7 +235,7 @@ describe("runDryRun", () => {
       evalFile: "evals/snapshot.yaml",
       command: ["run", "--dry-run"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.totalCases).toBe(1);
@@ -257,7 +257,7 @@ describe("runDryRun", () => {
         evalFile: "evals/outside-snapshot.yaml",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("Snapshot path must resolve inside the configured snapshots directory");
   });
@@ -272,7 +272,7 @@ describe("runDryRun", () => {
       evalFile: "evals/sample-audit.yaml",
       command: ["run", "--dry-run", "evals/sample-audit.yaml"],
       skillarenaVersion: "0.0.0-test",
-      detectCodexVersion: false,
+      detectAgentVersion: false,
     });
 
     expect(result.project.root).toBe(root);
@@ -295,7 +295,7 @@ describe("runDryRun", () => {
         evalFile: "outside.yaml",
         command: ["run", "--dry-run", "outside.yaml"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("Eval file must resolve inside the configured evals directory");
   });
@@ -315,7 +315,7 @@ describe("runDryRun", () => {
         evalFile: "evals/outside-fixture.yaml",
         command: ["run", "--dry-run"],
         skillarenaVersion: "0.0.0-test",
-        detectCodexVersion: false,
+        detectAgentVersion: false,
       }),
     ).rejects.toThrow("Fixture path must resolve inside the configured fixtures directory");
   });

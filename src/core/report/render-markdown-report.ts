@@ -135,7 +135,7 @@ export function renderMarkdownReport(report: SkillArenaReport): string {
   lines.push(`- SkillArena: ${report.metadata.skillarenaVersion}`);
   lines.push(`- Node: ${report.metadata.nodeVersion}`);
   lines.push(`- Platform: ${report.metadata.platform}/${report.metadata.arch}`);
-  lines.push(`- Codex: ${report.metadata.codexVersion ?? "not detected"}`);
+  lines.push(`- Agent: ${report.metadata.agentVersion ?? "not detected"}`);
   lines.push("");
 
   return `${lines.join("\n")}\n`;

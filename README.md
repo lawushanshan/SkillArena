@@ -1,5 +1,9 @@
 # SkillArena
 
+[![Verify](https://github.com/lawushanshan/SkillArena/actions/workflows/verify.yml/badge.svg)](https://github.com/lawushanshan/SkillArena/actions/workflows/verify.yml)
+[![npm version](https://img.shields.io/npm/v/skillarena)](https://www.npmjs.com/package/skillarena)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 SkillArena is a Codex skill evaluation harness.
 
 The goal is narrow and focused: help Codex skill authors automatically verify whether a skill is triggered correctly and improves task outcomes.

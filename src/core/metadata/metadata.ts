@@ -14,7 +14,7 @@ export interface RunMetadata {
   nodeVersion: string;
   platform: NodeJS.Platform;
   arch: string;
-  codexVersion?: string;
+  agentVersion?: string;
   startedAt: string;
   command: string[];
   projectRoot: string;
@@ -42,7 +42,9 @@ export interface CollectMetadataInput {
   startedAt: Date;
   command: string[];
   skillarenaVersion: string;
-  detectCodexVersion?: boolean;
+  detectAgentVersion?: boolean;
+  agentCommand?: string;
+  adapter?: { detectVersion?(): Promise<string | undefined> };
 }
 
 export async function collectRunMetadata(input: CollectMetadataInput): Promise<RunMetadata> {
@@ -61,7 +63,8 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
     nodeVersion: process.version,
     platform: process.platform,
     arch: process.arch,
-    codexVersion: input.detectCodexVersion === false ? undefined : await getCodexVersion(),
+    agentVersion:
+      input.detectAgentVersion === false ? undefined : await getAgentVersion(input.agentCommand),
     startedAt: input.startedAt.toISOString(),
     command: input.command,
     projectRoot: input.project.root,
@@ -95,9 +98,10 @@ export async function collectRunMetadata(input: CollectMetadataInput): Promise<R
   };
 }
 
-async function getCodexVersion(): Promise<string | undefined> {
+async function getAgentVersion(agentCommand?: string): Promise<string | undefined> {
+  const command = agentCommand ?? "codex";
   try {
-    const result = await execFileAsync("codex", ["--version"], { timeout: 1000 });
+    const result = await execFileAsync(command, ["--version"], { timeout: 1000 });
     return result.stdout.trim() || result.stderr.trim() || undefined;
   } catch {
     return undefined;
