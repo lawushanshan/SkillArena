@@ -45,6 +45,7 @@
   - [x] Generalize `source` field in normalized events beyond `"codex"`
   - [x] Generalize `codexVersion` metadata to `agentVersion` with adapter-driven version detection
   - [x] Add second adapter (Gemini CLI) to validate the interface
+  - [x] Add third adapter (Claude Code CLI) to further validate the interface
 - Web report viewer
 - Shared benchmark packs
 

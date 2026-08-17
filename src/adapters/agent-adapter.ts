@@ -1,5 +1,6 @@
 import type { ParsedTrace } from "../core/trace/normalized-events.js";
 import type { AdapterCapability } from "./adapter-capabilities.js";
+import type { ClaudeExecOptions } from "./claude/claude-adapter.js";
 import type { CodexExecOptions } from "./codex/codex-adapter.js";
 import type { GeminiExecOptions } from "./gemini/gemini-adapter.js";
 
@@ -154,6 +155,52 @@ export function createGeminiAdapter(extras?: {
     async detectVersion(): Promise<string | undefined> {
       const { getGeminiVersion } = await import("./gemini/gemini-adapter.js");
       return getGeminiVersion();
+    },
+  };
+}
+
+/**
+ * Create the built-in Claude Code CLI adapter.
+ *
+ * This adapter wraps `runClaudeExec` and `parseClaudeTrace` behind the
+ * `AgentAdapter` contract.
+ */
+export function createClaudeAdapter(extras?: {
+  claudeCommand?: string;
+  claudeCommandArgs?: string[];
+}): AgentAdapter {
+  const claudeCommand = extras?.claudeCommand;
+  const claudeCommandArgs = extras?.claudeCommandArgs;
+  return {
+    name: "claude",
+    capabilities: new Set<AdapterCapability>([
+      "skill_read_trace",
+      "command_trace",
+      "file_change_detection",
+    ]),
+
+    async execute(options: AgentExecOptions): Promise<AgentExecResult> {
+      const claudeOptions: ClaudeExecOptions = {
+        prompt: options.prompt,
+        cwd: options.cwd,
+        rawOutputPath: options.rawOutputPath,
+        stderrPath: options.stderrPath,
+        timeoutMs: options.timeoutMs,
+        claudeCommand: claudeCommand ?? options.command,
+        claudeCommandArgs: claudeCommandArgs ?? options.commandArgs,
+      };
+      const { runClaudeExec } = await import("./claude/claude-adapter.js");
+      return runClaudeExec(claudeOptions);
+    },
+
+    async parseTrace(rawPath: string): Promise<ParsedTrace> {
+      const { parseClaudeTrace } = await import("./claude/claude-adapter.js");
+      return parseClaudeTrace(rawPath);
+    },
+
+    async detectVersion(): Promise<string | undefined> {
+      const { getClaudeVersion } = await import("./claude/claude-adapter.js");
+      return getClaudeVersion();
     },
   };
 }
