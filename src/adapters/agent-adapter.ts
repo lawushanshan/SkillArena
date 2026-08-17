@@ -1,6 +1,7 @@
 import type { ParsedTrace } from "../core/trace/normalized-events.js";
 import type { AdapterCapability } from "./adapter-capabilities.js";
 import type { CodexExecOptions } from "./codex/codex-adapter.js";
+import type { GeminiExecOptions } from "./gemini/gemini-adapter.js";
 
 /**
  * Contract for a coding-agent adapter.
@@ -107,6 +108,52 @@ export function createCodexAdapter(extras?: {
     async detectVersion(): Promise<string | undefined> {
       const { getCodexVersion } = await import("./codex/codex-adapter.js");
       return getCodexVersion();
+    },
+  };
+}
+
+/**
+ * Create the built-in Gemini CLI adapter.
+ *
+ * This adapter wraps `runGeminiExec` and `parseGeminiJsonlTrace` behind the
+ * `AgentAdapter` contract.
+ */
+export function createGeminiAdapter(extras?: {
+  geminiCommand?: string;
+  geminiCommandArgs?: string[];
+}): AgentAdapter {
+  const geminiCommand = extras?.geminiCommand;
+  const geminiCommandArgs = extras?.geminiCommandArgs;
+  return {
+    name: "gemini",
+    capabilities: new Set<AdapterCapability>([
+      "skill_read_trace",
+      "command_trace",
+      "file_change_detection",
+    ]),
+
+    async execute(options: AgentExecOptions): Promise<AgentExecResult> {
+      const geminiOptions: GeminiExecOptions = {
+        prompt: options.prompt,
+        cwd: options.cwd,
+        rawOutputPath: options.rawOutputPath,
+        stderrPath: options.stderrPath,
+        timeoutMs: options.timeoutMs,
+        geminiCommand: geminiCommand ?? options.command,
+        geminiCommandArgs: geminiCommandArgs ?? options.commandArgs,
+      };
+      const { runGeminiExec } = await import("./gemini/gemini-adapter.js");
+      return runGeminiExec(geminiOptions);
+    },
+
+    async parseTrace(rawPath: string): Promise<ParsedTrace> {
+      const { parseGeminiTrace } = await import("./gemini/gemini-adapter.js");
+      return parseGeminiTrace(rawPath);
+    },
+
+    async detectVersion(): Promise<string | undefined> {
+      const { getGeminiVersion } = await import("./gemini/gemini-adapter.js");
+      return getGeminiVersion();
     },
   };
 }
