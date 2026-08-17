@@ -154,7 +154,12 @@ describe("parseClaudeTrace", () => {
           type: "assistant",
           message: {
             content: [
-              { type: "tool_use", id: "toolu_1", name: "Read", input: { file_path: ".codex/skills/code-audit/SKILL.md" } },
+              {
+                type: "tool_use",
+                id: "toolu_1",
+                name: "Read",
+                input: { file_path: ".codex/skills/code-audit/SKILL.md" },
+              },
             ],
           },
         }),
@@ -177,32 +182,38 @@ describe("parseClaudeTrace", () => {
         JSON.stringify({
           type: "user",
           message: {
-            content: [
-              { type: "tool_result", tool_use_id: "toolu_2", content: "tests passed" },
-            ],
+            content: [{ type: "tool_result", tool_use_id: "toolu_2", content: "tests passed" }],
           },
         }),
         JSON.stringify({
           type: "assistant",
           message: {
             content: [
-              { type: "tool_use", id: "toolu_3", name: "Write", input: { file_path: "audit-report.md", content: "# Audit Report" } },
+              {
+                type: "tool_use",
+                id: "toolu_3",
+                name: "Write",
+                input: { file_path: "audit-report.md", content: "# Audit Report" },
+              },
             ],
           },
         }),
         JSON.stringify({
           type: "user",
           message: {
-            content: [
-              { type: "tool_result", tool_use_id: "toolu_3", content: "File written" },
-            ],
+            content: [{ type: "tool_result", tool_use_id: "toolu_3", content: "File written" }],
           },
         }),
         JSON.stringify({
           type: "assistant",
           message: {
             content: [
-              { type: "tool_use", id: "toolu_4", name: "Read", input: { file_path: "config.json" } },
+              {
+                type: "tool_use",
+                id: "toolu_4",
+                name: "Read",
+                input: { file_path: "config.json" },
+              },
             ],
           },
         }),
@@ -262,7 +273,12 @@ describe("parseClaudeTrace", () => {
     await writeFile(
       rawPath,
       [
-        JSON.stringify({ type: "result", subtype: "error", is_error: true, result: "API rate limit exceeded" }),
+        JSON.stringify({
+          type: "result",
+          subtype: "error",
+          is_error: true,
+          result: "API rate limit exceeded",
+        }),
       ].join("\n"),
       "utf8",
     );
@@ -286,7 +302,12 @@ describe("parseClaudeTrace", () => {
           type: "assistant",
           message: {
             content: [
-              { type: "tool_use", id: "toolu_1", name: "Edit", input: { file_path: "src/app.ts", old_string: "old", new_string: "new" } },
+              {
+                type: "tool_use",
+                id: "toolu_1",
+                name: "Edit",
+                input: { file_path: "src/app.ts", old_string: "old", new_string: "new" },
+              },
             ],
           },
         }),
@@ -319,7 +340,12 @@ describe("parseClaudeTrace", () => {
           type: "user",
           message: {
             content: [
-              { type: "tool_result", tool_use_id: "toolu_1", is_error: true, content: "Command failed with exit code 1" },
+              {
+                type: "tool_result",
+                tool_use_id: "toolu_1",
+                is_error: true,
+                content: "Command failed with exit code 1",
+              },
             ],
           },
         }),
@@ -363,7 +389,12 @@ describe("parseClaudeTrace", () => {
           type: "assistant",
           message: {
             content: [
-              { type: "tool_use", id: "toolu_1", name: "Read", input: { file_path: ".codex\\skills\\security-scan\\SKILL.md" } },
+              {
+                type: "tool_use",
+                id: "toolu_1",
+                name: "Read",
+                input: { file_path: ".codex\\skills\\security-scan\\SKILL.md" },
+              },
             ],
           },
         }),
@@ -390,7 +421,12 @@ describe("parseClaudeTrace", () => {
           type: "assistant",
           message: {
             content: [
-              { type: "tool_use", id: "toolu_1", name: "NotebookEdit", input: { notebook_path: "analysis.ipynb" } },
+              {
+                type: "tool_use",
+                id: "toolu_1",
+                name: "NotebookEdit",
+                input: { notebook_path: "analysis.ipynb" },
+              },
             ],
           },
         }),

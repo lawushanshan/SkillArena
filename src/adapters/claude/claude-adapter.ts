@@ -3,10 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { delimiter, dirname, isAbsolute } from "node:path";
 import { promisify } from "node:util";
 import spawn from "cross-spawn";
-import type {
-  NormalizedEvent,
-  ParsedTrace,
-} from "../../core/trace/normalized-events.js";
+import type { NormalizedEvent, ParsedTrace } from "../../core/trace/normalized-events.js";
 import type { AgentExecResult } from "../agent-adapter.js";
 
 const execFileAsync = promisify(execFile);
@@ -275,8 +272,7 @@ function normalizeAssistantEvent(
       }
 
       if (toolName === "Write" || toolName === "Edit" || toolName === "NotebookEdit") {
-        const filePath =
-          stringField(input, ["file_path"]) ?? stringField(input, ["notebook_path"]);
+        const filePath = stringField(input, ["file_path"]) ?? stringField(input, ["notebook_path"]);
         if (filePath) {
           events.push({ ...base, type: "file_changed", path: filePath });
         }
@@ -361,10 +357,7 @@ function deriveSkillName(path: string | undefined): string | undefined {
   return parts[idx - 1];
 }
 
-function stringField(
-  value: Record<string, unknown>,
-  keys: string[],
-): string | undefined {
+function stringField(value: Record<string, unknown>, keys: string[]): string | undefined {
   for (const key of keys) {
     const v = value[key];
     if (typeof v === "string" && v.trim().length > 0) return v;
