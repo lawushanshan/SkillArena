@@ -105,15 +105,21 @@
 
  需要 Node.js 20+ 和 PATH 中的 `codex` CLI。
 
- ## 路线图
+## 路线图
 
- SkillArena v0 聚焦于 Codex。但架构上已经为多 agent 扩展做了准备：
+SkillArena v0 聚焦于 Codex。但架构上已经为多 agent 扩展做了准备：
 
- - `AgentAdapter` 接口已定义，Codex adapter 是参考实现
- - 版本检测通过 adapter 进行，不再硬编码 Codex
- - 归一化的 trace 事件模型与具体 agent 解耦
+- `AgentAdapter` 接口已定义，Codex 和 Gemini CLI adapter 均已实现
+- 版本检测通过 adapter 进行，不再硬编码 Codex
+- 归一化的 trace 事件模型与具体 agent 解耦
 
- 下一步计划是添加第二个 adapter（比如 Claude Code）来验证接口设计。
+Gemini CLI adapter 已经作为第二个 adapter 落地，验证了接口设计的可行性。接下来计划完善 Gemini 的 trace 解析器，并探索 Claude Code adapter。
+
+## 为什么开源
+
+Codex Skill 生态还在早期，但已经在生长。我相信 skill 作者需要一个标准化的评测工具，而不是每个人都自己写脚本。SkillArena 的目标是成为这个生态里的"测试基础设施"。
+
+同时，评测框架本身不应该绑定在某一个 agent 上。SkillArena 的 adapter 架构让它可以扩展到任何支持命令行调用的 coding agent——Codex、Gemini CLI、Claude Code，以及未来可能出现的更多工具。
 
  ## 为什么开源
 
