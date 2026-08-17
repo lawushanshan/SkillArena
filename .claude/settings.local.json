@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where claude *)",
+      "WebFetch(domain:www.claudelog.com)",
+      "WebFetch(domain:avasdream.com)"
+    ]
+  }
+}

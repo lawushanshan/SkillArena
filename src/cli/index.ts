@@ -62,6 +62,7 @@ program
   .option("--judge-timeout-ms <ms>", "OpenAI rubric judge timeout in milliseconds.", "60000")
   .option("--timeout-ms <ms>", "Per-case Codex execution timeout in milliseconds", "300000")
   .option("--codex-command <command>", "Codex command to execute", "codex")
+  .option("--agent <agent>", "Agent to evaluate: codex, claude, or gemini", "codex")
   .action(
     async (
       evalFile: string | undefined,
@@ -76,6 +77,7 @@ program
         judgeTimeoutMs: string;
         timeoutMs: string;
         codexCommand: string;
+        agent: string;
       },
     ) => {
       try {
@@ -107,6 +109,7 @@ program
               skillarenaVersion: VERSION,
               timeoutMs,
               failFast: options.failFast,
+              agent: parseAgent(options.agent),
               codexCommand: options.codexCommand,
               keepWorkspace: options.keepWorkspace,
               judgeModel: options.judgeModel,
@@ -210,6 +213,14 @@ function parsePositiveInteger(value: string, flagName: string): number {
   }
 
   return parsed;
+}
+
+function parseAgent(value: string): "codex" | "claude" | "gemini" {
+  const normalized = value.toLowerCase();
+  if (normalized === "codex" || normalized === "claude" || normalized === "gemini") {
+    return normalized;
+  }
+  throw new Error(`--agent must be one of: codex, claude, gemini. Got: ${value}`);
 }
 
 function formatStatus(status: SkillArenaReport["suites"][number]["status"]): string {

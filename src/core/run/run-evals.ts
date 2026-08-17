@@ -2,7 +2,12 @@ import {
   type AdapterCapability,
   missingCapabilities,
 } from "../../adapters/adapter-capabilities.js";
-import { type AgentAdapter, createCodexAdapter } from "../../adapters/agent-adapter.js";
+import {
+  type AgentAdapter,
+  createClaudeAdapter,
+  createCodexAdapter,
+  createGeminiAdapter,
+} from "../../adapters/agent-adapter.js";
 import type { EvalCase } from "../eval/eval-schema.js";
 import { gradeDeterministicExpectations } from "../grader/deterministic-grader.js";
 import { gradeRubricJudge } from "../judge/grade-rubric-judge.js";
@@ -38,6 +43,7 @@ export interface RunEvalsOptions {
   skillarenaVersion: string;
   timeoutMs: number;
   failFast?: boolean;
+  agent?: "codex" | "claude" | "gemini";
   codexCommand?: string;
   codexCommandArgs?: string[];
   detectAgentVersion?: boolean;
@@ -63,7 +69,7 @@ export async function runEvals(options: RunEvalsOptions): Promise<RunEvalsResult
   const startedAt = new Date();
   const adapter =
     options.adapter ??
-    createCodexAdapter({
+    resolveAdapter(options.agent ?? "codex", {
       codexCommand: options.codexCommand,
       codexCommandArgs: options.codexCommandArgs,
     });
@@ -330,6 +336,23 @@ async function runRubricJudge(
       },
       result,
     };
+  }
+}
+
+function resolveAdapter(
+  agent: "codex" | "claude" | "gemini",
+  extras: { codexCommand?: string; codexCommandArgs?: string[] },
+): AgentAdapter {
+  switch (agent) {
+    case "claude":
+      return createClaudeAdapter();
+    case "gemini":
+      return createGeminiAdapter();
+    default:
+      return createCodexAdapter({
+        codexCommand: extras.codexCommand,
+        codexCommandArgs: extras.codexCommandArgs,
+      });
   }
 }
 
